@@ -82,6 +82,13 @@
           "icon": "branch",
           "color": "#155eef",
           "available": true
+        },
+        "appointment_status": {
+          "label": "Appointment Status",
+          "kind": "trigger",
+          "icon": "calendar",
+          "color": "#f43f5e",
+          "available": true
         }
       },
       "sceneKinds": [
@@ -90,7 +97,8 @@
         "messages",
         "outcome",
         "workshop",
-        "native"
+        "native",
+        "funnel"
       ]
     },
     "n8n": {
@@ -163,11 +171,10 @@
         },
         "ai_agent": {
           "label": "AI Agent",
-          "kind": "cluster",
-          "icon": "spark",
-          "color": "#7d65c1",
-          "available": false,
-          "reason": "AI cluster subnode connectors are not supported in schemaVersion 1."
+          "kind": "action",
+          "icon": "chat",
+          "color": "#ff6d5a",
+          "available": true
         },
         "chat_model": {
           "label": "Chat Model",
@@ -182,6 +189,20 @@
           "kind": "trigger",
           "icon": "bolt",
           "color": "#ef6b53",
+          "available": true
+        },
+        "openai_chat_model": {
+          "label": "OpenAI Chat Model",
+          "kind": "subnode",
+          "icon": "chat",
+          "color": "#0f9f83",
+          "available": true
+        },
+        "http_request_tool": {
+          "label": "HTTP Request Tool",
+          "kind": "subnode",
+          "icon": "globe",
+          "color": "#7a64e3",
           "available": true
         }
       },
@@ -382,7 +403,10 @@
         "record",
         "messages",
         "outcome",
-        "carousel"
+        "carousel",
+        "architecture",
+        "product",
+        "intelligence"
       ],
       "sources": [],
       "actions": {}
@@ -436,6 +460,18 @@
         "native"
       ],
       "actions": {}
+    },
+    "gmail": {
+      "name": "Gmail",
+      "status": "supported",
+      "layout": "mail",
+      "sceneKinds": [
+        "gmail"
+      ],
+      "actions": {},
+      "sources": [
+        "https://support.google.com/mail/answer/2819488"
+      ]
     }
   },
   "referenceOnly": {

@@ -4,6 +4,8 @@ Native rebuild candidates (19 October): see [native-templates/README.md](native-
 
 > **Visual status, 19 October 2026:** This file describes technical renderer support, not accepted native visual fidelity. Lorenzo rejected the current batch. Start with [the native screen library](visual-reference/README.md) and its product/surface plans. Existing illustrations and conceptual transcripts cannot serve as proof of the current vendor UI. No replacement native template is accepted yet.
 
+> **Status update, 20 October 2026:** The 19 October banner above is kept as history. Since then, the 20 October batch of six job-specific demos passed its whole-walkthrough review (`../../.local/batch-2026-10-20-qa/astra-review.md`, copy approval in `copy-review.md`), Lorenzo recorded all six and their proposals were finalized. That approval covers those exact generations only. The four native desktop sales candidates (GoHighLevel, n8n, Zapier, Claude app) passed bounded sales review in `native-templates/SALES-REVIEW-2026-10-19.md` with native production parity withheld; the typed 20 October surfaces are in the extension section below. This file still describes technical renderer support, not blanket native visual acceptance. Future reviews follow U-014 in `DIRECTIVES.md`.
+
 This template produces local, illustrative sales demonstrations. The software interiors follow the repository's established examples and documented workflow concepts. They are not live software, importable automation exports, or a claim of pixel-identical current vendor interfaces. Every workflow frame displays “Illustrative sample.” Icons are semantic interface symbols; they are not vendor logos.
 
 ## Supported adapters
@@ -17,7 +19,7 @@ This template produces local, illustrative sales demonstrations. The software in
 | `codex` | Terminal task transcript and project context | `prompt`, `read`, `edit`, `command`, `review`, `result` |
 | `workbench` | Custom project workspace for records, drafts and results | No workflow actions |
 
-`n8n.ai_agent` and `n8n.chat_model` remain in the catalog with `available: false`. This schema does not describe cluster subnodes or their separate AI connectors, so the compiler and adapter reject these actions. Supporting them requires a reviewed template and schema change.
+The legacy workflow-only canvas rejects AI cluster actions. The 20 October native extension below supports typed `ai_agent`, `openai_chat_model` and `http_request_tool` surfaces; the old `chat_model` key remains unavailable. Use the typed adapter rather than enabling AI nodes in the legacy canvas.
 
 `contact_tag` represents the HighLevel **Contact Tag** trigger, configured for a tag being added. It does not mean an Add Contact Tag action. `google_sheets` represents n8n's append-row operation; the other application keys above likewise use the operation named in the catalog. Job labels describe the sample's purpose; the catalog's action label remains visible separately.
 
@@ -129,3 +131,26 @@ Vendor documentation checked on 14 October 2026 supports the action families and
 - Make: [Webhooks](https://help.make.com/webhooks), [Router](https://help.make.com/router), [Gmail modules](https://apps.make.com/gmail-modules), [Google Sheets](https://apps.make.com/google-sheets), [Slack](https://apps.make.com/slack), [HTTP](https://apps.make.com/http). The local established example also supplies the module shapes and app/action captions.
 
 Syntax and DOM checks cover the adapters' generated text, sample state and bounded node geometry. Desktop and 390px browser inspection and independent reviewer approval are still required for template acceptance. These checks do not certify real automation imports or service execution.
+
+## 20 October extension candidate
+
+The current compiler incorporates the approved cinematic presentation shell. Its intro holds until the presenter chooses Present or Preview. Present hides setup and remains on the intro; Next/right arrow enters the cover. Default route is two minutes. No chapter advances automatically. Recipient uses an evidenced first name, then account/business name, then `your team`. All overview tiles come from the spec, never from the Northstar fixture. Per-generation independent review remains required.
+
+Bounded new surfaces (technical support is not blanket visual acceptance):
+
+- `workbench` / `architecture`: explicitly custom system overview, 2–6 nodes, real acyclic edges and one connected sample path. It never depicts a vendor editor. Content has name, subtitle, nodes `{id,label,detail}`, edges, runOrder, context and related rows.
+- `n8n` / native editor or node: `ai_agent` in the main graph, with separate `aiNodes` and typed `aiConnections`. OpenAI Chat Model attaches through `ai_languageModel`; HTTP Request Tool through `ai_tool`. Each agent needs exactly one model and at least one tool. Subnodes are never main-flow steps. The legacy workflow canvas still rejects these actions.
+- `gmail` / `gmail`: desktop thread and editable unsent inline reply only. Native Send is disabled; there is no invented Gmail Approve button. Owner edits persist within the scene; Replay restores the supplied draft. Exact contract is in `gmail_schema.py`.
+- `ghl` / `funnel`: bespoke public landing page, reference-based classic Neo booking widget, and confirmation. Schema derives date/time labels, requires an eligible staff member and available slot, and carries the same appointment across chapters. `smsConsent` is a required boolean; booking can succeed with SMS held. This is not the GHL admin funnel editor or a live embed. Services v2 is not supported by this surface.
+- `ghl` / native builder: `appointment_status` is the documented Appointment Status trigger. Actual Wait, SMS and Email nodes remain separate; do not invent a combined action. Configuration belongs in inspectors and narration, using the documented before-appointment timing.
+- `workbench` / `product`: bounded bespoke transaction exception app. Integer USD minor units derive the difference. The only local decision is `Needs provider evidence`; provider state and reconciliation remain unchanged. Evidence is inspectable, with review/approval and audit states. This does not execute payments or certify a full fintech platform.
+
+Sources/captures for the new native surfaces are retained with the 20 October job preparation/reference evidence. Portable public copies are in `native-templates/references/current-2026/`. Current official Gmail composer evidence is July 2026, n8n editor/AI evidence includes May–August 2026, and the GHL selected-slot/contact-form captures come from a live vendor-published calendar on 20 October. The older Neo screenshot remains historical only. Do not extrapolate those references to other account versions, Services v2, mobile native apps or unsupported surfaces. Exact-page reviews decide recording readiness.
+
+## Editorial intelligence product
+
+`workbench` / `intelligence` is a custom product, not a vendor interior. Typed `content.surface` is `workflow` or `briefing`. The workflow shows collection, grouping/ranking and human review; the briefing shows ranked risk/opportunity/watch developments with evidence and local decisions. Story/topic IDs, source excerpts, counts, actions, failed-feed state and history come from the spec. Real source URLs must not be invented for fictional examples. The bounded contract lives in `intelligence_schema.py`.
+
+Evidence, recommendation approval, requests for more evidence, relevance feedback, a proposed topic profile and report history are local demonstration interactions. Feedback never silently becomes an approved production profile. Escape closes an open detail drawer without exiting Present. Replay resets local decisions, including under reduced motion. No service requests, report delivery or live approvals occur.
+
+For posts without a prescribed stack, choose a custom product archetype that fits the requested output. An intelligence brief should look like an editorial decision workspace; a transaction app should look like a transaction app. Generic record tables and architecture cards are not the default sales visual. Keep a distinct readable workflow view and a tangible product/result view. See standing directive U-012 in DIRECTIVES.md.

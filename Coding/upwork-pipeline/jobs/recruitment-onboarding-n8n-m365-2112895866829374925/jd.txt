@@ -1,0 +1,7 @@
+url: https://www.upwork.com/jobs/~022112895866829374925
+End-to-End Recruitment & Onboarding Automation : n8n, Microsoft 365, AI Agent
+
+I’m looking for an experienced automation specialist to build an end-to-end recruitment and onboarding workflow using n8n and Microsoft 365.
+The system should collect candidate applications through a smart form with conditional logic, store everything in a structured SharePoint database as a single source of truth, and auto-generate pre-filled contracts and NDAs (Word to PDF document automation) with dynamic field merging. Documents must be sent for e-signature via DocuSign or Adobe Sign with webhook-based status tracking, blocking the next step until signatures are confirmed.
+The workflow must also route approval cards to the right internal validator through Teams integration based on region, send interview booking links tied to each recruiter’s live calendar, trigger account creation, license assignment and group membership via Microsoft Graph API and Azure AD provisioning, and send welcome emails and internal announcements once onboarding completes — with full timestamped audit traceability (GDPR-ready).
+We’d also like to add an AI agent for candidate pre-qualification scoring, smart document parsing (ID cards, resumes) using OpenAI or Claude API, and optionally a WhatsApp intake agent feeding the workflow.

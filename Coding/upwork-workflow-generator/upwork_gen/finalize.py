@@ -280,7 +280,9 @@ def log_row(job_dir: str, loom: str, variant: str, visible_chars: Optional[int],
                 not isinstance(scene, dict) or not isinstance(scene.get("kind"), str)
                 for scene in scenes):
             raise ValueError("deck-spec.json: scenes must be a nonempty list of scene objects with kind strings")
-        workflow = next((scene for scene in scenes if scene["kind"] == "workflow" or (
+        workflow = next((scene for scene in scenes if scene["kind"] in ("workflow", "architecture") or (
+            scene['kind'] == 'intelligence' and isinstance(scene.get('content'), dict)
+            and scene['content'].get('surface') == 'workflow') or (
             scene["kind"] == "native" and isinstance(scene.get("content"), dict)
             and (scene.get("platform"), scene["content"].get("surface")) in (
                 ("ghl", "builder"), ("n8n", "editor"), ("zapier", "editor"),
@@ -288,10 +290,13 @@ def log_row(job_dir: str, loom: str, variant: str, visible_chars: Optional[int],
         if workflow is None:
             raise ValueError("deck-spec.json: requires a workflow scene")
         platform = workflow.get("platform")
-        if not isinstance(platform, str) or platform not in ("ghl", "n8n", "make", "claude-code", "codex", "zapier", "claude"):
+        if workflow['kind'] in ('architecture', 'intelligence'):
+            if platform != 'workbench':
+                raise ValueError('deck-spec.json: custom architecture requires workbench')
+        elif not isinstance(platform, str) or platform not in ("ghl", "n8n", "make", "claude-code", "codex", "zapier", "claude"):
             raise ValueError("deck-spec.json: first mechanism platform must be ghl, n8n, make, claude-code, codex, zapier or claude")
         content = workflow.get("content")
-        assistant = workflow["kind"] == "native" and platform == "claude"
+        assistant = (workflow["kind"] == "native" and platform == "claude") or workflow['kind'] == 'intelligence'
         if workflow["kind"] == "native" and not assistant:
             content = content.get("graph") if isinstance(content, dict) else None
         # Assistant Skills/Projects have no workflow nodes; leave that CSV cell blank.

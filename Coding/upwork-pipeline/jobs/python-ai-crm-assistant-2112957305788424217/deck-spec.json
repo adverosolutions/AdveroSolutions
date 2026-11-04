@@ -1,0 +1,419 @@
+{
+ "schemaVersion": 1,
+ "id": "python-ai-crm-assistant-2112957305788424217",
+ "title": "Python Developer for AI-Powered CRM Automation",
+ "systemName": "Your AI CRM assistant",
+ "account": {
+  "name": "Your sales and operations team",
+  "initials": "SO",
+  "operatorInitials": "LV"
+ },
+ "source": {
+  "jobUrl": "https://www.upwork.com/jobs/~022112957305788424217",
+  "facts": [
+   "Post: build an AI assistant using Python and LLM APIs.",
+   "Post: duplicate detection, basic customer data validation, lead categorization, customer interaction summaries, updating CRM records.",
+   "Post: connect to existing CRM through REST APIs; FastAPI and PostgreSQL; deploy to AWS.",
+   "CRM vendor not named, so the custom workbench is used. Personalization omitted (reviews say Hakims, ambiguous)."
+  ]
+ },
+ "entities": {
+  "lead": {
+   "name": "Dana Okafor",
+   "first": "Dana",
+   "email": "dana.okafor@example.com",
+   "company": "Brightline Freight",
+   "phone": "+1 312 555 0148",
+   "phoneRaw": "312.555.0148 ext"
+  },
+  "existing": {
+   "name": "D. Okafor",
+   "id": "CRM-20417",
+   "created": "14 March"
+  },
+  "owner": {
+   "name": "Sam Rivera"
+  },
+  "category": {
+   "label": "Mid-market, evaluating",
+   "route": "Sales follow-up"
+  }
+ },
+ "cover": {
+  "eyebrow": "Your AI CRM assistant",
+  "title": "A new lead comes in,",
+  "accent": "a clean CRM record comes out.",
+  "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "anchors": [
+   "Duplicate detection",
+   "Lead categories",
+   "Interaction summaries",
+   "FastAPI and PostgreSQL on AWS"
+  ],
+  "previewSteps": [
+   {
+    "title": "Check every new lead",
+    "detail": "Validate the fields and look for an existing contact first."
+   },
+   {
+    "title": "Sort and summarize",
+    "detail": "The LLM picks a lead category and summarizes past conversations."
+   },
+   {
+    "title": "Write it back to your CRM",
+    "detail": "One REST update with the category, summary and duplicate flag."
+   }
+  ],
+  "footer": "Illustrative sample with invented contacts",
+  "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+ },
+ "scenes": [
+  {
+   "id": "pipeline",
+   "kind": "architecture",
+   "platform": "workbench",
+   "title": "Here's how the assistant handles one new lead.",
+   "caption": "Your CRM sends the lead to a FastAPI service, PostgreSQL runs the checks, the LLM sorts it, and the update goes back over REST.",
+   "beat": "Here's the whole path for one sample lead, {{lead.name}} from {{lead.company}}. Your CRM sends her to a small FastAPI service. PostgreSQL checks her details and looks for an existing contact. Then the LLM picks a category and writes a summary, and the result goes back into your CRM.",
+   "details": [
+    "Sample lead: {{lead.name}}, {{lead.company}}",
+    "Runs as a FastAPI service with PostgreSQL, deployed on AWS"
+   ],
+   "optional": false,
+   "content": {
+    "name": "New lead to updated CRM record",
+    "subtitle": "Python service between your CRM and the LLM API",
+    "nodes": [
+     {
+      "id": "intake",
+      "label": "New lead arrives",
+      "detail": "Your CRM posts {{lead.name}} to the FastAPI endpoint"
+     },
+     {
+      "id": "validate",
+      "label": "Check the details",
+      "detail": "Email, phone and company fields cleaned and checked"
+     },
+     {
+      "id": "dedupe",
+      "label": "Look for an existing contact",
+      "detail": "PostgreSQL compares email, name and phone"
+     },
+     {
+      "id": "llm",
+      "label": "Sort and summarize",
+      "detail": "LLM API picks a category and summarizes past conversations"
+     },
+     {
+      "id": "writeback",
+      "label": "Update the CRM",
+      "detail": "REST call writes category, summary and duplicate flag"
+     }
+    ],
+    "edges": [
+     {
+      "from": "intake",
+      "to": "validate"
+     },
+     {
+      "from": "validate",
+      "to": "dedupe"
+     },
+     {
+      "from": "dedupe",
+      "to": "llm"
+     },
+     {
+      "from": "llm",
+      "to": "writeback"
+     }
+    ],
+    "runOrder": [
+     "intake",
+     "validate",
+     "dedupe",
+     "llm",
+     "writeback"
+    ],
+    "context": {
+     "name": "{{lead.name}}",
+     "subtitle": "{{lead.company}}",
+     "fields": [
+      {
+       "label": "Email",
+       "value": "{{lead.email}}"
+      },
+      {
+       "label": "Backend",
+       "value": "FastAPI and PostgreSQL"
+      },
+      {
+       "label": "Hosting",
+       "value": "AWS"
+      }
+     ],
+     "states": [
+      "Lead received from the CRM",
+      "Phone number cleaned up",
+      "Existing contact {{existing.id}} found",
+      "Category: {{category.label}}",
+      "CRM record updated"
+     ]
+    },
+    "related": [
+     {
+      "title": "Duplicate check",
+      "detail": "Matches on email first, then name and phone"
+     },
+     {
+      "title": "LLM prompt",
+      "detail": "Category list and summary format you approve"
+     }
+    ]
+   },
+   "statuses": [
+    "Lead received",
+    "Details checked",
+    "Existing contact found",
+    "Category and summary ready",
+    "CRM updated"
+   ]
+  },
+  {
+   "id": "duplicate",
+   "kind": "record",
+   "platform": "workbench",
+   "title": "Catch the duplicate before it's saved twice.",
+   "caption": "{{lead.name}} already exists as {{existing.name}}. The assistant flags the match and holds the merge for a person to approve.",
+   "beat": "On the left is the lead that just came in. On the right is the contact already in your CRM, {{existing.name}}, created on {{existing.created}}. Same email, so the assistant flags them as one person. It also fixes the phone format. The merge waits for someone on your team to approve it.",
+   "details": [
+    "Match: same email, similar name, same phone",
+    "Merge held for approval, nothing deleted"
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{lead.name}}",
+    "subtitle": "{{lead.email}}",
+    "sourceTitle": "Incoming lead",
+    "sourceFields": [
+     {
+      "label": "Name",
+      "value": "{{lead.name}}"
+     },
+     {
+      "label": "Email",
+      "value": "{{lead.email}}"
+     },
+     {
+      "label": "Phone as entered",
+      "value": "{{lead.phoneRaw}}"
+     },
+     {
+      "label": "Company",
+      "value": "{{lead.company}}"
+     }
+    ],
+    "fields": [
+     {
+      "label": "Existing contact",
+      "value": "{{existing.name}} · {{existing.id}}"
+     },
+     {
+      "label": "Created",
+      "value": "{{existing.created}}"
+     },
+     {
+      "label": "Phone after cleanup",
+      "value": "{{lead.phone}}"
+     },
+     {
+      "label": "Match reason",
+      "value": "Same email and phone, similar name"
+     },
+     {
+      "label": "Merge",
+      "value": "Waiting for approval"
+     }
+    ],
+    "events": [
+     {
+      "title": "Details checked",
+      "detail": "Phone number reformatted, email is valid"
+     },
+     {
+      "title": "Possible duplicate found",
+      "detail": "Matches {{existing.id}} on email and phone"
+     },
+     {
+      "title": "Merge held",
+      "detail": "Sent to {{owner.name}} to approve"
+     }
+    ],
+    "notice": "Illustrative sample. The assistant suggests the merge; a person approves it."
+   },
+   "statuses": [
+    "Details checked",
+    "Duplicate found",
+    "Merge waiting for approval"
+   ]
+  },
+  {
+   "id": "history",
+   "kind": "messages",
+   "platform": "workbench",
+   "title": "These are the conversations the summary reads.",
+   "caption": "Two emails and a call note from the existing contact. The assistant reads them so {{owner.name}} doesn't have to.",
+   "beat": "These are the past conversations already on {{existing.name}}'s record: her first email, a call note from {{owner.name}}, and her reply. The assistant reads all three before it writes the summary.",
+   "details": [
+    "Pulled from the existing CRM record over REST",
+    "Read only, nothing is sent"
+   ],
+   "optional": true,
+   "content": {
+    "name": "{{existing.name}}",
+    "subtitle": "{{lead.company}}",
+    "fields": [
+     {
+      "label": "Owner",
+      "value": "{{owner.name}}"
+     },
+     {
+      "label": "Contact",
+      "value": "{{existing.id}}"
+     }
+    ],
+    "items": [
+     {
+      "channel": "email",
+      "direction": "incoming",
+      "sender": "{{lead.name}}",
+      "time": "Oct 6",
+      "subject": "Pricing for our dispatch team",
+      "body": "We have about 40 dispatchers and want to see how your scheduling tool handles route changes."
+     },
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "{{owner.name}}",
+      "time": "Oct 9",
+      "body": "Call note: wants a trial before the end of the quarter. Asked about connecting their current TMS."
+     },
+     {
+      "channel": "email",
+      "direction": "incoming",
+      "sender": "{{lead.name}}",
+      "time": "Oct 14",
+      "subject": "Re: Trial setup",
+      "body": "Thanks for the call. Can we start the trial next week with five users?"
+     }
+    ],
+    "notice": "Illustrative sample conversations. The assistant only reads them."
+   },
+   "statuses": [
+    "First email",
+    "Call note",
+    "Latest reply"
+   ]
+  },
+  {
+   "id": "crm-update",
+   "kind": "outcome",
+   "platform": "workbench",
+   "title": "The CRM record comes back sorted and summarized.",
+   "caption": "{{owner.name}} opens one record with the category, a short summary and the duplicate flag already filled in.",
+   "beat": "This is what lands back in your CRM. {{lead.name}} is categorized as {{category.label}} and routed to {{category.route}}. The summary says she wants a five-user trial next week and asked about connecting her current system. The duplicate is flagged for approval, so {{owner.name}} has one clean record to work from.",
+   "details": [
+    "Written back with one REST update",
+    "Category list and summary format agreed with you first"
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{lead.name}}",
+    "subtitle": "{{lead.company}} · owner {{owner.name}}",
+    "fields": [
+     {
+      "label": "Category",
+      "value": "{{category.label}}"
+     },
+     {
+      "label": "Route",
+      "value": "{{category.route}}"
+     },
+     {
+      "label": "Summary",
+      "value": "Wants a five-user trial next week. Asked about connecting their current TMS. 40 dispatchers."
+     },
+     {
+      "label": "Duplicate",
+      "value": "Matches {{existing.id}}, merge waiting for approval"
+     }
+    ],
+    "stages": [
+     "Received",
+     "Checked",
+     "Duplicate flagged",
+     "Sorted and summarized",
+     "CRM updated"
+    ],
+    "stageSequence": [
+     2,
+     3,
+     4
+    ],
+    "metrics": [
+     {
+      "label": "Possible duplicate",
+      "value": "1",
+      "note": "Same email and phone"
+     },
+     {
+      "label": "Conversations read",
+      "value": "3",
+      "note": "Two emails and a call note"
+     },
+     {
+      "label": "Fields updated",
+      "value": "4",
+      "note": "In one REST call"
+     }
+    ],
+    "note": "Illustrative sample record. Counts describe this one lead."
+   },
+   "statuses": [
+    "Duplicate flagged",
+    "Category and summary added",
+    "CRM record updated"
+   ]
+  }
+ ],
+ "close": {
+  "eyebrow": "What I would measure",
+  "title": "Less time on CRM upkeep,",
+  "accent": "cleaner records for sales.",
+  "caption": "We set the starting point together, then track team time, duplicates and how fast leads get sorted.",
+  "metrics": [
+   {
+    "name": "Time spent on CRM upkeep",
+    "direction": "down",
+    "aim": "Less manual cleanup each week",
+    "definition": "Hours per week your sales and operations teams log on deduplicating, categorizing, summarizing and updating CRM records, measured the same way before and after launch."
+   },
+   {
+    "name": "Duplicate contact rate",
+    "direction": "down",
+    "aim": "Fewer duplicate contacts",
+    "definition": "Contacts later confirmed as duplicates divided by all new contacts created in the same period."
+   },
+   {
+    "name": "Time to a sorted lead",
+    "direction": "down",
+    "aim": "Leads sorted sooner",
+    "definition": "Median time from a lead entering the CRM to having an approved category and summary on its record."
+   }
+  ],
+  "baselineNote": "We'll measure where you are today and agree the targets together.",
+  "ctaTitle": "Worth a quick 15-minute call?",
+  "ctaCopy": "Reply here and I'll send times.",
+  "beat": "I'd track the time your team spends on CRM upkeep, how many duplicates get created, and how quickly a new lead gets sorted, starting from where you are today. Worth a quick 15-minute call? Reply here and I'll send times."
+ }
+}

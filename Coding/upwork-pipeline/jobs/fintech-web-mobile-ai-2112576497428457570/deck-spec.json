@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "id": "fintech-web-mobile-ai-2112576497428457570",
+  "title": "Fintech web, mobile and AI review workflow",
+  "systemName": "Payment review workflow",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "personalization": {
+    "firstName": "Steve",
+    "source": "client_reviews",
+    "reviewCount": 2
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112576497428457570",
+    "facts": [
+      "Original post requests web/mobile, AI, backend, financial integrations, security and deployment; existing product scope unspecified.",
+      "Steve appears in two separate reviews, dated 2026-01-15 and 2025-07-31; ownership unverified.",
+      "This is a narrow synthetic reconciliation review concept; no live transfer, certified security or production fintech delivery is claimed.",
+      "Custom product adapter shows local classification approval; no transaction is executed."
+    ]
+  },
+  "entities": {
+    "transaction": {
+      "id": "TX-042",
+      "event": "evt_demo_042",
+      "invoice": "INV-018",
+      "gross": "$128.00",
+      "expected": "$120.00",
+      "difference": "$8.00"
+    },
+    "reviewer": {
+      "name": "Jordan Lee",
+      "role": "Reviewer"
+    },
+    "tenant": {
+      "id": "DEMO"
+    }
+  },
+  "cover": {
+    "eyebrow": "Web, mobile and AI",
+    "title": "See how your app",
+    "accent": "handles a payment mismatch.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Shared backend",
+      "Restricted AI input",
+      "Human approval"
+    ],
+    "previewSteps": [
+      {
+        "title": "Check the payment",
+        "detail": "Compare the payment with the invoice."
+      },
+      {
+        "title": "Review the difference",
+        "detail": "AI suggests what to check next."
+      },
+      {
+        "title": "Record the decision",
+        "detail": "Your team approves the next step."
+      }
+    ],
+    "footer": "Illustrative product concept · fictional transactions and users.",
+    "beat": "Steve, I've already put this workflow together for you. Let me show you how your team would review a payment that doesn't match the invoice."
+  },
+  "scenes": [
+    {
+      "id": "architecture",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Here's how the review works.",
+      "caption": "Your web and mobile apps use the same records and review process.",
+      "beat": "The system checks the payment and who is allowed to see it. It compares the payment with the invoice, then asks AI to review the difference. Your team approves the next step, and the system records that decision.",
+      "details": [
+        "Recommended clients: React/Next.js for web and React Native for iOS/Android. Shared Node.js API and Postgres; OpenAI behind the backend.",
+        "Proposed access: MFA-backed sessions, server-side tenant/role checks, signed provider events and unique event IDs.",
+        "Proposed operations: sandbox integration tests, deployment checks, monitored retries, trace IDs and audited releases."
+      ],
+      "optional": false,
+      "content": {
+        "name": "The payment review workflow",
+        "subtitle": "A shared process for your web and mobile apps.",
+        "nodes": [
+          {
+            "id": "event",
+            "label": "Check the payment record",
+            "detail": "Confirm where the payment came from and check that it hasn't already been recorded."
+          },
+          {
+            "id": "record",
+            "label": "Check who can view it",
+            "detail": "Check the user's account and permissions before showing the payment and invoice."
+          },
+          {
+            "id": "suggest",
+            "label": "Ask AI to review the difference",
+            "detail": "Give OpenAI the payment and invoice amounts, with personal details removed."
+          },
+          {
+            "id": "approve",
+            "label": "Save the team's decision",
+            "detail": "A reviewer requests more information. Keep the review open until the difference is explained."
+          }
+        ],
+        "edges": [
+          {
+            "from": "event",
+            "to": "record"
+          },
+          {
+            "from": "record",
+            "to": "suggest"
+          },
+          {
+            "from": "suggest",
+            "to": "approve"
+          }
+        ],
+        "runOrder": [
+          "event",
+          "record",
+          "suggest",
+          "approve"
+        ],
+        "context": {
+          "name": "Who can see what",
+          "subtitle": "Access and data handling",
+          "fields": [
+            {
+              "label": "Sign-in",
+              "value": "Confirm the reviewer is signed in."
+            },
+            {
+              "label": "Permissions",
+              "value": "Only show records from the reviewer's business account."
+            },
+            {
+              "label": "AI input",
+              "value": "Amounts and a description with personal details removed."
+            },
+            {
+              "label": "Access records",
+              "value": "Keep provider keys on the server. Record who accessed each payment."
+            }
+          ],
+          "states": [
+            "Payment checked",
+            "Access confirmed",
+            "AI review ready",
+            "Decision recorded"
+          ]
+        },
+        "related": [
+          {
+            "title": "Web and mobile stay in sync",
+            "detail": "Both apps use the same payment record and review status."
+          },
+          {
+            "title": "Handle repeated messages",
+            "detail": "If the provider sends the same payment twice, keep one record."
+          }
+        ]
+      },
+      "statuses": [
+        "Payment checked",
+        "Access confirmed",
+        "AI review ready",
+        "Decision recorded"
+      ]
+    },
+    {
+      "id": "transaction-app",
+      "kind": "product",
+      "platform": "workbench",
+      "title": "See the mismatch and the next step.",
+      "caption": "The payment is $128. The invoice is $120. Your team reviews what caused the difference.",
+      "beat": "The payment shows $128, but the invoice is $120. The AI flags the eight-dollar difference and recommends asking the payment provider for more detail. When Jordan approves that recommendation, the system records the decision. The review stays open.",
+      "details": [
+        "The single transaction object supplies the queue, detail, derived difference and responsive mobile layout. No financial state is duplicated.",
+        "Use Show/Hide evidence for local inspection. Review again returns to the proposal; Approve classification records only local sample UI state.",
+        "The provider remains settled. Classification approval does not execute a transfer, adjust a ledger or resolve the reconciliation."
+      ],
+      "optional": false,
+      "statuses": [
+        "Exception loaded; classification awaits review",
+        "AI suggests Needs provider evidence",
+        "Jordan approved classification; reconciliation remains open"
+      ],
+      "content": {
+        "name": "Reconcile",
+        "subtitle": "One transaction requires a closer look.",
+        "reviewer": {
+          "name": "{{reviewer.name}}",
+          "role": "{{reviewer.role}}",
+          "tenant": "{{tenant.id}}"
+        },
+        "transaction": {
+          "id": "{{transaction.id}}",
+          "event": "{{transaction.event}}",
+          "invoice": "{{transaction.invoice}}",
+          "currency": "USD",
+          "grossMinor": 12800,
+          "expectedMinor": 12000,
+          "providerStatus": "Settled",
+          "description": "Provider receipt differs from the expected invoice amount."
+        },
+        "evidence": [
+          {
+            "id": "{{transaction.event}}",
+            "title": "Provider receipt",
+            "detail": "Settled receipt of $128.00. Signed sandbox event accepted; replay of this event creates no second record."
+          },
+          {
+            "id": "{{transaction.invoice}}",
+            "title": "Invoice record",
+            "detail": "Expected amount $120.00. No fee breakdown or adjustment evidence is attached."
+          }
+        ],
+        "analysis": {
+          "summary": "The $8.00 difference is unexplained. A fee is one possibility, but the available records do not establish the cause.",
+          "recommendation": "Request the provider fee breakdown before assigning a cause or posting an adjustment.",
+          "confidence": "Arithmetic confirmed · cause unknown",
+          "dataBoundary": "Surrogate transaction ID, amounts and redacted description. Account details, identity and provider credentials excluded."
+        },
+        "decision": {
+          "classification": "Needs provider evidence",
+          "reason": "Approved the evidence-needed classification. Your team must collect supporting details before resolving this exception.",
+          "auditId": "AUD-042"
+        }
+      }
+    }
+  ],
+  "close": {
+    "eyebrow": "The next step",
+    "title": "Let's map out",
+    "accent": "your first feature.",
+    "caption": "We’ll start with the part of your app that matters most to your users.",
+    "metrics": [
+      {
+        "name": "Time spent reviewing payments",
+        "direction": "down",
+        "aim": "Spend less time investigating mismatches",
+        "definition": "Compare the time your team spends reviewing the same sample payments before and after the workflow is introduced."
+      },
+      {
+        "name": "Helpful AI recommendations",
+        "direction": "up",
+        "aim": "Give reviewers more useful next steps",
+        "definition": "Track which AI recommendations your reviewers find useful and supported by the payment records."
+      },
+      {
+        "name": "Duplicate records",
+        "direction": "down",
+        "aim": "Prevent the same payment appearing twice",
+        "definition": "Check that repeated messages from the payment provider create one payment record."
+      }
+    ],
+    "baselineNote": "We’ll measure the current process first, then compare results after launch.",
+    "ctaTitle": "Reply here for a 15-minute call",
+    "ctaCopy": "Send me a message on Upwork. We'll book a 15-minute call to go over your app and choose the first feature to build.",
+    "beat": "Send me a message on Upwork and we'll book a 15-minute call. We'll go over your app and choose the first feature to build."
+  }
+}

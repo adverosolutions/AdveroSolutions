@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-wordpress-ai-tech-help-2112966029220608996",
+  "title": "GHL and other tech needs",
+  "systemName": "Your website-to-GHL follow-up",
+  "account": {"name": "Website follow-up demo", "initials": "WF", "operatorInitials": "LV"},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112966029220608996",
+    "facts": [
+      "help with GHL and other tech and marketing needs for my business.",
+      "GHL, Wordpress, AI, Coding, and more.",
+      "First name Chris from 4 separate client review comments (private evidence in assessment-private.md)."
+    ]
+  },
+  "entities": {
+    "lead": {"name": "Priya Nadeau", "first": "Priya", "email": "priya.nadeau@example.com", "phone": "(555) 014-2290", "request": "Asked for a callback about getting started"},
+    "owner": {"name": "Sam Ortiz", "first": "Sam"},
+    "form": {"name": "Contact us", "tag": "website-form"},
+    "callback": {"label": "Thursday 29 October at 11 am"}
+  },
+  "cover": {
+    "eyebrow": "Your website-to-GHL follow-up",
+    "title": "From your WordPress form",
+    "accent": "to a booked callback in GHL.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["GHL", "WordPress", "AI-assisted coding"],
+    "previewSteps": [
+      {"title": "Connect the website form", "detail": "A small WordPress handler sends each entry into GHL as a tagged contact."},
+      {"title": "Follow up inside GHL", "detail": "Callback requests get an owner, a text and a heads-up for the team."},
+      {"title": "Book the callback", "detail": "The lead picks a time and the pipeline shows where they stand."}
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · names and counts are made up"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track every website enquiry",
+    "accent": "from form to callback.",
+    "caption": "We set a starting point first, then watch how many entries reach GHL, how fast they hear back, and how many book a call.",
+    "metrics": [
+      {"name": "Website entries that reach GHL", "direction": "up", "aim": "Capture every form entry", "definition": "WordPress form entries that show up in GHL as a contact with the website tag, divided by all form entries over the same agreed period."},
+      {"name": "Time to first reply", "direction": "down", "aim": "Reply to website leads sooner", "definition": "Median time from a form entry arriving in GHL to the first text or email sent to that lead, measured over an agreed period."},
+      {"name": "Callbacks booked from the website", "direction": "up", "aim": "Book more calls from the site", "definition": "Website leads who confirm a callback time, divided by all website leads who asked for one in the same agreed period."}
+    ],
+    "baselineNote": "We'll measure where things stand today and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd track how many form entries reach GHL, how fast people hear back, and how many book a callback, starting from where you are today. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "code",
+      "kind": "workflow",
+      "platform": "claude-code",
+      "title": "Connect your WordPress form to GHL.",
+      "caption": "I use Claude Code to write and test a small handler that sends each website entry into GHL with a tag.",
+      "beat": "This is the coding side. I ask Claude Code to read your contact form, write a small handler, and send one test entry. Priya's test entry lands in GHL as a contact with the website-form tag, and nothing goes live until you approve it.",
+      "details": [
+        "Contact us form → GHL contact → tag website-form",
+        "Sample file names; nothing is installed on your site"
+      ],
+      "content": {
+        "name": "WordPress form to GHL",
+        "nodes": [
+          {"id": "ask", "type": "prompt", "label": "Send website form entries into GHL", "detail": "Every Contact us entry becomes a GHL contact tagged website-form"},
+          {"id": "read-form", "type": "read", "label": "Read the contact form fields", "detail": "Name, email, phone, message, callback request, text consent"},
+          {"id": "write-handler", "type": "edit", "label": "Write the form handler", "detail": "ghl-form-bridge.php: maps the fields and adds the website-form tag"},
+          {"id": "test-entry", "type": "command", "label": "Send one test entry", "detail": "Test entry for {{lead.name}}: contact created, tag added"},
+          {"id": "check-contact", "type": "review", "label": "Check the contact in GHL", "detail": "One contact, consent saved, source set to Website"},
+          {"id": "hand-over", "type": "result", "label": "Ready for your review", "detail": "Handler file and setup notes for your approval"}
+        ],
+        "edges": [
+          {"from": "ask", "to": "read-form"},
+          {"from": "read-form", "to": "write-handler"},
+          {"from": "write-handler", "to": "test-entry"},
+          {"from": "test-entry", "to": "check-contact"},
+          {"from": "check-contact", "to": "hand-over"}
+        ],
+        "runOrder": ["ask", "read-form", "write-handler", "test-entry", "check-contact", "hand-over"],
+        "context": {
+          "name": "Website form to GHL",
+          "subtitle": "WordPress site · GoHighLevel account",
+          "fields": [
+            {"label": "Form", "value": "{{form.name}}"},
+            {"label": "Tag in GHL", "value": "{{form.tag}}"},
+            {"label": "Test lead", "value": "{{lead.name}}"}
+          ],
+          "states": [
+            "Task written",
+            "Form fields mapped",
+            "Handler drafted",
+            "Test entry sent for {{lead.first}}",
+            "Contact checked in GHL",
+            "Ready for your review"
+          ]
+        },
+        "related": [
+          {"title": "ghl-form-bridge.php", "detail": "Sample handler for the Contact us form"},
+          {"title": "setup-notes.md", "detail": "Where the GHL key lives and how to switch it off"}
+        ]
+      },
+      "statuses": [
+        "Task written",
+        "Form fields mapped",
+        "Handler drafted",
+        "Test entry sent for Priya",
+        "Contact checked in GHL",
+        "Ready for your review"
+      ],
+      "optional": false
+    },
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Follow up on every website enquiry in GHL.",
+      "caption": "The website tag starts the workflow. Callback requests get an owner and a text, everyone else gets an email.",
+      "beat": "Now we're in GHL. When the website-form tag lands on Priya, this workflow starts. She asked for a callback, so she gets an opportunity, Sam becomes her owner, she gets a text, and Sam gets a heads-up. Someone who didn't ask for a call gets an email with next steps instead.",
+      "details": [
+        "Contact Tag trigger: website-form added",
+        "If/Else: asked for a callback → Yes path shown"
+      ],
+      "content": {
+        "name": "Website enquiry follow-up",
+        "nodes": [
+          {"id": "tag-added", "type": "contact_tag", "label": "Tag added: website-form", "detail": "Starts when the form handler tags a new contact"},
+          {"id": "wants-call", "type": "condition", "label": "Asked for a callback?", "detail": "Checks the callback box from the form"},
+          {"id": "new-opp", "type": "opportunity", "label": "Opportunity: New website lead", "detail": "Website leads pipeline"},
+          {"id": "give-owner", "type": "assign_user", "label": "Assign to Sam Ortiz", "detail": "Sam owns callbacks from the site"},
+          {"id": "text-lead", "type": "sms", "label": "Text with callback times", "detail": "Sent only when text consent is saved"},
+          {"id": "tell-sam", "type": "notification", "label": "Tell Sam a callback is coming", "detail": "Includes the form message"},
+          {"id": "email-info", "type": "email", "label": "Email with next steps", "detail": "For entries without a callback request"}
+        ],
+        "edges": [
+          {"from": "tag-added", "to": "wants-call"},
+          {"from": "wants-call", "to": "new-opp", "label": "Yes"},
+          {"from": "wants-call", "to": "email-info", "label": "No"},
+          {"from": "new-opp", "to": "give-owner"},
+          {"from": "give-owner", "to": "text-lead"},
+          {"from": "text-lead", "to": "tell-sam"}
+        ],
+        "runOrder": ["tag-added", "wants-call", "new-opp", "give-owner", "text-lead", "tell-sam"],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Website · {{form.name}} form",
+          "fields": [
+            {"label": "Request", "value": "{{lead.request}}"},
+            {"label": "Text consent", "value": "Yes, from the form"},
+            {"label": "Status", "value": "Illustrative sample"}
+          ],
+          "states": [
+            "Tag website-form added",
+            "Callback requested: Yes",
+            "Opportunity created",
+            "Owner: Sam Ortiz",
+            "Text sent with times",
+            "Sam notified"
+          ]
+        },
+        "related": [
+          {"title": "Website leads pipeline", "detail": "New website lead, Contacted, Callback booked, Won"},
+          {"title": "No-callback path", "detail": "Email with next steps, no owner assigned yet"}
+        ]
+      },
+      "statuses": [
+        "Tag website-form added",
+        "Callback requested: Yes",
+        "Opportunity created",
+        "Owner: Sam Ortiz",
+        "Text sent with times",
+        "Sam notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "Priya picks a callback time by text.",
+      "caption": "The text, her reply and Sam's heads-up sit in one GHL conversation.",
+      "beat": "Here's the result. Priya gets a text with two times, picks Thursday at 11, and gets a confirmation. Sam sees the booking and her original message before he calls.",
+      "details": [
+        "Text consent saved from the form before any text",
+        "Reply → callback booked → Sam notified"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}} · {{lead.email}}",
+        "fields": [
+          {"label": "Owner", "value": "{{owner.name}}"},
+          {"label": "Source", "value": "Website · {{form.name}}"}
+        ],
+        "items": [
+          {"channel": "sms", "direction": "outgoing", "sender": "{{owner.name}}", "time": "2:14 pm", "body": "Hi {{lead.first}}, it's {{owner.first}}. Thanks for reaching out on our website. I can call you Thursday at 11 am or Friday at 2 pm. Which works better?"},
+          {"channel": "sms", "direction": "incoming", "sender": "{{lead.name}}", "time": "2:21 pm", "body": "Thursday at 11 works for me."},
+          {"channel": "sms", "direction": "outgoing", "sender": "{{owner.name}}", "time": "2:22 pm", "body": "You're booked for {{callback.label}}. Talk then, {{lead.first}}."},
+          {"channel": "internal", "direction": "outgoing", "sender": "Workflow", "time": "2:22 pm", "body": "Callback booked with {{lead.name}} for {{callback.label}}. Her form message: wants help getting started."}
+        ],
+        "notice": "{{lead.first}} confirmed {{callback.label}}. The opportunity moves to Callback booked."
+      },
+      "statuses": [
+        "Text sent",
+        "Priya replies",
+        "Callback confirmed",
+        "Sam notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "See where every website lead stands.",
+      "caption": "Priya sits in Callback booked, and the website source stays on her record.",
+      "beat": "And here's the pipeline. Priya is in Callback booked with Sam as owner, and the website source stays with her. These weekly counts are made up, just to show what you'd see.",
+      "details": [
+        "Illustrative week: 12 entries, 12 replied to, 5 callbacks booked",
+        "Source kept from form to pipeline"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Website leads pipeline",
+        "fields": [
+          {"label": "Owner", "value": "{{owner.name}}"},
+          {"label": "Source", "value": "Website · {{form.name}}"},
+          {"label": "Callback", "value": "{{callback.label}}"}
+        ],
+        "stages": ["New website lead", "Contacted", "Callback booked", "Won"],
+        "stageSequence": [0, 1, 2],
+        "metrics": [
+          {"label": "Form entries in GHL", "value": "12", "note": "Illustrative week"},
+          {"label": "Replied to", "value": "12", "note": "Illustrative, by text or email"},
+          {"label": "Callbacks booked", "value": "5", "note": "Illustrative, not a promised result"}
+        ],
+        "note": "Counts are made up for this sample. The website tag and source stay on each lead."
+      },
+      "statuses": [
+        "New website lead",
+        "Contacted by text",
+        "Callback booked · source kept"
+      ],
+      "optional": false
+    }
+  ],
+  "personalization": {"firstName": "Chris", "source": "client_reviews", "reviewCount": 4}
+}

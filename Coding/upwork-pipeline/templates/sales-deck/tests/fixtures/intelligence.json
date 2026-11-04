@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture-intelligence",
+  "title": "Personalized news intelligence and decision support",
+  "systemName": "Your intelligence workbench",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:intelligence",
+    "facts": [
+      "Synthetic regression fixture; not a saved job or delivered client system."
+    ]
+  },
+  "entities": {
+    "report": {
+      "id": "INT-014",
+      "time": "07:00",
+      "owner": "your team"
+    },
+    "story": {
+      "id": "DEV-01",
+      "title": "Sample supplier sunsets its old export API"
+    },
+    "source": {
+      "a": "https://example.invalid/fixtures/api-notice",
+      "b": "https://example.invalid/fixtures/api-reprint",
+      "c": "https://example.invalid/fixtures/data-pilot",
+      "d": "https://example.invalid/fixtures/competitor-note"
+    }
+  },
+  "cover": {
+    "eyebrow": "Personalized intelligence",
+    "title": "Know what deserves",
+    "accent": "your attention.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Your priorities",
+      "Ranked briefing",
+      "Evidence and review"
+    ],
+    "previewSteps": [
+      {
+        "title": "Collect",
+        "detail": "Read sources against your priorities."
+      },
+      {
+        "title": "Analyze",
+        "detail": "Group repeats and explain relevance."
+      },
+      {
+        "title": "Decide",
+        "detail": "Review the evidence and next step."
+      }
+    ],
+    "footer": "Illustrative sample \u00b7 fictional sources, developments and counts.",
+    "beat": "Your post calls for more than article summaries. I would start with the decisions you want to support, then rank the developments against those priorities."
+  },
+  "scenes": [
+    {
+      "id": "architecture",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "From your priorities to a briefing",
+      "caption": "Your objectives control what gets collected, grouped and ranked.",
+      "beat": "Point to the high-priority API continuity topic. The scheduled collector keeps source links and timestamps, groups the repeated notice, and sends three developments to the briefing. A failed feed is tracked separately.",
+      "details": [
+        "Add or remove sources, adjust topic weights and choose report frequency through configuration.",
+        "Semantic topic matching checks meaning beyond exact keywords. Relevance ranking combines objective fit, urgency, source support and novelty.",
+        "Store canonical URLs, retrieved text and timestamps; group by canonical URL, content fingerprint and semantic event similarity."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Custom intelligence architecture",
+        "subtitle": "{{report.id}} \u00b7 scheduled sample run {{report.time}}",
+        "nodes": [
+          {
+            "id": "priorities",
+            "label": "Read priorities",
+            "detail": "API continuity high; data services medium; competitor chatter low."
+          },
+          {
+            "id": "collect",
+            "label": "Collect and preserve",
+            "detail": "Fetch RSS, public pages and agreed APIs. Save source URLs, text and timestamps."
+          },
+          {
+            "id": "analyze",
+            "label": "Group and rank",
+            "detail": "Four fetched items become three developments. Separate source facts from analysis."
+          },
+          {
+            "id": "brief",
+            "label": "Publish for review",
+            "detail": "Create {{report.id}}, with priorities, evidence and proposed actions. Archive the version."
+          }
+        ],
+        "edges": [
+          {
+            "from": "priorities",
+            "to": "collect"
+          },
+          {
+            "from": "collect",
+            "to": "analyze"
+          },
+          {
+            "from": "analyze",
+            "to": "brief"
+          }
+        ],
+        "runOrder": [
+          "priorities",
+          "collect",
+          "analyze",
+          "brief"
+        ],
+        "context": {
+          "name": "Sample operating settings",
+          "subtitle": "Configuration, not fixed keywords",
+          "fields": [
+            {
+              "label": "Objective",
+              "value": "Protect business data access"
+            },
+            {
+              "label": "Reporting",
+              "value": "Daily at 07:00; frequency configurable"
+            },
+            {
+              "label": "Source policy",
+              "value": "Prefer primary evidence; track missing coverage"
+            },
+            {
+              "label": "Review owner",
+              "value": "{{report.owner}}"
+            }
+          ],
+          "states": [
+            "Priority profile loaded",
+            "Four items fetched; feed F failed",
+            "A/B grouped; three developments ranked",
+            "{{report.id}} saved for human review"
+          ]
+        },
+        "related": [
+          {
+            "title": "Source registry",
+            "detail": "Topics, access method, priority, last success and failure policy."
+          },
+          {
+            "title": "Report history",
+            "detail": "Versioned reports, supporting excerpts and relevance feedback."
+          }
+        ]
+      },
+      "statuses": [
+        "Priorities loaded",
+        "Sources collected",
+        "Stories grouped and ranked",
+        "Briefing prepared"
+      ]
+    },
+    {
+      "id": "briefing",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "What matters this morning",
+      "caption": "The briefing separates an immediate check, an opportunity and a watch item.",
+      "beat": "Read the three ranked cards. The API notice comes first because the sample priority is continuity. The opportunity has a bounded investigation step. The unsupported competitor claim stays on watch.",
+      "details": [
+        "Rank reflects this sample objective, not universal importance.",
+        "Source confidence and business-impact confidence are separate.",
+        "The report keeps the source IDs for drill-down and never turns an unverified anecdote into a confirmed fact."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Executive briefing \u00b7 {{report.id}}",
+        "subtitle": "{{report.time}} \u00b7 reviewer: {{report.owner}}",
+        "fields": [
+          {
+            "label": "Summary",
+            "value": "Check export API exposure first. Investigate the data pilot after that. Keep the competitor anecdote on watch."
+          },
+          {
+            "label": "Coverage",
+            "value": "Four fetched items \u2192 three developments. One configured feed unavailable."
+          },
+          {
+            "label": "Detailed evidence",
+            "value": "DEV-01 links to fixture sources A/B; the next screen shows their excerpts."
+          }
+        ],
+        "stages": [
+          "Collected",
+          "Ranked",
+          "Ready for review"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "1 \u00b7 Risk \u00b7 check now",
+            "value": "API continuity",
+            "note": "DEV-01 \u00b7 A/B state v1 retires in 60 days. Check whether your exports use v1. Strong fixture evidence; exposure unknown."
+          },
+          {
+            "label": "2 \u00b7 Opportunity \u00b7 investigate",
+            "value": "Data-service pilot",
+            "note": "DEV-02 \u00b7 C announces a limited pilot. Compare its coverage with one current research task. Benefit remains untested."
+          },
+          {
+            "label": "3 \u00b7 Watch \u00b7 no action yet",
+            "value": "Competitor anecdote",
+            "note": "DEV-03 \u00b7 D is an unverified claim. Seek a primary announcement before changing strategy."
+          }
+        ],
+        "note": "Recommendations remain open to human review. Failed-feed coverage is disclosed; absence from this briefing does not establish that nothing happened.",
+        "proof": {
+          "label": "Deduplication result",
+          "value": "3 developments",
+          "description": "A and B describe one API notice. C and D describe separate items. Four fetched items become three ranked developments.",
+          "sourceNote": "Fictional source fixtures A, B, C and D. Failed feed F contributes no fetched item."
+        }
+      },
+      "statuses": [
+        "Items collected",
+        "Priorities ranked",
+        "Briefing ready for review"
+      ]
+    },
+    {
+      "id": "decision-evidence",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Why this item earns an action",
+      "caption": "{{story.id}} \u00b7 {{story.title}}",
+      "beat": "Point to the two source excerpts and the single grouped development. The notice supports checking your dependency. It does not establish that your business is affected. Your team can approve the check, defer it, or request more evidence.",
+      "details": [
+        "A repost is not independent corroboration. Keep it attached to the same story and retain the primary-source attribution.",
+        "A recommendation must identify what is supported, what is inferred and what still needs checking."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Evidence and recommended next step",
+        "subtitle": "{{report.id}} / {{story.id}} \u00b7 review owner: {{report.owner}}",
+        "sourceTitle": "Evidence ledger \u00b7 synthetic fixtures",
+        "sourceFields": [
+          {
+            "label": "A \u00b7 primary notice",
+            "value": "\u201cExport API v1 will retire in 60 days.\u201d {{source.a}}"
+          },
+          {
+            "label": "B \u00b7 repeated notice",
+            "value": "\u201cThe supplier says v1 retires in 60 days.\u201d {{source.b}}"
+          },
+          {
+            "label": "Grouping",
+            "value": "Same supplier, API version and retirement event. B links back to A; it adds no independent confirmation."
+          }
+        ],
+        "fields": [
+          {
+            "label": "Recommended action",
+            "value": "Inventory export jobs that use this supplier. If v1 is present, confirm the migration path and test one export."
+          },
+          {
+            "label": "Why / expected benefit",
+            "value": "The sample objective is data continuity. Finding a dependency early allows time to assess the replacement."
+          },
+          {
+            "label": "Urgency",
+            "value": "Check this week. Migration urgency depends on actual usage and the confirmed deadline."
+          },
+          {
+            "label": "Confidence",
+            "value": "Notice: high within the fixture. Business impact: provisional until your team checks actual API usage."
+          },
+          {
+            "label": "Human decision",
+            "value": "Awaiting {{report.owner}}: approve the inventory check, defer, or request evidence."
+          }
+        ],
+        "events": [
+          {
+            "title": "Source fact",
+            "detail": "A states a 60-day retirement window; B repeats it."
+          },
+          {
+            "title": "Analysis",
+            "detail": "A dependent export could be interrupted. This is a conditional implication, not an observed incident."
+          },
+          {
+            "title": "Next evidence needed",
+            "detail": "Current export configuration, supplier terms and replacement compatibility."
+          }
+        ],
+        "notice": "Source URLs are mock fixture references. Production reports retain genuine canonical links and supporting excerpts."
+      },
+      "statuses": [
+        "Source evidence visible",
+        "Recommendation awaiting human review"
+      ]
+    },
+    {
+      "id": "reliability",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Know when the briefing is incomplete",
+      "caption": "Collection health, report history and relevance feedback remain attached to the report.",
+      "beat": "Feed F did not respond. Show the retry and the partial-coverage label on INT-014. The feedback changes the next profile version and keeps the original report intact.",
+      "details": [
+        "Retry transient failures with a bounded policy; alert your team when retries are exhausted.",
+        "Persist source status, collection errors, analysis failures and report versions for investigation.",
+        "Use labeled feedback to tune relevance weights and evaluate the next version against a held-out review set."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Collection health and learning history",
+        "subtitle": "{{report.id}} \u00b7 source monitoring and audit trail",
+        "sourceTitle": "Configuration and coverage",
+        "sourceFields": [
+          {
+            "label": "Feed F",
+            "value": "Collection timeout at 07:00. No item included from this feed."
+          },
+          {
+            "label": "Report status",
+            "value": "Partial coverage shown on {{report.id}}. Four successfully fetched items processed."
+          },
+          {
+            "label": "Profile settings",
+            "value": "Add/remove feeds; change topic priority; choose daily or weekly delivery."
+          }
+        ],
+        "fields": [
+          {
+            "label": "Retry / alert",
+            "value": "Retry failed feed at 07:15. If retry fails, alert {{report.owner}} and retain the coverage warning."
+          },
+          {
+            "label": "History",
+            "value": "{{report.id}} v1 archived with source excerpts, ranking reasons and collection status."
+          },
+          {
+            "label": "Feedback",
+            "value": "Your team marks DEV-03 \u201clow relevance\u201d and DEV-01 \u201cuseful recommendation\u201d."
+          },
+          {
+            "label": "Next run",
+            "value": "Profile v2 lowers competitor chatter weight. Human approval required before the changed profile is used."
+          }
+        ],
+        "events": [
+          {
+            "title": "07:00 \u00b7 feed F failed",
+            "detail": "Timeout logged with source ID and retry state; no success is fabricated."
+          },
+          {
+            "title": "07:02 \u00b7 {{report.id}} saved",
+            "detail": "Briefing version retains the partial-coverage warning and evidence references."
+          },
+          {
+            "title": "Review \u00b7 feedback recorded",
+            "detail": "Relevance labels are tied to DEV-01 and DEV-03; the original ranking remains available."
+          }
+        ],
+        "notice": "Processing failures enter the same review queue. Draft delivery can use your agreed dashboard, email or messaging channel."
+      },
+      "statuses": [
+        "Collection exception logged",
+        "Report history saved",
+        "Feedback recorded for next profile"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "Measure the pilot",
+    "title": "Less reading.",
+    "accent": "Clearer decisions.",
+    "caption": "Test the first briefing against your own topics, sources and relevance judgments.",
+    "metrics": [
+      {
+        "name": "Manual review time",
+        "direction": "down",
+        "aim": "Spend less time searching and comparing",
+        "definition": "Minutes your team spends finding, reading and comparing information for each briefing, measured before and during the pilot."
+      },
+      {
+        "name": "Relevant priorities",
+        "direction": "up",
+        "aim": "Increase useful top-ranked items",
+        "definition": "Share of top-ranked developments that your team labels relevant to an agreed objective. Keep a labeled holdout set to check changes."
+      },
+      {
+        "name": "Evidence coverage",
+        "direction": "up",
+        "aim": "Increase supported recommendations",
+        "definition": "Share of recommendations whose material claims have accessible source evidence, stated uncertainty and a human review disposition."
+      }
+    ],
+    "baselineNote": "Agree the baseline, review set and acceptance thresholds in discovery. No measured improvement is claimed here.",
+    "ctaTitle": "Reply here for a 15-minute call",
+    "ctaCopy": "Send me a message here on Upwork and we'll book a 15-minute call to choose your first topics, sources and pilot report.",
+    "beat": "I would use the first call to choose the topics and sources for a small pilot, then agree how you will judge the briefing. Send me a message here and we can book that 15-minute call."
+  }
+}

@@ -1,0 +1,532 @@
+{
+  "schemaVersion": 1,
+  "id": "email-deliverability-recovery-2115470279727513285",
+  "title": "Email Marketing List Cleanup & Setup",
+  "systemName": "Your email deliverability recovery and cart integration",
+  "account": {
+    "name": "Project Eagle",
+    "initials": "PE",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022115470279727513285",
+    "facts": [
+      "Post: email ops not actively managed for about a year; blocks by some mailbox providers; IP and domain reputation concerns.",
+      "Post asks: audit, list cleanup (invalid, bounces, complaints, inactives, suppression), SPF/DKIM/DMARC, platform recommendation and migration (Omnisend, Klaviyo, SendGrid named), custom cart integration via APIs/webhooks, abandoned-cart recovery, automations, 90-day campaign calendar, monitoring.",
+      "Post asks applicants to reference Project Eagle. Client name not verified; account label uses the post's project name.",
+      "n8n is not named in the post; it is shown as the webhook and sync layer between their custom cart, the current system and the chosen platform."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Imogen Castellano",
+      "email": "imogen.c@example.com",
+      "list": "Past buyers"
+    },
+    "cart": {
+      "id": "CART-40718",
+      "items": "Two items left in cart"
+    },
+    "domain": {
+      "sending": "mail.example.com",
+      "ip": "192.0.2.44"
+    }
+  },
+  "cover": {
+    "eyebrow": "Project Eagle email recovery",
+    "title": "From blocked sends",
+    "accent": "to a clean list that reaches the inbox.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "List cleanup and suppression",
+      "SPF, DKIM, DMARC and blocklist audit",
+      "Abandoned-cart flow from your own cart",
+      "First 30 days and migration plan"
+    ],
+    "previewSteps": [
+      {
+        "title": "Clean",
+        "detail": "Suppress bounces and complaints, hold inactive contacts."
+      },
+      {
+        "title": "Authenticate",
+        "detail": "Fix SPF, DKIM and DMARC, then clear the blocklist."
+      },
+      {
+        "title": "Recover",
+        "detail": "Send abandoned carts from your checkout to the new platform."
+      }
+    ],
+    "footer": "Illustrative sample data · no live system connected",
+    "beat": "Here's the recovery plan for your email: clean the lists, fix the sending reputation, then connect your cart to the new platform."
+  },
+  "scenes": [
+    {
+      "id": "list-cleanup",
+      "kind": "workflow",
+      "platform": "n8n",
+      "optional": false,
+      "title": "Clean every list before anything gets sent.",
+      "caption": "Bounces and complaints go to suppression, inactive contacts wait for a win-back, and only safe addresses move to the new platform.",
+      "beat": "First, the list cleanup. n8n pulls each list from your current system and tags hard bounces, spam complaints, invalid addresses and contacts who haven't engaged in a year. Imogen is a recent buyer, so she moves to the new platform. Anyone flagged goes to suppression or a slow win-back instead, so they stop hurting your reputation.",
+      "details": [
+        "Sample contact {{lead.name}}, {{lead.email}}, from the {{lead.list}} list",
+        "One suppression list covers every list and every platform",
+        "HTTP Request steps are demonstration actions; API access and field mapping are agreed with your developers."
+      ],
+      "content": {
+        "name": "List cleanup and suppression",
+        "nodes": [
+          {
+            "id": "run-audit",
+            "type": "manual_trigger",
+            "label": "Run the list audit",
+            "detail": "Start the cleanup for one list export"
+          },
+          {
+            "id": "pull-list",
+            "type": "http_request",
+            "label": "Pull list from current system",
+            "detail": "Illustrative: contacts with last open, last purchase, bounce and complaint history"
+          },
+          {
+            "id": "tag-risk",
+            "type": "edit_fields",
+            "label": "Tag bounces, complaints, inactives",
+            "detail": "Hard bounce, spam complaint, invalid address, no engagement in twelve months"
+          },
+          {
+            "id": "safe-check",
+            "type": "if",
+            "label": "Safe to mail now?",
+            "detail": "No bounce, no complaint, valid address, engaged or recent buyer"
+          },
+          {
+            "id": "load-platform",
+            "type": "http_request",
+            "label": "Add to new platform segment",
+            "detail": "Illustrative: create the contact with source list and consent date"
+          },
+          {
+            "id": "suppress",
+            "type": "google_sheets",
+            "label": "Suppress or hold for win-back",
+            "detail": "Bounces and complaints suppressed for good; inactive contacts held for a slow win-back"
+          }
+        ],
+        "edges": [
+          {
+            "from": "run-audit",
+            "to": "pull-list"
+          },
+          {
+            "from": "pull-list",
+            "to": "tag-risk"
+          },
+          {
+            "from": "tag-risk",
+            "to": "safe-check"
+          },
+          {
+            "from": "safe-check",
+            "to": "load-platform",
+            "label": "true"
+          },
+          {
+            "from": "safe-check",
+            "to": "suppress",
+            "label": "false"
+          }
+        ],
+        "runOrder": [
+          "run-audit",
+          "pull-list",
+          "tag-risk",
+          "safe-check",
+          "load-platform"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{lead.email}}",
+          "fields": [
+            {
+              "label": "List",
+              "value": "{{lead.list}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "List audit started",
+            "Contact pulled from current system",
+            "No bounce or complaint, bought recently",
+            "Safe to mail",
+            "Added to the new platform segment"
+          ]
+        },
+        "related": [
+          {
+            "title": "Suppression list",
+            "detail": "Hard bounces, complaints and unsubscribes from every list, never imported again"
+          },
+          {
+            "title": "Win-back segment",
+            "detail": "Valid but inactive contacts get a slower re-engagement before any campaign"
+          }
+        ]
+      },
+      "statuses": [
+        "List audit started",
+        "Contact pulled from current system",
+        "Risk tags checked",
+        "Safe to mail",
+        "Added to the new platform segment"
+      ]
+    },
+    {
+      "id": "sender-audit",
+      "kind": "record",
+      "platform": "workbench",
+      "optional": false,
+      "title": "See what is hurting your sender reputation.",
+      "caption": "Each authentication and blocklist finding comes with its fix and the order to do it in.",
+      "beat": "Next is the deliverability audit for your sending domain. In this sample, SPF is over its lookup limit, DKIM isn't signing for the current sender, DMARC only monitors with no reports going anywhere, and the sending IP is on one public blocklist. Each finding has its fix and who handles it, me or your developers.",
+      "details": [
+        "Sample domain {{domain.sending}}, sample IP {{domain.ip}}",
+        "DNS changes are listed for your developers to apply"
+      ],
+      "content": {
+        "name": "{{domain.sending}}",
+        "subtitle": "Deliverability audit, sample findings",
+        "sourceTitle": "What the audit checks",
+        "sourceFields": [
+          {
+            "label": "Sending domain",
+            "value": "{{domain.sending}}"
+          },
+          {
+            "label": "Sending IP",
+            "value": "{{domain.ip}}"
+          },
+          {
+            "label": "Mailbox provider blocks",
+            "value": "Sample: one major provider blocking"
+          },
+          {
+            "label": "Last actively managed",
+            "value": "About a year ago"
+          }
+        ],
+        "fields": [
+          {
+            "label": "SPF",
+            "value": "Found, over the lookup limit"
+          },
+          {
+            "label": "DKIM",
+            "value": "Not signing for the current sender"
+          },
+          {
+            "label": "DMARC",
+            "value": "Monitor only, no report address"
+          },
+          {
+            "label": "Blocklists",
+            "value": "IP listed on one public blocklist"
+          },
+          {
+            "label": "Fix order",
+            "value": "DKIM, SPF, DMARC reports, then delisting"
+          }
+        ],
+        "events": [
+          {
+            "title": "Fix DKIM signing",
+            "detail": "Publish a key for the new platform. Your developers add the DNS record."
+          },
+          {
+            "title": "Trim the SPF record",
+            "detail": "Remove old senders so the record stays under the lookup limit."
+          },
+          {
+            "title": "Turn on DMARC reports",
+            "detail": "Add a report address, then move to quarantine once the reports are clean."
+          },
+          {
+            "title": "Request delisting",
+            "detail": "Once the list is cleaned and bounces stop, file the delisting request."
+          }
+        ],
+        "notice": "Illustrative audit with sample findings. The real audit runs on your domain, DNS records and sending logs."
+      },
+      "statuses": [
+        "DKIM fix listed",
+        "SPF fix listed",
+        "DMARC reports planned",
+        "Delisting queued"
+      ]
+    },
+    {
+      "id": "cart-recovery",
+      "kind": "workflow",
+      "platform": "n8n",
+      "optional": false,
+      "title": "Recover abandoned carts from your own checkout.",
+      "caption": "Your cart sends a webhook, n8n checks the shopper, and the new email platform starts the recovery email.",
+      "beat": "Then the abandoned-cart flow. When Imogen leaves two items in your cart, your checkout sends a webhook to n8n. It maps the cart items and checks that she isn't suppressed and hasn't already paid. Then it sends the cart event to the email platform, which starts the recovery email.",
+      "details": [
+        "Sample cart {{cart.id}} for {{lead.name}}",
+        "Works with your custom cart, not a plugin",
+        "The webhook payload and event names are documented for your developers."
+      ],
+      "content": {
+        "name": "Abandoned cart recovery",
+        "nodes": [
+          {
+            "id": "cart-hook",
+            "type": "webhook",
+            "label": "Cart abandoned in your checkout",
+            "detail": "Webhook from your custom cart with {{cart.id}} and the shopper's email"
+          },
+          {
+            "id": "map-cart",
+            "type": "edit_fields",
+            "label": "Map cart items to email fields",
+            "detail": "Item names, images, cart link and abandoned time"
+          },
+          {
+            "id": "cart-check",
+            "type": "if",
+            "label": "Mailable and still unpaid?",
+            "detail": "Not on the suppression list, no order placed for {{cart.id}}"
+          },
+          {
+            "id": "send-event",
+            "type": "http_request",
+            "label": "Send cart event to email platform",
+            "detail": "Illustrative: a custom event starts the platform's abandoned-cart flow"
+          },
+          {
+            "id": "log-skip",
+            "type": "google_sheets",
+            "label": "Log skipped cart",
+            "detail": "Suppressed or already purchased, so no email is sent"
+          }
+        ],
+        "edges": [
+          {
+            "from": "cart-hook",
+            "to": "map-cart"
+          },
+          {
+            "from": "map-cart",
+            "to": "cart-check"
+          },
+          {
+            "from": "cart-check",
+            "to": "send-event",
+            "label": "true"
+          },
+          {
+            "from": "cart-check",
+            "to": "log-skip",
+            "label": "false"
+          }
+        ],
+        "runOrder": [
+          "cart-hook",
+          "map-cart",
+          "cart-check",
+          "send-event"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{cart.id}}",
+          "fields": [
+            {
+              "label": "Cart",
+              "value": "{{cart.items}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Cart abandoned",
+            "Cart items mapped",
+            "Mailable, no order yet",
+            "Recovery flow started"
+          ]
+        },
+        "related": [
+          {
+            "title": "Order webhook",
+            "detail": "A paid order stops the reminders right away"
+          },
+          {
+            "title": "Developer handoff",
+            "detail": "Payload fields and event names written up for your team"
+          }
+        ]
+      },
+      "statuses": [
+        "Cart abandoned",
+        "Cart items mapped",
+        "Mailable, no order yet",
+        "Recovery flow started"
+      ]
+    },
+    {
+      "id": "recovery-emails",
+      "kind": "messages",
+      "platform": "workbench",
+      "optional": true,
+      "title": "Read the recovery emails Imogen would get.",
+      "caption": "Two draft reminders, both stopped the moment her order comes through.",
+      "beat": "Here are the two recovery emails in this sample. The first goes out an hour after she leaves, the second the next day, and both stop as soon as her order comes in.",
+      "details": [
+        "Draft copy for review; nothing is sent from this page"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "fields": [
+          {
+            "label": "Cart",
+            "value": "{{cart.id}}"
+          },
+          {
+            "label": "Status",
+            "value": "Draft emails, sample"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Draft, first reminder",
+            "time": "One hour after",
+            "subject": "You left something in your cart",
+            "body": "Hi Imogen, your two items are still saved in your cart. Pick up where you left off whenever you're ready."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Draft, second reminder",
+            "time": "Next day",
+            "subject": "Still thinking it over?",
+            "body": "Hi Imogen, your cart is still saved. Reply to this email if you have any questions about your items."
+          }
+        ],
+        "notice": "Draft emails with sample data. The final copy and timing are set in the chosen platform."
+      },
+      "statuses": [
+        "First reminder drafted",
+        "Second reminder drafted"
+      ]
+    },
+    {
+      "id": "recovery-plan",
+      "kind": "outcome",
+      "platform": "workbench",
+      "optional": false,
+      "title": "Your first 30 days, in order.",
+      "caption": "The list is clean, the fixes are lined up, and Imogen's cart reached the new platform.",
+      "beat": "Here's where it lands. The sample list is cleaned, bad addresses are suppressed, inactive contacts wait for a win-back, and Imogen's cart reached the email platform. The plan runs from the audit to cleanup, authentication, then migration and warm-up, and ends with weekly monitoring and a campaign calendar planned ninety days out.",
+      "details": [
+        "Counts are illustrative",
+        "Platform pick follows the audit, not before it"
+      ],
+      "content": {
+        "name": "Project Eagle recovery plan",
+        "subtitle": "Sample results for {{domain.sending}}",
+        "fields": [
+          {
+            "label": "Platform choice",
+            "value": "Omnisend, Klaviyo or SendGrid, picked after the audit"
+          },
+          {
+            "label": "Campaign calendar",
+            "value": "Planned ninety days ahead"
+          },
+          {
+            "label": "Monitoring",
+            "value": "Weekly bounce, complaint and blocklist check"
+          }
+        ],
+        "stages": [
+          "Audit",
+          "Clean and suppress",
+          "Fix authentication",
+          "Migrate and warm up",
+          "Monitor"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Contacts reviewed",
+            "value": "12,400",
+            "note": "Illustrative sample list"
+          },
+          {
+            "label": "Suppressed",
+            "value": "1,860",
+            "note": "Bounces, complaints, invalid"
+          },
+          {
+            "label": "Held for win-back",
+            "value": "3,050",
+            "note": "Valid but inactive"
+          }
+        ],
+        "note": "Illustrative plan with sample counts. Real numbers come from your audit."
+      },
+      "statuses": [
+        "Audit done",
+        "List cleaned and suppressed",
+        "Authentication fixes applied",
+        "Migration and warm-up planned",
+        "Weekly monitoring set"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track the recovery",
+    "accent": "from inbox to recovered cart.",
+    "caption": "We set a baseline from the audit, then check these three every week.",
+    "metrics": [
+      {
+        "name": "Blocked and bounced sends",
+        "direction": "down",
+        "aim": "Fewer blocks and bounces",
+        "definition": "Sends rejected or bounced by mailbox providers divided by all sends."
+      },
+      {
+        "name": "Spam complaint rate",
+        "direction": "down",
+        "aim": "Fewer spam complaints",
+        "definition": "Spam complaints divided by delivered emails."
+      },
+      {
+        "name": "Carts recovered by email",
+        "direction": "up",
+        "aim": "Recover more abandoned carts",
+        "definition": "Abandoned carts paid after a recovery email divided by carts that got one."
+      }
+    ],
+    "baselineNote": "We set the baseline from your audit and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd walk through the audit plan and the cart integration with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

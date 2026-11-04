@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-architect-real-estate-brokerage-2113394730633503851-r1026",
+  "title": "Architect and implement: Real Estate lead funnels, pipelines, workflows, SMS & email nurturing",
+  "systemName": "Your brokerage buyer system",
+  "account": {"name": "Your brokerage", "initials": "YB", "operatorInitials": "LV"},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113394730633503851",
+    "facts": [
+      "California real estate brokerage, GoHighLevel architect, hourly part-time. No client or contact name in the post.",
+      "Scope: seller and buyer funnels, opportunity pipelines, workflows, SMS and email nurture, calendar booking, webinar registration and follow-up, AI lead qualification, agent recruiting funnels.",
+      "Proposal must start with 'Pipeline First'.",
+      "Fresh 2026-10-26 rebuild on the legacy sales-deck template. Buyer webinar path chosen so it does not repeat the 10/22 seller deck."
+    ]
+  },
+  "entities": {
+    "lead": {"name": "Priya Natarajan", "first": "Priya", "phone": "(555) 010 0187", "email": "priya.sample@example.com", "area": "Carlsbad or Oceanside", "home": "3 bedrooms, move by spring"},
+    "agent": {"name": "Tomas Reyes", "first": "Tomas"},
+    "webinar": {"name": "First-time buyer webinar", "day": "Tuesday"},
+    "consult": {"label": "Saturday, Nov 7 at 10:30 AM", "short": "Sat 10:30 AM"}
+  },
+  "cover": {
+    "eyebrow": "Your brokerage buyer system",
+    "title": "From your buyer webinar",
+    "accent": "to a booked consult with an agent.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["Buyer and seller funnels", "Webinar follow-up", "AI lead qualification", "Calendar booking", "Opportunity pipelines"],
+    "previewSteps": [
+      {"title": "Qualify every attendee", "detail": "After the webinar, the AI step checks pre-approval, area and move date."},
+      {"title": "Hand ready buyers to an agent", "detail": "Ready buyers get an agent and a booking link by text."},
+      {"title": "Book and track the consult", "detail": "The booked consult moves the buyer card forward in the pipeline."}
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works. We'll follow one buyer from your first-time buyer webinar to a booked consult with one of your agents.",
+    "footer": "Illustrative sample · made-up names and data"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track how many attendees",
+    "accent": "become booked buyer consults.",
+    "caption": "First we measure how your brokerage runs today, then we track the same numbers after launch.",
+    "metrics": [
+      {"name": "Webinar attendees who book", "direction": "up", "aim": "Turn more attendees into consults", "definition": "Distinct webinar attendees who book a buyer consult within the agreed window, divided by all attendees of the same webinar."},
+      {"name": "Time to the agent's first text", "direction": "down", "aim": "Reach ready buyers sooner", "definition": "Median time from the webinar ending to the first text from the assigned agent, for attendees the AI step marks ready."},
+      {"name": "Leads qualified before a call", "direction": "up", "aim": "Give agents the answers up front", "definition": "Share of new buyer, seller and webinar leads with an AI qualification saved on the contact before the first agent call."}
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times. We'll go through your pipelines and pick the first funnel to build.",
+    "beat": "I'd track how many attendees book, how fast ready buyers hear from an agent, and how many leads are qualified before a call, starting from how things run today. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "webinar-qualify-workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Qualify buyers right after the webinar.",
+      "caption": "{{lead.first}} attended, the AI step marks her ready, and she is assigned to {{agent.first}}.",
+      "beat": "{{lead.first}} attends your {{webinar.day}} night first-time buyer webinar. Thirty minutes after it ends, the AI step reads her poll answers: she's pre-approved, wants {{lead.area}}, and plans to move by spring. That makes her ready, so she goes into the buyer pipeline as Qualified, round robin gives her to {{agent.first}}, and she gets the replay with a link to book. Attendees who aren't ready get a buyer email series instead.",
+      "details": [
+        "{{webinar.name}} → AI qualifier → {{agent.name}}",
+        "Not ready yet → buyer email series, scored again when they click"
+      ],
+      "content": {
+        "name": "Buyer webinar follow-up",
+        "nodes": [
+          {"id": "w1", "type": "contact_tag", "label": "Tag added: attended webinar", "detail": "{{webinar.name}}"},
+          {"id": "w2", "type": "wait", "label": "Wait 30 minutes", "detail": "After the webinar ends"},
+          {"id": "w3", "type": "condition", "label": "AI qualifier: ready to buy?", "detail": "Pre-approval, area, move date"},
+          {"id": "w4", "type": "opportunity", "label": "Buyer pipeline: Qualified", "detail": "Poll answers kept on the card"},
+          {"id": "w5", "type": "assign_user", "label": "Round robin to buyer agents", "detail": "Assigned {{agent.name}}"},
+          {"id": "w6", "type": "sms", "label": "Text replay and booking link", "detail": "Sent as {{agent.first}}"},
+          {"id": "w7", "type": "email", "label": "Buyer email series", "detail": "Listings and lender tips"}
+        ],
+        "edges": [
+          {"from": "w1", "to": "w2"},
+          {"from": "w2", "to": "w3"},
+          {"from": "w3", "to": "w4", "label": "Ready"},
+          {"from": "w3", "to": "w7", "label": "Not yet"},
+          {"from": "w4", "to": "w5"},
+          {"from": "w5", "to": "w6"}
+        ],
+        "runOrder": ["w1", "w2", "w3", "w4", "w5", "w6"],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{webinar.name}} · attended",
+          "fields": [
+            {"label": "Status", "value": "Illustrative sample"},
+            {"label": "Looking for", "value": "{{lead.home}}"}
+          ],
+          "states": [
+            "Attended the {{webinar.day}} webinar",
+            "Waiting 30 minutes",
+            "AI result: ready, pre-approved",
+            "Buyer card in Qualified",
+            "Assigned to {{agent.name}}",
+            "Replay and booking link texted"
+          ]
+        },
+        "related": [
+          {"title": "Seller home value funnel", "detail": "Same qualifier, its own seller pipeline."},
+          {"title": "Agent recruiting funnel", "detail": "Applicants scored against your hiring criteria."}
+        ]
+      },
+      "statuses": [
+        "Webinar attendance tagged",
+        "Waited 30 minutes",
+        "AI qualifier: ready",
+        "Card in Qualified",
+        "{{agent.name}} assigned",
+        "Booking link texted"
+      ],
+      "optional": false
+    },
+    {
+      "id": "buyer-consult-booking",
+      "kind": "funnel",
+      "platform": "ghl",
+      "content": {
+        "surface": "booking",
+        "name": "Buyer consult calendar",
+        "subtitle": "Opened from {{agent.first}}'s text",
+        "brand": "Your brokerage",
+        "heading": "Book your buyer consult",
+        "body": "Pick a time with {{agent.first}} to go over your pre-approval, neighborhoods and next steps.",
+        "cta": "Confirm booking",
+        "booking": {
+          "service": "Buyer consult",
+          "durationMinutes": 30,
+          "location": "Phone call",
+          "staff": "{{agent.name}}",
+          "staffOptions": ["{{agent.name}}", "Next available buyer agent"],
+          "slots": ["09:00", "10:30", "13:00", "15:30"],
+          "dateISO": "2026-11-07",
+          "timezone": "America/Los_Angeles",
+          "timezoneLabel": "Pacific Time",
+          "selectedSlot": "10:30",
+          "smsConsent": true,
+          "contact": {"name": "{{lead.name}}", "email": "{{lead.email}}", "phone": "{{lead.phone}}"}
+        }
+      },
+      "title": "She books straight from the text.",
+      "caption": "{{lead.first}} picks {{consult.short}} on {{agent.first}}'s buyer consult calendar.",
+      "beat": "{{lead.first}} taps the link and lands on {{agent.first}}'s buyer consult calendar. She picks {{consult.label}}, her details are already filled in, and she agrees to text reminders. Booking here is what moves her card forward in the pipeline.",
+      "details": [
+        "{{agent.name}} · Buyer consult · 30 minutes",
+        "{{consult.label}} · Pacific Time · SMS reminders on"
+      ],
+      "statuses": ["Calendar opened from the text", "{{consult.short}} booked with {{agent.first}}"],
+      "optional": false
+    },
+    {
+      "id": "consult-reminders",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "Confirmations and a reminder go out.",
+      "caption": "{{agent.first}} gets her AI notes and {{lead.first}} gets a reminder the day before.",
+      "beat": "Once she books, {{lead.first}} gets a confirmation text and {{agent.first}} gets an internal note with her AI answers, so he walks in prepared. The day before, she gets a reminder, and her reply lands in the same conversation.",
+      "details": [
+        "Confirmation → note to {{agent.first}} → reminder → reply",
+        "Texting stops on STOP or a reschedule"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}}",
+        "fields": [
+          {"label": "Agent", "value": "{{agent.name}}"},
+          {"label": "Consult", "value": "{{consult.label}}"}
+        ],
+        "items": [
+          {"channel": "sms", "direction": "outgoing", "sender": "{{agent.name}}", "time": "Tue 7:41 pm", "body": "You're booked for a buyer consult with {{agent.first}} on {{consult.label}}. Reply R if you need a different time."},
+          {"channel": "internal", "direction": "outgoing", "sender": "Workflow", "time": "Tue 7:41 pm", "body": "{{lead.name}} booked {{consult.short}}. AI notes: pre-approved, wants {{lead.area}}, {{lead.home}}."},
+          {"channel": "sms", "direction": "outgoing", "sender": "{{agent.name}}", "time": "Fri 10:30 am", "body": "Hi {{lead.first}}, quick reminder about our call tomorrow at 10:30 AM. Have your pre-approval letter handy if you can."},
+          {"channel": "sms", "direction": "incoming", "sender": "{{lead.name}}", "time": "Fri 10:44 am", "body": "Sounds good, talk tomorrow!"}
+        ],
+        "notice": "Sample texts with a made-up contact."
+      },
+      "statuses": ["Confirmation texted", "{{agent.first}} gets AI notes", "Reminder sent", "{{lead.first}} replies"],
+      "optional": true
+    },
+    {
+      "id": "buyer-pipeline-result",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "Priya is now a booked buyer consult.",
+      "caption": "Illustrative: her card moves from Attended to Consult booked, owned by {{agent.first}}.",
+      "beat": "Here's the result in the buyer pipeline. {{lead.first}} moved from Attended, to Qualified, to Consult booked, with {{agent.first}} as her agent and the webinar kept as her source. Your seller funnel and agent recruiting run the same way, each in its own pipeline.",
+      "details": [
+        "Attended → Qualified → Consult booked",
+        "Seller and recruiting pipelines follow the same pattern"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Buyer pipeline · source: {{webinar.name}}",
+        "fields": [
+          {"label": "Agent", "value": "{{agent.name}}"},
+          {"label": "AI qualifier", "value": "Ready, pre-approved"},
+          {"label": "Consult", "value": "{{consult.label}}"}
+        ],
+        "stages": ["Registered", "Attended", "Qualified", "Consult booked", "Touring homes"],
+        "stageSequence": [1, 2, 3],
+        "metrics": [
+          {"label": "Buyer stage", "value": "Consult booked", "note": "Sample buyer, not a result"},
+          {"label": "Agent", "value": "{{agent.first}}", "note": "Assigned by round robin"},
+          {"label": "Pipelines", "value": "3", "note": "Buyer, seller, recruiting · starting point"}
+        ],
+        "note": "Stage names and the number of pipelines are a starting point we shape together. Sample data only.",
+        "proof": {
+          "label": "Relevant past project · lender",
+          "value": "$5M in loan applications",
+          "description": "Generated in 30 days for a lender.",
+          "sourceNote": "Past project, separate from this sample. Applications, not funded loans."
+        }
+      },
+      "statuses": ["Attended", "Qualified", "Consult booked · source kept"],
+      "optional": false
+    }
+  ]
+}

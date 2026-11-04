@@ -1,0 +1,378 @@
+{
+  "schemaVersion": 1,
+  "id": "clay-executive-contacts-cold-email-2112900978688649314",
+  "title": "Verified executive contacts and cold email inboxes",
+  "systemName": "Contact list and sending setup",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112900978688649314",
+    "facts": [
+      "Post requests about 150 verified contacts (founders and CEOs of consumer and subscription companies, lower middle market sell-side bankers and brokers) with name, title, company, LinkedIn URL, verified email and email source; under 3% bounce on verification with report; 2 to 3 inboxes on a secondary domain with SPF, DKIM, DMARC and warm-up in Instantly or Smartlead; short handoff doc; all accounts under the client's ownership.",
+      "No client name in the post. 'Margaux' is the required first proposal word, not a verified name. Fallback used: your team.",
+      "Clay has no accepted native renderer (02-UI-REFERENCE-GUIDE: reference only, no saved table image). Demo uses the explicitly custom workbench to show the deliverable package and never labels it as Clay or Instantly.",
+      "All contacts, companies, domains and LinkedIn URLs are fictional (.example domain). Figures shown are the client's own targets, not past results. No live enrichment, verification, DNS change or warm-up is claimed."
+    ]
+  },
+  "entities": {
+    "contact": {
+      "name": "Dana Reyes",
+      "title": "Founder and CEO",
+      "company": "Brightbox Subscriptions",
+      "size": "about 50 people",
+      "linkedin": "linkedin.com/in/sample-dana-reyes",
+      "email": "dana@brightbox.example",
+      "alt": "hello@brightbox.example"
+    },
+    "verifier": {
+      "name": "MillionVerifier"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Your verified contact list.",
+    "accent": "And inboxes ready to send.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "About 150 verified contacts",
+      "Every email has its source",
+      "Inboxes on a domain you own"
+    ],
+    "previewSteps": [
+      {
+        "title": "Build the list",
+        "detail": "Founders, CEOs, bankers and brokers that match your criteria."
+      },
+      {
+        "title": "Verify every email",
+        "detail": "Only valid emails stay on the list."
+      },
+      {
+        "title": "Set up your inboxes",
+        "detail": "SPF, DKIM and DMARC set up, with warm-up running."
+      }
+    ],
+    "footer": "Illustrative sample · fictional contacts and domains.",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works. You'll see how the list gets built, how every email gets checked, and how your inboxes get set up."
+  },
+  "scenes": [
+    {
+      "id": "build-flow",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Here's how your list gets built.",
+      "caption": "Your criteria go in. A verified list and warmed inboxes come out.",
+      "beat": "It starts with your criteria. Clay finds each company and the right person, and I cross-check them on LinkedIn. Every email keeps a note of where it was found. Then every email gets verified, and anything risky comes off the list. Last, I set up two or three inboxes on a separate domain you own, and hand you a short guide.",
+      "details": [
+        "0:10 to 0:40. Point to each step from left to right, then to the ownership note on the right.",
+        "Custom project workspace. This is a process view, not the Clay or Instantly interface."
+      ],
+      "optional": false,
+      "content": {
+        "name": "How your list and inboxes get built",
+        "subtitle": "Precision work, about 150 contacts.",
+        "nodes": [
+          {
+            "id": "criteria",
+            "label": "Start from your criteria",
+            "detail": "Founders and CEOs of consumer and subscription companies, plus bankers and brokers in the lower middle market."
+          },
+          {
+            "id": "find",
+            "label": "Find the right person in Clay",
+            "detail": "Clay finds the company and the decision maker. I check each one against their LinkedIn profile."
+          },
+          {
+            "id": "email",
+            "label": "Find the email and note the source",
+            "detail": "Each row keeps the email and the provider that found it."
+          },
+          {
+            "id": "verify",
+            "label": "Verify every email",
+            "detail": "Every email is checked before it goes on the list. Risky or unknown emails come off."
+          },
+          {
+            "id": "inboxes",
+            "label": "Set up your sending inboxes",
+            "detail": "Two or three inboxes on a separate domain, with SPF, DKIM and DMARC set up and warm-up running."
+          },
+          {
+            "id": "handoff",
+            "label": "Hand over the list and a short guide",
+            "detail": "So you can add contacts and inboxes yourself later."
+          }
+        ],
+        "edges": [
+          {
+            "from": "criteria",
+            "to": "find"
+          },
+          {
+            "from": "find",
+            "to": "email"
+          },
+          {
+            "from": "email",
+            "to": "verify"
+          },
+          {
+            "from": "verify",
+            "to": "inboxes"
+          },
+          {
+            "from": "inboxes",
+            "to": "handoff"
+          }
+        ],
+        "runOrder": [
+          "criteria",
+          "find",
+          "email",
+          "verify",
+          "inboxes",
+          "handoff"
+        ],
+        "context": {
+          "name": "Who owns what",
+          "subtitle": "Everything stays in your name",
+          "fields": [
+            {
+              "label": "Domain",
+              "value": "Bought in your account."
+            },
+            {
+              "label": "Inboxes",
+              "value": "Created under your account."
+            },
+            {
+              "label": "Sending tool",
+              "value": "Instantly or Smartlead, in your account."
+            },
+            {
+              "label": "List",
+              "value": "Built from your criteria. No resold databases."
+            }
+          ],
+          "states": [
+            "Criteria set",
+            "People found",
+            "Emails found",
+            "Emails verified",
+            "Inboxes warming",
+            "Guide handed over"
+          ]
+        },
+        "related": [
+          {
+            "title": "Built from scratch",
+            "detail": "Every contact comes from your criteria, not a bought list."
+          },
+          {
+            "title": "Report included",
+            "detail": "You can check every email's verification result yourself."
+          }
+        ]
+      },
+      "statuses": [
+        "Criteria set",
+        "People found",
+        "Emails found",
+        "Emails verified",
+        "Inboxes warming",
+        "Guide handed over"
+      ]
+    },
+    {
+      "id": "sample-contact",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Here's one row from your list.",
+      "caption": "Every contact has a name, title, company, LinkedIn, a verified email and where that email came from.",
+      "beat": "Here's one sample row. Dana Reyes is the founder and CEO of Brightbox Subscriptions, about fifty people. Her email isn't listed anywhere, so Clay looked it up, and the row notes where it came from. The verifier marked it valid. A second address came back as catch-all, so it stayed off the list.",
+      "details": [
+        "0:40 to 1:10. Point to the email source, then the verification result, then the catch-all address that was left out.",
+        "Illustrative sample row. Fictional person and company."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{contact.name}}",
+        "subtitle": "Sample row from your contact list",
+        "sourceTitle": "Where it came from",
+        "sourceFields": [
+          {
+            "label": "Company",
+            "value": "{{contact.company}}, {{contact.size}}"
+          },
+          {
+            "label": "LinkedIn",
+            "value": "{{contact.linkedin}}"
+          },
+          {
+            "label": "Email source",
+            "value": "Clay email lookup, then verified"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Name",
+            "value": "{{contact.name}}"
+          },
+          {
+            "label": "Title",
+            "value": "{{contact.title}}"
+          },
+          {
+            "label": "Company",
+            "value": "{{contact.company}}"
+          },
+          {
+            "label": "LinkedIn URL",
+            "value": "{{contact.linkedin}}"
+          },
+          {
+            "label": "Verified email",
+            "value": "{{contact.email}}"
+          },
+          {
+            "label": "Verification",
+            "value": "Valid, checked with {{verifier.name}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Right person confirmed",
+            "detail": "Founder and CEO on the company site and on LinkedIn."
+          },
+          {
+            "title": "Email found and verified",
+            "detail": "{{contact.email}} came back valid from {{verifier.name}}."
+          },
+          {
+            "title": "Risky email left out",
+            "detail": "{{contact.alt}} came back as catch-all, so it stays off the list."
+          }
+        ],
+        "notice": "Illustrative sample row. Your real list is built from the criteria you send."
+      },
+      "statuses": [
+        "Right person confirmed",
+        "Email verified",
+        "Risky email left out"
+      ]
+    },
+    {
+      "id": "report-and-inboxes",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Your report and your inboxes.",
+      "caption": "You get the verification report, and your inboxes are warming up on a domain you own.",
+      "beat": "This is what you get at the end. About a hundred and fifty contacts, each one checked, and a verification report so you can see the bounce rate yourself. The goal is under three percent. Your separate domain has SPF, DKIM and DMARC set up, and two or three inboxes are warming up in Instantly or Smartlead, all in your accounts.",
+      "details": [
+        "1:10 to 1:40. Point to the bounce goal, then the DNS records, then the warm-up stage.",
+        "The numbers shown are your targets from the post, not past results."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Verification report and sending setup",
+        "subtitle": "Everything handed over in your accounts",
+        "fields": [
+          {
+            "label": "Domain",
+            "value": "A separate domain you own"
+          },
+          {
+            "label": "DNS records",
+            "value": "SPF, DKIM and DMARC set up and checked"
+          },
+          {
+            "label": "Warm-up",
+            "value": "Running in Instantly or Smartlead"
+          },
+          {
+            "label": "Guide",
+            "value": "How to add contacts and inboxes yourself"
+          }
+        ],
+        "stages": [
+          "List built",
+          "Emails verified",
+          "Domain set up",
+          "Inboxes warming",
+          "Handed over"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Contacts",
+            "value": "About 150",
+            "note": "Founders, CEOs, bankers and brokers"
+          },
+          {
+            "label": "Bounce goal",
+            "value": "Under 3%",
+            "note": "Shown in the verification report"
+          },
+          {
+            "label": "Inboxes",
+            "value": "2 to 3",
+            "note": "On a separate domain you own"
+          }
+        ],
+        "note": "Illustrative sample. These numbers are your targets, not results.",
+        "proof": {
+          "label": "Verification report",
+          "value": "Included with the list",
+          "description": "Shows the result for every email, so you can check the bounce rate yourself.",
+          "sourceNote": "Illustrative sample. Your real report comes from the verifier."
+        }
+      },
+      "statuses": [
+        "List built",
+        "Emails verified",
+        "Domain set up",
+        "Inboxes warming",
+        "Handed over"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "The next step",
+    "title": "Let's go over",
+    "accent": "your search criteria.",
+    "caption": "We'll start with the companies and roles you want on the list.",
+    "metrics": [
+      {
+        "name": "Bounce rate",
+        "direction": "down",
+        "aim": "Keep bounces low from the first send",
+        "definition": "Check the verification report first, then track bounces once sending starts."
+      },
+      {
+        "name": "Contacts that fit",
+        "direction": "up",
+        "aim": "More of the list matches the people you want",
+        "definition": "Check a sample of rows against your criteria before the list is handed over."
+      },
+      {
+        "name": "Time to add contacts",
+        "direction": "down",
+        "aim": "Add new contacts and inboxes on your own",
+        "definition": "Follow the guide to add a contact and an inbox without outside help."
+      }
+    ],
+    "baselineNote": "We'll agree on the criteria first, then check the list against them.",
+    "ctaTitle": "Reply here for a 15-minute call",
+    "ctaCopy": "Send me a message on Upwork. I'll send over a few times for a 15-minute call to go over your criteria and get started.",
+    "beat": "Send me a message here on Upwork, and I'll send over a few times for a quick 15-minute call. We'll go over your criteria and get started."
+  }
+}

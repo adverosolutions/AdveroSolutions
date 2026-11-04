@@ -1,0 +1,459 @@
+{
+  "schemaVersion": 1,
+  "id": "b2b-cold-email-research-reply-tracking-2114739857960227730",
+  "title": "Researched cold emails, handled replies and a weekly report for AVD",
+  "systemName": "AVD outreach desk",
+  "account": {
+    "name": "Albert Venture Design",
+    "initials": "AV",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114739857960227730",
+    "facts": [
+      "Post: Albert Venture Design (AVD) wants a cold email outreach specialist for lead generation and sales outreach.",
+      "Post: research target prospects, build and run B2B cold email campaigns, personalized messaging, follow-ups for qualified leads.",
+      "Post: keep deliverability healthy, track performance, regular reporting on open rates, replies and booked meetings.",
+      "Post: experience with outreach platforms, prospect research and improving results through testing."
+    ]
+  },
+  "entities": {
+    "prospect": {
+      "name": "Dana Whitlock",
+      "first": "Dana",
+      "role": "Head of Operations",
+      "company": "Corbel Freight",
+      "domain": "corbelfreight.example",
+      "email": "dana@corbelfreight.example",
+      "fact": "a second warehouse opening in Columbus"
+    },
+    "sender": {
+      "name": "Sam",
+      "email": "sam@avd-outreach.example"
+    },
+    "campaign": {
+      "name": "US logistics, October",
+      "batch": "40 prospects"
+    },
+    "meeting": {
+      "time": "next Tuesday at 10:00 AM Eastern",
+      "owner": "AVD sales lead"
+    },
+    "test": {
+      "a": "Columbus warehouse",
+      "b": "Quick question, Dana"
+    }
+  },
+  "cover": {
+    "eyebrow": "AVD outreach desk",
+    "title": "Cold emails people answer,",
+    "accent": "and a report on every reply.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n research flow",
+      "Sequence and reply",
+      "Weekly report"
+    ],
+    "previewSteps": [
+      {
+        "title": "Research",
+        "detail": "Each prospect's website is read and one real fact becomes the first line."
+      },
+      {
+        "title": "Follow up",
+        "detail": "Follow-ups stop the moment someone replies, and qualified replies get a meeting."
+      },
+      {
+        "title": "Report",
+        "detail": "Every week you see opens, replies, booked meetings and what the latest test changed."
+      }
+    ],
+    "footer": "Sample prospects and numbers · no live accounts connected",
+    "beat": "You asked for research, personal emails, follow-ups and regular reporting. I'll follow one sample prospect through all of it."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "More replies from the right people,",
+    "accent": "and more meetings on the calendar.",
+    "caption": "We agree a starting point from your first two weeks of sending, then track these three in the weekly report.",
+    "metrics": [
+      {
+        "name": "Interested replies",
+        "direction": "up",
+        "aim": "More prospects reply with interest",
+        "definition": "Replies that show interest or ask a question, as a share of prospects emailed."
+      },
+      {
+        "name": "Meetings booked",
+        "direction": "up",
+        "aim": "More qualified replies turn into a meeting",
+        "definition": "Meetings booked from campaign replies each week."
+      },
+      {
+        "name": "Open rate",
+        "direction": "up",
+        "aim": "More prospects open the first email",
+        "definition": "Prospects who open at least one email, as a share of prospects emailed. Read alongside replies, since some inboxes block open tracking."
+      }
+    ],
+    "baselineNote": "Your first two weeks of sending set the starting point. We agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd start with your target list and your offer, and we'd pick the first test together. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "research-to-first-line",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "Every first line comes from their own website.",
+      "caption": "n8n reads each prospect's site, writes one personal first line from a real fact, and adds it to the research sheet.",
+      "beat": "Here is the research flow for one batch. For {{prospect.name}} at {{prospect.company}}, it reads their website, finds {{prospect.fact}}, and writes a first line about it. If no real fact turns up, the prospect goes to a person instead of getting a generic line.",
+      "details": [
+        "Sample prospect: {{prospect.name}}, {{prospect.role}}, {{prospect.company}}",
+        "Fact found on {{prospect.domain}}: {{prospect.fact}}",
+        "The AI step is an HTTP Request; the model and account are set up with you."
+      ],
+      "content": {
+        "name": "Prospect research and first lines",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "manual_trigger",
+            "label": "Start research batch",
+            "detail": "{{campaign.batch}} for {{campaign.name}}"
+          },
+          {
+            "id": "site",
+            "type": "http_request",
+            "label": "Read prospect website",
+            "detail": "Pulls the news and about pages on {{prospect.domain}}"
+          },
+          {
+            "id": "write",
+            "type": "http_request",
+            "label": "Write personal first line",
+            "detail": "One sentence built on a fact from their site"
+          },
+          {
+            "id": "found",
+            "type": "if",
+            "label": "Real fact found?",
+            "detail": "The first line names something from their own pages"
+          },
+          {
+            "id": "sheet",
+            "type": "google_sheets",
+            "label": "Add to research sheet",
+            "detail": "Prospect, fact, first line and subject variant"
+          },
+          {
+            "id": "hold",
+            "type": "edit_fields",
+            "label": "Mark for manual research",
+            "detail": "No generic line goes out"
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "site"
+          },
+          {
+            "from": "site",
+            "to": "write"
+          },
+          {
+            "from": "write",
+            "to": "found"
+          },
+          {
+            "from": "found",
+            "to": "sheet",
+            "label": "true"
+          },
+          {
+            "from": "found",
+            "to": "hold",
+            "label": "false"
+          }
+        ],
+        "runOrder": [
+          "start",
+          "site",
+          "write",
+          "found",
+          "sheet"
+        ],
+        "context": {
+          "name": "{{prospect.name}}",
+          "subtitle": "{{prospect.role}} · {{prospect.company}}",
+          "fields": [
+            {
+              "label": "Email",
+              "value": "{{prospect.email}}"
+            },
+            {
+              "label": "Campaign",
+              "value": "{{campaign.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Batch started",
+            "Website read",
+            "First line written about {{prospect.fact}}",
+            "Real fact confirmed",
+            "Added to the research sheet"
+          ]
+        },
+        "related": [
+          {
+            "title": "Research sheet",
+            "detail": "One row per prospect, with the fact and where it came from."
+          },
+          {
+            "title": "Outreach platform",
+            "detail": "The sheet feeds whichever sending tool you use."
+          }
+        ]
+      },
+      "statuses": [
+        "Batch started",
+        "Website read",
+        "First line written",
+        "Real fact confirmed",
+        "Added to research sheet"
+      ],
+      "optional": false
+    },
+    {
+      "id": "research-row",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "One row per prospect, with the proof.",
+      "caption": "The research sheet keeps the fact, where it came from, and which subject line the prospect gets.",
+      "beat": "This is {{prospect.name}}'s row. You can see the fact, the page it came from, and the first line it produced. Half the batch gets subject A and half gets subject B, so the weekly report can tell which one works.",
+      "details": [
+        "Subject A: {{test.a}}",
+        "Subject B: {{test.b}}"
+      ],
+      "content": {
+        "name": "{{prospect.name}}",
+        "subtitle": "{{prospect.role}} · {{prospect.company}}",
+        "sourceTitle": "Research",
+        "sourceFields": [
+          {
+            "label": "Company site",
+            "value": "{{prospect.domain}}"
+          },
+          {
+            "label": "Fact",
+            "value": "{{prospect.fact}}"
+          },
+          {
+            "label": "Found on",
+            "value": "Company news page"
+          },
+          {
+            "label": "Role check",
+            "value": "{{prospect.role}}, listed on the team page"
+          }
+        ],
+        "fields": [
+          {
+            "label": "First line",
+            "value": "Saw that {{prospect.company}} is opening a second warehouse in Columbus."
+          },
+          {
+            "label": "Subject line",
+            "value": "Variant A: {{test.a}}"
+          },
+          {
+            "label": "Campaign",
+            "value": "{{campaign.name}}"
+          },
+          {
+            "label": "Status",
+            "value": "Ready to send"
+          }
+        ],
+        "events": [
+          {
+            "title": "Website read",
+            "detail": "News and about pages on {{prospect.domain}}."
+          },
+          {
+            "title": "First line written",
+            "detail": "Built on {{prospect.fact}}."
+          },
+          {
+            "title": "Subject variant set",
+            "detail": "Variant A, for the subject line test."
+          }
+        ],
+        "notice": "Illustrative sample prospect and research. No live accounts are connected."
+      },
+      "statuses": [
+        "Website read",
+        "First line written",
+        "Subject variant set"
+      ],
+      "optional": true
+    },
+    {
+      "id": "sequence-and-reply",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Follow-ups stop the moment they reply.",
+      "caption": "The first email opens with the researched line, one follow-up goes out, and a qualified reply turns into a booked meeting.",
+      "beat": "Here's the thread with {{prospect.first}}. The first email opens with the Columbus warehouse. Three days later a short follow-up goes out. When {{prospect.first}} replies asking for times, the rest of the sequence stops, the reply is marked qualified, and the meeting is booked for {{meeting.time}} with the {{meeting.owner}}.",
+      "details": [
+        "Sender: {{sender.name}}, {{sender.email}}",
+        "Meeting: {{meeting.time}}, owner {{meeting.owner}}"
+      ],
+      "content": {
+        "name": "{{prospect.name}}",
+        "subtitle": "{{prospect.company}} · {{campaign.name}}",
+        "fields": [
+          {
+            "label": "Prospect",
+            "value": "{{prospect.email}}"
+          },
+          {
+            "label": "Sequence",
+            "value": "Email 1 and follow-up, then stopped on reply"
+          },
+          {
+            "label": "Lead status",
+            "value": "Qualified, meeting booked"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{sender.name}}",
+            "time": "Monday 9:10 AM",
+            "subject": "{{test.a}}",
+            "body": "Hi {{prospect.first}}, saw that {{prospect.company}} is opening a second warehouse in Columbus. When a team adds a site, a lot of work lands at once. Open to a short call to see if AVD can help with it?"
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{sender.name}}",
+            "time": "Thursday 9:05 AM",
+            "subject": "Re: {{test.a}}",
+            "body": "Hi {{prospect.first}}, just bringing this back up in case the timing works better now that Columbus is getting closer."
+          },
+          {
+            "channel": "email",
+            "direction": "incoming",
+            "sender": "{{prospect.name}}",
+            "time": "Thursday 2:40 PM",
+            "subject": "Re: {{test.a}}",
+            "body": "Hi {{sender.name}}, good timing actually. Can you send a couple of times for next week?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Outreach desk",
+            "time": "Thursday 2:52 PM",
+            "body": "Qualified reply. Sequence stopped. Times sent and meeting booked for {{meeting.time}} with the {{meeting.owner}}, research notes attached."
+          }
+        ],
+        "notice": "Illustrative sample thread. Nothing here is sent."
+      },
+      "statuses": [
+        "First email sent",
+        "Follow-up sent",
+        "Dana replied",
+        "Meeting booked"
+      ],
+      "optional": false
+    },
+    {
+      "id": "weekly-report",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Every week: opens, replies and booked meetings.",
+      "caption": "The weekly report shows how the batch moved and which subject line won the test.",
+      "beat": "This is the weekly report for {{campaign.name}}. You see how many prospects were researched, emailed, replied and booked, and the subject line test result. Next week's batch uses the winning subject, and we test something new.",
+      "details": [
+        "All numbers are sample values for one batch of {{campaign.batch}}",
+        "The test result decides next week's subject line"
+      ],
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "Weekly report · {{campaign.batch}}",
+        "fields": [
+          {
+            "label": "Researched",
+            "value": "40 prospects"
+          },
+          {
+            "label": "Emailed",
+            "value": "36, four held for manual research"
+          },
+          {
+            "label": "Replies",
+            "value": "5, of which 3 qualified"
+          },
+          {
+            "label": "Booked",
+            "value": "2 meetings, including {{prospect.name}}"
+          }
+        ],
+        "stages": [
+          "Researched",
+          "Emailed",
+          "Replied",
+          "Qualified",
+          "Meeting booked"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Open rate",
+            "value": "58%",
+            "note": "Sample week"
+          },
+          {
+            "label": "Replies",
+            "value": "5",
+            "note": "Sample week, 3 qualified"
+          },
+          {
+            "label": "Meetings booked",
+            "value": "2",
+            "note": "Sample week"
+          }
+        ],
+        "note": "Illustrative sample report. Real numbers come from your own campaigns.",
+        "proof": {
+          "label": "Subject line test",
+          "value": "A won",
+          "description": "Subject A, \"{{test.a}}\", got more replies than subject B, \"{{test.b}}\".",
+          "sourceNote": "Sample test on one batch"
+        }
+      },
+      "statuses": [
+        "Researched",
+        "Emailed",
+        "Replied",
+        "Qualified",
+        "Meeting booked"
+      ],
+      "optional": false
+    }
+  ]
+}

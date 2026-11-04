@@ -1,0 +1,100 @@
+url: https://www.upwork.com/jobs/~022113396734814561387
+n8n AI Automation Specialist – Customer Support Email Workflow
+Fixed price, intermediate, 1 to hire. Client in Texas (US), timezone America/Sao_Paulo. Client record: 100 contracts, 88 jobs with hires, 3 active, 80 jobs posted, 5.0 over 62 reviews, hire rate 100%. Category: AI Apps & Integration. Fetched read-only 2026-10-22 7:03 PM CT via Upwork connector. 2 invites sent, 0 interviewing, 0 hired. Connects to apply: 14.
+Private notes (not for the page): two separate freelancer reviews name "Saqib" (U-006 evidence, kept private). Client work history shows two earlier closed contracts titled "AI Automation Specialist Needed for n8n Customer Support Workflow" (Sept 2026), so this is a repeat of a similar project.
+
+Project Overview
+
+We’re looking for an experienced n8n AI Automation Specialist to build and document an AI-powered customer support email workflow for our internal agency operations.
+
+The workflow should identify incoming support emails, retrieve relevant information from our knowledge base, generate appropriate AI-assisted responses, and reply through Gmail while preserving the original email thread.
+
+We need a reliable, well-organized, and maintainable solution that our team can configure, test, and activate after handover.
+
+Scope of Work
+
+1. Workflow Development
+
+Build an n8n workflow following this process:
+
+Gmail → AI Classification → Knowledge Retrieval (RAG) → AI Response Generation → Gmail Reply
+
+The workflow should:
+
+- Monitor incoming emails through a Gmail trigger.
+- Capture the sender, subject, email body, message ID, and thread ID.
+- Classify incoming emails using an OpenAI model to identify customer support requests.
+- Route non-support emails out of the workflow without generating unnecessary responses.
+- Retrieve relevant information from an existing Pinecone knowledge base using OpenAI embeddings.
+- Generate clear, professional, context-aware responses using an OpenAI model.
+- Reply through Gmail while preserving the original email thread where supported.
+- Include a simple human-escalation path when the knowledge base does not provide sufficient information.
+
+2. Integrations & Reliability
+
+Configure and validate the following integrations:
+
+- n8n workflow and credentials
+- Gmail / Google Workspace
+- OpenAI API
+- Pinecone vector database and existing knowledge index
+
+Additional requirements:
+
+- Implement basic error handling and retry logic where appropriate.
+- Handle missing or insufficient knowledge gracefully.
+- Avoid hard-coding API keys or credentials.
+- Keep the workflow modular, readable, and easy to maintain.
+
+Credentials and access to the required services will be provided by us.
+
+3. Testing & Validation
+
+Test the complete workflow against representative scenarios, including:
+
+- Support and non-support emails
+- Relevant and irrelevant knowledge-base results
+- Appropriate AI response generation
+- Missing or insufficient knowledge
+- Gmail thread continuity
+- Credential or integration failures
+- End-to-end workflow execution
+
+Provide a concise testing summary and validation checklist documenting the results.
+
+4. Documentation & Handover
+
+The final delivery must include:
+
+1. Workflow Design & Integration Mapping – Explanation of the workflow nodes, integrations, and data flow.
+2. Process Flow Diagram – Visual representation of the automation process.
+3. Testing Notes & Validation Checklist – Scenarios tested, results, and known limitations.
+4. Project Handover Summary – Setup instructions, credential configuration, activation steps, and maintenance notes.
+5. Importable n8n Workflow JSON – The completed workflow, ready to import into our n8n environment.
+
+Required Experience
+
+- Hands-on experience building n8n automation workflows
+- Practical experience with OpenAI APIs and LLM-powered automation
+- Understanding of Retrieval-Augmented Generation (RAG), embeddings, and vector databases
+- Experience integrating Gmail or Google Workspace APIs
+- Familiarity with Pinecone
+- Knowledge of API authentication, error handling, and workflow testing
+- Ability to document and hand over a solution clearly
+
+Definition of Done
+
+The project will be considered complete when the workflow is delivered in importable JSON format, the agreed integrations and workflow paths are configured, representative test scenarios have been executed, and the documentation and handover materials are provided.
+
+This is a one-time implementation project. We value clear communication, maintainable automation, proper testing, and a complete handover.
+
+ow to Apply
+
+Please include:
+
+- A brief summary of your n8n and AI automation experience.
+- One or two relevant examples of n8n workflows you have built.
+- Your experience with OpenAI, Pinecone, RAG, and Gmail integration.
+- Any assumptions or dependencies you would want to confirm before starting.
+
+We look forward to working with someone who can deliver a reliable, well-documented solution.

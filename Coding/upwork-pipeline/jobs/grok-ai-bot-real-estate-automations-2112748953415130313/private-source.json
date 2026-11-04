@@ -1,0 +1,232 @@
+{
+  "applied": false,
+  "bid_stats_basis": {
+    "contract_type": "HOURLY",
+    "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+  },
+  "can_apply": true,
+  "client_feedback": {
+    "more_available": true,
+    "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nThanks\n</untrusted_participant_content>",
+        "ended": "2026-09-08T17:07:11.867Z",
+        "score": 5,
+        "title": "update website"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nAnother awesome project with Joe! always happy to help with, very interesting job, very awesome communication. Any thing always happy help with! Best client\n</untrusted_participant_content>",
+        "ended": "2026-07-09T22:42:35.491Z",
+        "score": 5,
+        "title": "Big Query"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nAnother Great job with Joe! always happy to help with any of that.\n</untrusted_participant_content>",
+        "ended": "2026-06-23T05:55:07.809Z",
+        "score": 5,
+        "title": "Google Spreadsheet automation"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nAs developer with +10 Years. Highly recommended Joe! \n\nBest client that i've worked on the Upwork for a long time, clear instructions, also give me bonus for job, very kind, communication very clear a…\n</untrusted_participant_content>",
+        "ended": "2026-05-18T18:17:38.095Z",
+        "score": 5,
+        "title": "WordPress Developer for Secure Signup/Login"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nJoe is a hilarious, quick, responsive, communicative, and simply easy to work with client. Solid client all around.\n</untrusted_participant_content>",
+        "ended": "2025-09-27T22:31:49.917Z",
+        "score": 5,
+        "title": "Real Estate Data Analyst / Lead Targeting Specialist"
+      }
+    ],
+    "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+    "shown": 5
+  },
+  "client_open_jobs": {
+    "jobs": [
+      {
+        "id": "2105759882629470056",
+        "job_type": "hourly",
+        "title": "Email Outreach (Real Estate Agents) — MUST Have Warmed Inboxes + Send 30,000+/Month (Your Own Infra)",
+        "url": "https://www.upwork.com/jobs/~022105759882629470056?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor"
+      }
+    ],
+    "note": "A sample, never a count; client_record.open_jobs also counts private jobs and this one.",
+    "selection": "at most 5 of the client's other open jobs visible to freelancers; private jobs are never listed",
+    "shown": 1
+  },
+  "client_record": {
+    "contracts_active": 5,
+    "contracts_total": 40,
+    "feedback_count": 28,
+    "feedback_score": 4.95,
+    "hire_rate_percent": 58,
+    "hours_total": 643.67,
+    "jobs_posted": 67,
+    "jobs_with_hires": 39,
+    "open_jobs": 2,
+    "spend_total": "$21,020.38"
+  },
+  "client_work_history": {
+    "closed": [
+      {
+        "ended": "2026-07-09T22:42:35.491Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2026-07-02T15:37:14.918Z",
+        "title": "Big Query",
+        "type": "FIXED"
+      },
+      {
+        "ended": "2026-06-23T05:55:07.809Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2026-06-21T04:47:10.150Z",
+        "title": "Google Spreadsheet automation",
+        "type": "HOURLY"
+      },
+      {
+        "ended": "2026-05-18T18:17:38.095Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2026-04-30T18:01:01.744Z",
+        "status": "CLOSED",
+        "title": "WordPress Developer for Secure Signup/Login",
+        "type": "HOURLY"
+      },
+      {
+        "ended": "2026-02-02T18:41:14.051Z",
+        "feedback_score": 5,
+        "started": "2026-02-02T18:36:11.322Z",
+        "title": "Another spreadsheet",
+        "type": "FIXED"
+      },
+      {
+        "ended": "2026-01-08T17:06:10.419Z",
+        "feedback_score": 5,
+        "started": "2026-01-08T16:43:43.584Z",
+        "status": "CLOSED",
+        "title": "Google Sheets Expert Needed for Data Analysis Project",
+        "type": "FIXED"
+      }
+    ],
+    "more_available": true,
+    "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+    "open": [
+      {
+        "started": "2026-10-15T15:42:19.615Z",
+        "title": "Google Spreadsheet Automation",
+        "type": "FIXED"
+      },
+      {
+        "started": "2026-08-31T17:03:32.673Z",
+        "status": "ACTIVE",
+        "title": "GoHighLevel SMS Campaign Specialist for B2B Appointment Booking",
+        "type": "FIXED"
+      },
+      {
+        "started": "2026-02-13T04:28:58.429Z",
+        "title": "Google spread sheet work",
+        "type": "FIXED"
+      },
+      {
+        "started": "2025-12-09T17:07:56.934Z",
+        "status": "ACTIVE",
+        "title": "B2B Cold Calling, Qualifying and Appointment Setting",
+        "type": "HOURLY"
+      },
+      {
+        "started": "2025-09-05T06:00:22.362Z",
+        "status": "ACTIVE",
+        "title": "WordPress Home Valuation Website Development",
+        "type": "FIXED"
+      }
+    ],
+    "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+    "shown": 10
+  },
+  "connects_balance": 1475,
+  "connects_cost": 27,
+  "data": {
+    "marketplaceJobPosting": {
+      "activityStat": {
+        "applicationsBidStats": {
+          "avgRateBid": {
+            "currency": "USD",
+            "displayValue": "$30.24",
+            "rawValue": "30.24244444444444"
+          },
+          "maxRateBid": {
+            "currency": "USD",
+            "displayValue": "$85.00",
+            "rawValue": "85.0"
+          },
+          "minRateBid": {
+            "currency": "USD",
+            "displayValue": "$3.00",
+            "rawValue": "3.0"
+          }
+        },
+        "jobActivity": {
+          "invitesSent": 0,
+          "totalHired": 0,
+          "totalInvitedToInterview": 0,
+          "totalOffered": 0
+        }
+      },
+      "classification": {
+        "category": {
+          "id": "531770282580668418",
+          "preferredLabel": "Web, Mobile & Software Dev"
+        },
+        "subCategory": {
+          "id": "531770282589057028",
+          "preferredLabel": "Scripts & Utilities"
+        }
+      },
+      "clientCompanyPublic": {
+        "country": {
+          "name": "United States"
+        },
+        "id": "3593382",
+        "state": "CA",
+        "timezone": "America/Sao_Paulo"
+      },
+      "content": {
+        "description": "<untrusted_participant_content>\nI’m looking for someone to build AI bots(Grok Bot, Muse, Instinct, etc) and automations for my businesses and teach me how to use them.\n\nWe’ll start with my real estate business, but this will be an ongoing relationship. As I come up with new ideas and business needs, I’ll want help planning, building, and improving additional bots.\n\nInitial Bots I Want Built\n•\tClient follow-up bot: Help manage texts and emails to buyers, sellers, past clients, and prospects.\n•\tTop leads bot: Track my priority buyer and seller leads, remind me who needs attention, and suggest next steps.\n•\tCalendar bot: Help with scheduling, appointment reminders, and follow-up tasks.\n•\tSEO and blog bots: Help research topics, draft website content, and identify SEO improvements.\n•\tGoHighLevel bot: Help manage contacts, pipelines, tasks, workflows, and reporting.\n\nWhat I’m Looking For\n•\tExperience building practical AI bots and business automations.\n•\tStrong GoHighLevel experience.\n•\tAbility to connect CRMs, email, texting, calendars, and websites.\n•\tFamiliarity with Grok/xAI, Muse, Instinct, ect or similar tools is a plus.\n•\tClear communication and willingness to provide live training.\n•\tSomeone who can recommend the simplest reliable solution—not overcomplicate things.\n\nHow We’ll Work\nWe’ll start with one small paid project, then build additional bots in separate stages. New ideas and requests will be scoped and priced separately, with the potential for ongoing work across all my businesses.\nI’ll need documentation, training, and ownership of all accounts and workflows. Bots must protect client information and require my approval before sending messages, publishing content, or making important changes unless we agree otherwise.\n\nTo Apply\nPlease share:\n1.\tExamples of bots or automations you personally built.\n2.\tYour experience with GHL and AI tools.\n3.\tYour hourly rate and availability.\n4.\tWhether you can provide live screen-sharing training.\n\nI’m looking for a long-term partner who can build with me as my businesses and ideas grow.\n</untrusted_participant_content>",
+        "title": "Grok AI Bot Specialist Needed — Build Automations & Train Me to Manage Them"
+      },
+      "contractTerms": {
+        "contractType": "HOURLY",
+        "experienceLevel": "EXPERT",
+        "hourlyContractTerms": {
+          "engagementType": "FULL_TIME",
+          "hourlyBudgetMax": 35,
+          "hourlyBudgetMin": 20,
+          "hourlyBudgetType": "MANUAL"
+        },
+        "personsToHire": 1
+      },
+      "id": "2112748953415130313",
+      "url": "https://www.upwork.com/jobs/~022112748953415130313?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor",
+      "workFlowState": {
+        "status": "ACTIVE"
+      }
+    }
+  },
+  "plan": "Freelancer Plus",
+  "preferred_qualifications": {
+    "contractor_type": "All freelancers",
+    "english_proficiency": "Any",
+    "has_portfolio": false,
+    "min_earnings": "Any",
+    "min_hours_worked": 0,
+    "min_job_success_score": 0,
+    "rising_talent": false
+  },
+  "proposals_tier_unavailable": true,
+  "status": "ok",
+  "trace_id": "5669574d777c66a1388e985893e0cf47",
+  "unanswered_invites_unavailable": true
+}

@@ -1,0 +1,153 @@
+Title: AI Agent Engineer Needed to Build an Autonomous AI Sales Agent
+URL: https://www.upwork.com/jobs/~022115457308108467345
+Budget: Fixed price, 2500.0 USD
+Experience level: EXPERT
+Category: Data Science & Analytics / AI & Machine Learning
+Client: Pakistan, Asia/Karachi; jobs posted 3, hires 0, reviews 0
+Activity: invites 4, interviewing 1, hired 0
+Connects: 15
+Screening questions: none separate (the post lists 8 evaluation questions in its description, under "How We Will Evaluate Applicants")
+Source: read-only Upwork find_jobs get saved 2026-10-28 (raw_get_saved_20261028/2115457308108467345.txt)
+
+Description (verbatim):
+
+# AI Agent Engineer Needed to Build an Autonomous AI Sales Agent (Lead Research, Outreach, Follow-Ups & Meeting Booking)
+
+## Project Overview
+
+We are looking for an experienced **AI Agent Engineer / AI Automation Developer** to design, build, test, and deploy a reliable, end-to-end autonomous AI sales agent for our business.
+
+We are NOT looking for a salesperson, virtual assistant, or lead generation expert to perform these tasks manually. We need a technical expert who can build the actual AI agent and automation infrastructure that performs the sales workflow with minimal human intervention.
+
+Our company provides AI solutions, AI automation, agentic AI systems, business process automation, API integrations, CRM automation, and custom AI implementation services.
+
+The goal is to build an intelligent sales agent that can independently identify high-potential prospects, research businesses, qualify leads, initiate personalized outreach, manage follow-ups, book meetings, and report results, while requesting human approval for predefined sensitive actions.
+
+## What We Want the AI Agent to Do
+
+### 1. Intelligent Lead Discovery and Market Research
+
+- Identify companies that are actively adopting AI, investing in automation, expanding their technology capabilities, or showing clear signs of needing AI solutions.
+- Research potential clients across permitted sources, including company websites, public business directories, search engines, relevant professional platforms, and authorized lead databases.
+- Identify high-value industries, companies, decision-makers, founders, CEOs, COOs, CTOs, department heads, and other relevant buyers.
+- Detect buying signals such as business expansion, repetitive operational processes, hiring for AI-related roles, digital transformation initiatives, inefficient workflows, and publicly announced technology investments.
+- Prioritize companies with a strong likelihood of purchasing high-ticket AI services instead of generating large lists of unqualified leads.
+
+### 2. AI-Powered Lead Qualification and Scoring
+
+- Build an intelligent lead scoring system based on company size, industry, budget indicators, business needs, technology adoption, urgency, and purchasing potential.
+- Score and rank prospects according to their fit with our services and the strength of available buying signals.
+- Explain why each prospect is a good potential client and recommend the most relevant service to offer.
+- Distinguish between high-priority prospects, prospects requiring further research, and poor-fit leads.
+- Support configurable ideal customer profiles (ICPs), target industries, company sizes, geographical markets, and deal-value thresholds.
+
+### 3. Personalized Outreach Automation
+
+- Generate highly personalized, context-aware outreach based on verified company research and relevant business problems.
+- Create tailored email messages, follow-ups, connection requests, and other permitted outreach communications.
+- Maintain a natural, professional, value-driven tone instead of sending generic AI-generated spam.
+- Support approved outreach channels and integrations, such as email, CRM-connected communication tools, and professional platforms where the relevant automation is permitted.
+- Use controlled sending limits, duplicate detection, suppression lists, and opt-out handling.
+
+### 4. Automated Follow-Ups and Lead Nurturing
+
+- Track outreach activity and follow-up schedules.
+- Send appropriate follow-ups based on the prospect's response, engagement, and position in the sales sequence.
+- Detect replies and classify them as interested, not interested, requesting more information, asking to schedule a meeting, or requiring human intervention.
+- Pause sequences when a prospect responds, opts out, books a meeting, or requires manual review.
+- Avoid duplicate messages, excessive follow-ups, and inappropriate communication.
+
+### 5. Meeting Booking and Calendar Management
+
+- Recognize when a prospect is interested and ready for a meeting.
+- Coordinate available time slots through an approved calendar integration.
+- Send scheduling links or arrange meetings according to the prospect's preferences and the rules we define.
+- Confirm bookings, create calendar events, send reminders, and handle rescheduling or cancellations.
+- Notify us when a qualified meeting is booked and provide the prospect's background, business needs, buying signals, and conversation history.
+
+### 6. CRM, Reporting, and Notifications
+
+- Integrate with an appropriate CRM and maintain an organized record of every lead, interaction, follow-up, and meeting.
+- Provide a centralized dashboard or reporting system showing leads discovered, qualified prospects, outreach activity, replies, positive responses, meetings booked, and conversion rates.
+- Send regular summaries and immediate notifications for high-value opportunities, positive replies, important decisions, and booked meetings.
+- Maintain an auditable activity log so we can see what the agent did, why it did it, and what happened next.
+
+### 7. Human Approval and Control System
+
+The agent should operate autonomously within clearly defined boundaries, with approval checkpoints for sensitive or high-impact actions.
+
+We should be able to configure which activities the agent can execute independently and which require our approval. Examples include approving a new outreach campaign, changing targeting criteria, authorizing a high-volume campaign, approving unusual messages, and handling sensitive or high-value opportunities.
+
+The system must support pausing, resuming, reviewing, and stopping campaigns at any time. It must also include configurable spending limits, usage limits, and safeguards against unintended actions.
+
+## Technical Requirements
+
+The developer should have proven experience with:
+
+- Production-ready AI agents and agentic workflows.
+- LLMs such as OpenAI, Claude, or comparable models.
+- Workflow automation platforms such as n8n, Make, or equivalent tools.
+- API integrations, webhooks, authentication, and third-party services.
+- CRM and sales automation integrations.
+- Lead enrichment, research pipelines, and AI-powered lead scoring.
+- Email automation, reply classification, and calendar scheduling.
+- Persistent storage, reliable workflow orchestration, retries, error handling, and monitoring.
+- Security, credential management, access controls, and data privacy.
+- Automated testing, debugging, deployment, and ongoing observability.
+
+You may recommend the best architecture and technology stack for the project. We are open to a combination of AI models, custom code, and automation platforms, provided the resulting system is reliable, maintainable, and cost-effective.
+
+## Reliability and Quality Standards
+
+We need a properly engineered system, not a quick prototype held together by fragile workflows.
+
+The solution must include:
+
+- End-to-end testing of the complete sales workflow.
+- Reliable handling of API failures, rate limits, timeouts, duplicate records, and interrupted workflows.
+- Retry logic, failure alerts, logging, and recovery mechanisms.
+- Validation of lead data and protection against fabricated research or unsupported claims.
+- Safe handling of credentials and customer information.
+- Clear documentation, deployment instructions, and maintainable code or workflows.
+- Testing of edge cases, including negative replies, opt-outs, rescheduling, duplicate leads, and unavailable integrations.
+
+No developer can honestly guarantee a system with zero bugs under every possible condition. We therefore expect a rigorous QA process, documented acceptance tests, and a defined post-launch bug-fixing period.
+
+## Project Deliverables
+
+1. A documented solution architecture and implementation plan.
+2. A working AI sales agent with the agreed discovery, qualification, outreach, follow-up, and booking capabilities.
+3. Integrations with the agreed lead sources, outreach channels, CRM, and calendar.
+4. A configurable approval system and campaign controls.
+5. A reporting dashboard or equivalent reporting interface.
+6. End-to-end test results and documentation of known limitations.
+7. Source code, prompts, workflow configurations, and deployment documentation.
+8. Deployment to our designated environment and a handover session.
+9. A defined post-launch support and bug-fixing period.
+
+All project-specific source code, workflows, documentation, and configurations must be handed over to us, subject to the contract and any agreed third-party licensing terms.
+
+## How We Will Evaluate Applicants
+
+Please answer the following questions in your proposal:
+
+1. Describe an AI agent or sales automation system you have built that is genuinely similar to this project. Include a demo, screenshots, or a relevant case study where possible.
+2. What architecture and technology stack would you recommend, and why?
+3. How would you identify companies with a high probability of purchasing high-ticket AI services?
+4. How would you implement lead scoring, personalized outreach, automated follow-ups, and meeting booking?
+5. How would you handle platform restrictions, authorized data access, email deliverability, opt-outs, and account safety?
+6. How would you prevent duplicate outreach, fabricated research, infinite loops, and failed workflows?
+7. What is your estimated timeline, fixed-price budget, and ongoing monthly operating cost?
+8. What testing, monitoring, documentation, and post-launch support would you provide?
+
+We prefer developers who can demonstrate real production experience, strong problem-solving skills, and a practical understanding of sales processes, not just chatbot development.
+
+## Engagement Structure
+
+We prefer a milestone-based fixed-price project, beginning with architecture and a working proof of concept, followed by the complete implementation, testing, deployment, and handover.
+
+Please submit a realistic proposal with clearly defined milestones, assumptions, dependencies, and exclusions.
+
+**Important:** We are hiring someone to BUILD THE AI AGENT, not someone to act as our salesperson or manually perform lead generation.
+
+We want a dependable, scalable AI sales system that can operate with minimal supervision while keeping us informed and retaining human approval where necessary.

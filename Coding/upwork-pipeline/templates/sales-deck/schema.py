@@ -204,10 +204,10 @@ def validate(spec, catalog):
             fail('scenes', 'duplicate native proof screen; combine it or show a distinct result')
         native_proofs.add(signature)
     from native_schema import MECHANISMS, RESULTS
-    first_mechanism = scenes[0]["kind"] == "workflow" or (scenes[0]["kind"] == "native" and scenes[0]["content"]["surface"] in MECHANISMS)
+    first_mechanism = scenes[0]["kind"] in ("workflow", "architecture") or (scenes[0]["kind"] == "intelligence" and scenes[0]["content"]["surface"] == "workflow") or (scenes[0]["kind"] == "native" and scenes[0]["content"]["surface"] in MECHANISMS)
     if not first_mechanism or scenes[0]["optional"]:
         fail("scenes", "first scene must be a required workflow")
-    results = [x for x in scenes if (x["kind"] in ("outcome", "workshop", "carousel") or (x["kind"] == "native" and x["content"]["surface"] in RESULTS)) and not x["optional"]]
+    results = [x for x in scenes if (x["kind"] in ("outcome", "workshop", "carousel", "gmail", "product") or (x["kind"] == "intelligence" and x["content"]["surface"] == "briefing") or (x["kind"] == "funnel" and x["content"]["surface"] == "confirmation") or (x["kind"] == "native" and x["content"]["surface"] in RESULTS)) and not x["optional"]]
     if not results:
         fail("scenes", "requires a visible result/proof scene on every route")
     return s
@@ -215,6 +215,35 @@ def validate(spec, catalog):
 
 def content(scene, platform, path, native_graph=False):
     c, kind = scene["content"], scene["kind"]
+    if kind == 'intelligence':
+        if scene['platform'] != 'workbench':
+            fail(path, 'intelligence requires an explicitly custom workbench')
+        from intelligence_schema import validate_intelligence
+        return validate_intelligence(scene, path)
+    if kind in ("gmail", "funnel", "product"):
+        expected = {"gmail": "gmail", "funnel": "ghl", "product": "workbench"}[kind]
+        if scene["platform"] != expected:
+            fail(path, "requires_adapter: incorrect product surface")
+        if kind == "gmail":
+            from gmail_schema import validate_gmail
+            return validate_gmail(scene, path)
+        if kind == "funnel":
+            from funnel_schema import validate_funnel
+            return validate_funnel(scene, path)
+        from product_schema import validate_product
+        return validate_product(scene, path)
+    if kind == "architecture":
+        if scene["platform"] != "workbench":
+            fail(path, "custom architecture requires workbench")
+        obj(c, path + ".content", ("name", "subtitle", "nodes", "edges", "runOrder", "context", "related"))
+        text(c["subtitle"], path + ".content.subtitle")
+        rows(c["nodes"], path + ".content.nodes", ("id", "label", "detail"), minimum=2, maximum=6)
+        graph = copy.deepcopy(c)
+        graph.pop("subtitle")
+        for i, node in enumerate(graph["nodes"]):
+            node["type"] = "start" if i == 0 else "step"
+        fake = dict(scene, kind="workflow", platform="make", content=graph)
+        return content(fake, {"actions": {"start": {"kind": "trigger", "available": True}, "step": {"kind": "action", "available": True}}}, path)
     if kind == "native":
         from native_schema import validate_native
         return validate_native(scene, platform, path, lambda fake, plat, loc: content(fake, plat, loc, native_graph=True))
@@ -238,6 +267,8 @@ def content(scene, platform, path, native_graph=False):
             fail(p + ".nodes", "duplicate node ids")
         for n in nodes:
             slug(n["id"], p + ".nodes.id")
+            if scene["platform"] == "n8n" and (n["type"] in ("openai_chat_model", "http_request_tool") or (n["type"] == "ai_agent" and not native_graph)):
+                fail(p + ".nodes.type", "unsupported action: AI nodes require the native typed-connector adapter")
             action = platform.get("actions", {}).get(n["type"])
             if not action or action.get("available") is not True:
                 fail(p + ".nodes.type", "unsupported action " + n["type"] + ": " + (action or {}).get("reason", "requires_adapter"))

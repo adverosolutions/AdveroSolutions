@@ -1,0 +1,419 @@
+{
+ "schemaVersion": 1,
+ "id": "ghl-small-crm-automation-task-2113221187329458414",
+ "title": "GoHighLevel Expert Needed for a Small CRM & Automation Task",
+ "systemName": "Your GHL request follow-up",
+ "account": {
+  "name": "Your GoHighLevel account",
+  "initials": "GA",
+  "operatorInitials": "LV"
+ },
+ "source": {
+  "jobUrl": "https://www.upwork.com/jobs/~022113221187329458414",
+  "facts": [
+   "Post: small task inside the client's GHL account, may involve a workflow, CRM pipeline, lead capture form, automation, email/SMS follow-up, appointment booking or funnel element.",
+   "Post lists tags, custom fields, opportunities, triggers and workflow actions, A2P / SMS setup.",
+   "Post: someone who can complete the task correctly without extensive supervision.",
+   "No client name, business or industry in the post. Sample business and people are invented."
+  ]
+ },
+ "entities": {
+  "lead": {
+   "name": "Talia Brooks",
+   "first": "Talia",
+   "email": "talia.brooks@example.com",
+   "phone": "(555) 014-2290"
+  },
+  "owner": {
+   "name": "Devon Ortiz",
+   "first": "Devon"
+  },
+  "tag": {
+   "name": "quote-request"
+  },
+  "call": {
+   "slot": "Wednesday 28 October at 10:00 am CT"
+  }
+ },
+ "cover": {
+  "eyebrow": "Your GHL request follow-up",
+  "title": "Text the leads who opted in.",
+  "accent": "Email the rest.",
+  "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "anchors": [
+   "Contact Tag trigger",
+   "SMS consent check",
+   "Pipeline and owner alert"
+  ],
+  "previewSteps": [
+   {
+    "title": "Check consent first",
+    "detail": "The workflow reads the contact before it sends anything."
+   },
+   {
+    "title": "Book the call",
+    "detail": "The lead picks a time by text and the owner hears about it."
+   },
+   {
+    "title": "Track it in the pipeline",
+    "detail": "The opportunity moves to Call booked with the tag and owner attached."
+   }
+  ],
+  "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "footer": "Illustrative sample · sample business and people"
+ },
+ "close": {
+  "eyebrow": "What I would measure",
+  "title": "Measure each request",
+  "accent": "from form to booked call.",
+  "caption": "We'd agree the starting numbers, then track reply speed, booked calls, and requests still waiting.",
+  "metrics": [
+   {
+    "name": "Time to first reply",
+    "direction": "down",
+    "aim": "Reply to new requests sooner",
+    "definition": "Median time from the request tag being added to the first text or email sent to that contact, measured over an agreed period."
+   },
+   {
+    "name": "Booked calls per 100 requests",
+    "direction": "up",
+    "aim": "Book more calls from the same requests",
+    "definition": "Contacts whose opportunity reaches Call booked, divided by all tagged requests in the same period, multiplied by 100. Each contact counts once."
+   },
+   {
+    "name": "Requests with no next step",
+    "direction": "down",
+    "aim": "Leave fewer requests waiting",
+    "definition": "Open opportunities in New request that have no message sent and no assigned owner after one business day, counted at the end of each week."
+   }
+  ],
+  "baselineNote": "We’ll establish the baseline and agree the targets.",
+  "ctaTitle": "Worth a quick 15-minute call?",
+  "ctaCopy": "Reply here and I'll send times.",
+  "beat": "I'd track how fast new requests hear back, how many book a call, and how many are still waiting, starting from your current numbers. Worth a quick 15-minute call? Reply here and I'll send times."
+ },
+ "scenes": [
+  {
+   "id": "workflow",
+   "kind": "workflow",
+   "platform": "ghl",
+   "title": "The workflow checks for SMS consent before it texts anyone.",
+   "caption": "The quote-request tag starts it, and the consent answer decides between a text and an email.",
+   "beat": "When the form adds the quote-request tag, this workflow starts. It creates the opportunity and assigns Devon. Then it checks whether Talia agreed to texts. She did, so she gets a text and Devon gets an alert. Without consent, the same request gets an email instead.",
+   "details": [
+    "Trigger: Contact Tag, quote-request added",
+    "If/Else: SMS consent on file? Yes sends a text, No sends an email"
+   ],
+   "content": {
+    "name": "Quote request follow-up",
+    "nodes": [
+     {
+      "id": "tag",
+      "type": "contact_tag",
+      "label": "Tag added: {{tag.name}}",
+      "detail": "Form submission adds the tag"
+     },
+     {
+      "id": "opp",
+      "type": "opportunity",
+      "label": "Opportunity: New request",
+      "detail": "Quote requests pipeline"
+     },
+     {
+      "id": "owner",
+      "type": "assign_user",
+      "label": "Assign to {{owner.name}}",
+      "detail": "Owner set on contact and opportunity"
+     },
+     {
+      "id": "consent",
+      "type": "condition",
+      "label": "SMS consent on file?",
+      "detail": "Reads the consent field on the contact"
+     },
+     {
+      "id": "text",
+      "type": "sms",
+      "label": "Text {{lead.first}} a booking question",
+      "detail": "Asks which day suits a call"
+     },
+     {
+      "id": "mail",
+      "type": "email",
+      "label": "Email the booking question",
+      "detail": "Used when there is no SMS consent"
+     },
+     {
+      "id": "alert",
+      "type": "notification",
+      "label": "Alert {{owner.first}}",
+      "detail": "Internal notification with the request"
+     }
+    ],
+    "edges": [
+     {
+      "from": "tag",
+      "to": "opp"
+     },
+     {
+      "from": "opp",
+      "to": "owner"
+     },
+     {
+      "from": "owner",
+      "to": "consent"
+     },
+     {
+      "from": "consent",
+      "to": "text",
+      "label": "Consent: yes"
+     },
+     {
+      "from": "consent",
+      "to": "mail",
+      "label": "Consent: no"
+     },
+     {
+      "from": "text",
+      "to": "alert"
+     },
+     {
+      "from": "mail",
+      "to": "alert"
+     }
+    ],
+    "runOrder": [
+     "tag",
+     "opp",
+     "owner",
+     "consent",
+     "text",
+     "alert"
+    ],
+    "context": {
+     "name": "{{lead.name}}",
+     "subtitle": "Tag: {{tag.name}} · SMS consent: yes",
+     "fields": [
+      {
+       "label": "Status",
+       "value": "Illustrative sample"
+      }
+     ],
+     "states": [
+      "Tag added",
+      "Opportunity created",
+      "Assigned to {{owner.name}}",
+      "Consent found",
+      "Text sent",
+      "{{owner.first}} alerted"
+     ]
+    },
+    "related": [
+     {
+      "title": "Consent: no branch",
+      "detail": "Same booking question goes out by email."
+     },
+     {
+      "title": "Call booked",
+      "detail": "Opportunity moves stage when a time is confirmed."
+     }
+    ]
+   },
+   "statuses": [
+    "Tag added",
+    "Opportunity created",
+    "Assigned to {{owner.name}}",
+    "Consent found",
+    "Text sent",
+    "{{owner.first}} alerted"
+   ],
+   "optional": false
+  },
+  {
+   "id": "record",
+   "kind": "record",
+   "platform": "ghl",
+   "title": "Everything the workflow reads sits on the contact.",
+   "caption": "Custom fields, the tag and the consent answer all come from the form.",
+   "beat": "Here's Talia's contact. The form filled in what she needs and when she's free, added the quote-request tag, and saved her answer to the text consent box. That's what the workflow reads.",
+   "details": [
+    "Custom fields: Request, Best time to call",
+    "Tag: quote-request · SMS consent: yes"
+   ],
+   "content": {
+    "name": "{{lead.name}}",
+    "subtitle": "{{lead.email}} · {{lead.phone}}",
+    "sourceTitle": "Quote request form",
+    "sourceFields": [
+     {
+      "label": "Request",
+      "value": "Wants a call about getting started"
+     },
+     {
+      "label": "Best time to call",
+      "value": "Weekday mornings"
+     }
+    ],
+    "fields": [
+     {
+      "label": "Tags",
+      "value": "{{tag.name}}"
+     },
+     {
+      "label": "SMS consent",
+      "value": "Yes, ticked on the form"
+     },
+     {
+      "label": "Owner",
+      "value": "{{owner.name}}"
+     }
+    ],
+    "events": [
+     {
+      "title": "Form submitted",
+      "detail": "Custom fields filled from the answers"
+     },
+     {
+      "title": "Tag added",
+      "detail": "{{tag.name}} starts the workflow"
+     }
+    ],
+    "notice": "Sample contact. Consent comes from the form checkbox."
+   },
+   "statuses": [
+    "Form answers saved",
+    "Tag and consent recorded"
+   ],
+   "optional": true
+  },
+  {
+   "id": "messages",
+   "kind": "messages",
+   "platform": "ghl",
+   "title": "Talia picks a time by text, and Devon books the call.",
+   "caption": "Devon is alerted, Talia replies, and Devon confirms the time.",
+   "beat": "Devon gets the workflow's alert and Talia gets the text asking which day suits her. She replies Wednesday morning, so Devon books her for Wednesday at ten and confirms it by text.",
+   "details": [
+    "Text only because consent is on file",
+    "Alert, reply, then Devon confirms and books"
+   ],
+   "content": {
+    "name": "{{lead.name}}",
+    "subtitle": "{{lead.phone}}",
+    "fields": [
+     {
+      "label": "Owner",
+      "value": "{{owner.name}}"
+     },
+     {
+      "label": "Tag",
+      "value": "{{tag.name}}"
+     }
+    ],
+    "items": [
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "Workflow",
+      "time": "9:12 am",
+      "body": "New quote request from {{lead.name}}, assigned to you. Texted with consent. Request: wants a call about getting started."
+     },
+     {
+      "channel": "sms",
+      "direction": "outgoing",
+      "sender": "{{owner.name}}",
+      "time": "9:12 am",
+      "body": "Hi {{lead.first}}, it's {{owner.first}}. Thanks for your request. Which day this week or next suits a quick call? Reply STOP to opt out."
+     },
+     {
+      "channel": "sms",
+      "direction": "incoming",
+      "sender": "{{lead.name}}",
+      "time": "9:20 am",
+      "body": "Wednesday morning works for me."
+     },
+     {
+      "channel": "sms",
+      "direction": "outgoing",
+      "sender": "{{owner.name}}",
+      "time": "9:24 am",
+      "body": "You're booked for {{call.slot}}. I'll call you then."
+     }
+    ],
+    "notice": "{{owner.first}} booked {{lead.first}} for {{call.slot}} and moved her opportunity to Call booked."
+   },
+   "statuses": [
+    "{{owner.first}} alerted",
+    "Booking question sent",
+    "{{lead.first}} replies",
+    "Call booked by {{owner.first}}"
+   ],
+   "optional": false
+  },
+  {
+   "id": "result",
+   "kind": "outcome",
+   "platform": "ghl",
+   "title": "The pipeline shows Talia at Call booked, with Devon as owner.",
+   "caption": "Illustrative week: 12 requests, 9 texted with consent, 3 emailed instead.",
+   "beat": "In the pipeline, Talia sits at Call booked with Devon as her owner, after he moved her there. In this sample week, twelve requests came in. Nine had text consent, and three got an email instead.",
+   "details": [
+    "Illustrative week: 12 requests · 9 texted · 3 emailed",
+    "Stage: New request, Contacted, Call booked"
+   ],
+   "content": {
+    "name": "{{lead.name}}",
+    "subtitle": "Quote requests pipeline",
+    "fields": [
+     {
+      "label": "Owner",
+      "value": "{{owner.name}}"
+     },
+     {
+      "label": "Tag",
+      "value": "{{tag.name}}"
+     },
+     {
+      "label": "Call",
+      "value": "{{call.slot}}"
+     }
+    ],
+    "stages": [
+     "New request",
+     "Contacted",
+     "Call booked",
+     "Won"
+    ],
+    "stageSequence": [
+     0,
+     1,
+     2
+    ],
+    "metrics": [
+     {
+      "label": "Requests",
+      "value": "12",
+      "note": "Illustrative sample week"
+     },
+     {
+      "label": "Texted with consent",
+      "value": "9",
+      "note": "Illustrative, not a promised result"
+     },
+     {
+      "label": "Emailed instead",
+      "value": "3",
+      "note": "Illustrative, no SMS consent"
+     }
+    ],
+    "note": "Counts are illustrative. Every request gets one message on the channel the contact allowed."
+   },
+   "statuses": [
+    "New request",
+    "Contacted",
+    "Call booked · owner {{owner.name}}"
+   ],
+   "optional": false
+  }
+ ]
+}

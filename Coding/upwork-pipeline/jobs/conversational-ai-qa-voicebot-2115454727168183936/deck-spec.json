@@ -1,0 +1,406 @@
+{
+  "schemaVersion": 1,
+  "id": "conversational-ai-qa-voicebot-2115454727168183936",
+  "title": "Conversational AI QA Specialist",
+  "systemName": "Your voicebot and chatbot QA",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022115454727168183936",
+    "facts": [
+      "Post: test voicebot and chatbot before changes go live, review live conversations, turn findings into defects and fixes.",
+      "Post: compliance checks include identity before account talk, required disclosures, no third-party disclosure, cease-communication and attorney-representation requests, disputes, bankruptcy, hardship, SCRA.",
+      "Post: catch hallucinated balances, out-of-policy plan terms, misheard numbers, loops and failed live-agent handoffs; spot-check the platform's automated scoring.",
+      "Post: reproducible defect tickets with transcript, severity, expected behavior; track through fix and retest; weekly quality summary for a non-technical leader.",
+      "Post success: 30-day baseline audit and agreed rubric with Digital Operations and Compliance; 60-day pre-release checklist and regression suite; 90 days no compliance defect reaches production.",
+      "No client or contact name in the post; personalization omitted (U-006 fallback: your team)."
+    ]
+  },
+  "entities": {
+    "release": {
+      "name": "Prompt update 3.2",
+      "fix": "Prompt update 3.2.1"
+    },
+    "persona": {
+      "name": "Marcus Bell",
+      "first": "Marcus"
+    },
+    "test": {
+      "id": "TC-114",
+      "name": "Attorney named after identity check"
+    },
+    "defect": {
+      "id": "DEF-207"
+    },
+    "lawyer": {
+      "name": "Kim Ortiz"
+    }
+  },
+  "cover": {
+    "eyebrow": "Conversational AI quality",
+    "title": "Test every bot change",
+    "accent": "before a consumer hears it.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Scripted test calls and chats",
+      "Scored on your compliance rubric",
+      "Defects tracked through retest"
+    ],
+    "previewSteps": [
+      {
+        "title": "Run the release tests",
+        "detail": "Scripted personas call and chat with the staging bot."
+      },
+      {
+        "title": "Catch what the bot got wrong",
+        "detail": "Each transcript is scored, including the automated grade."
+      },
+      {
+        "title": "Fix, retest and sign off",
+        "detail": "The defect goes to the vendor and the release waits for a clean retest."
+      }
+    ],
+    "footer": "Illustrative sample · test personas, transcripts and counts are invented",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "release-test-run",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Every change gets tested before it goes live.",
+      "caption": "A prompt update runs through scripted calls and chats, gets scored, and is signed off or blocked.",
+      "beat": "Here's how a release moves through testing. Your vendor ships a prompt update. I pick the matching tests from the regression library, run them as scripted calls and chats against the staging bot, and score every transcript on your rubric. Anything that fails gets logged, and the release is blocked until the retest is clean.",
+      "details": [
+        "0:10 to 0:40. Click each step to follow {{release.name}} through testing.",
+        "The regression library holds the scripts and test personas, including the tricky conversations."
+      ],
+      "content": {
+        "name": "Pre-release test run",
+        "subtitle": "Custom QA workflow",
+        "nodes": [
+          {
+            "id": "library",
+            "label": "Pick the tests",
+            "detail": "{{release.name}} touches the account inquiry flow, so the attorney, dispute and hardship scripts run."
+          },
+          {
+            "id": "run",
+            "label": "Run scripted calls and chats",
+            "detail": "Test personas like {{persona.name}} talk to the staging voicebot and chatbot."
+          },
+          {
+            "id": "score",
+            "label": "Score each transcript",
+            "detail": "Accuracy, compliance, resolution and consumer experience, per your rubric."
+          },
+          {
+            "id": "log",
+            "label": "Log what failed",
+            "detail": "{{defect.id}} with the transcript, severity and expected behavior."
+          },
+          {
+            "id": "decide",
+            "label": "Sign off or block",
+            "detail": "Blocked until the vendor fix passes the same tests."
+          }
+        ],
+        "edges": [
+          {
+            "from": "library",
+            "to": "run"
+          },
+          {
+            "from": "run",
+            "to": "score"
+          },
+          {
+            "from": "score",
+            "to": "log"
+          },
+          {
+            "from": "log",
+            "to": "decide"
+          }
+        ],
+        "runOrder": [
+          "library",
+          "run",
+          "score",
+          "log",
+          "decide"
+        ],
+        "context": {
+          "name": "{{release.name}}",
+          "subtitle": "Illustrative sample",
+          "fields": [
+            {
+              "label": "Channels",
+              "value": "Voicebot and chatbot, staging"
+            },
+            {
+              "label": "Test set",
+              "value": "Account inquiry regression scripts"
+            }
+          ],
+          "states": [
+            "Tests picked for the account inquiry flow",
+            "Scripted calls and chats running",
+            "Transcripts scored on the rubric",
+            "{{defect.id}} logged on {{test.id}}",
+            "Release blocked until retest"
+          ]
+        },
+        "related": []
+      },
+      "statuses": [
+        "Tests picked",
+        "Calls and chats run",
+        "Transcripts scored",
+        "Defect logged",
+        "Release blocked"
+      ],
+      "optional": false
+    },
+    {
+      "id": "scored-test-call",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Catch the attorney request the bot talked past.",
+      "caption": "The automated grade said pass. The transcript shows the bot kept collecting.",
+      "beat": "This is test {{test.id}}. The bot checks identity before it talks about the account, which is right. Then {{persona.first}} says he has a lawyer, and the bot offers a payment plan anyway. The platform graded this call a pass. On your rubric it's a compliance fail, so it gets flagged.",
+      "details": [
+        "0:40 to 1:10. Replay steps through the call line by line.",
+        "Expected behavior comes from the rubric agreed with your Compliance team."
+      ],
+      "content": {
+        "name": "{{test.id}} · {{test.name}}",
+        "subtitle": "Scripted test call · staging voicebot",
+        "fields": [
+          {
+            "label": "Persona",
+            "value": "{{persona.name}}, represented by an attorney"
+          },
+          {
+            "label": "Release",
+            "value": "{{release.name}}"
+          },
+          {
+            "label": "Automated grade",
+            "value": "Pass"
+          },
+          {
+            "label": "QA score",
+            "value": "Fail · attorney representation"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Voicebot (staging)",
+            "time": "0:06",
+            "body": "Thanks for calling. Before we talk about the account, can you confirm your date of birth?"
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Test caller · {{persona.name}}",
+            "time": "0:14",
+            "body": "Sure. And I should tell you, my lawyer {{lawyer.name}} is handling this now."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Voicebot (staging)",
+            "time": "0:21",
+            "body": "Thanks, {{persona.first}}, you're verified. I can set up a payment plan on your balance today."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "QA review",
+            "time": "Scored",
+            "body": "Identity check before account talk: pass. Attorney representation: fail. Expected: stop collection talk, take the attorney's details and offer a live agent."
+          }
+        ],
+        "notice": "Test conversation with an invented persona. No consumer data."
+      },
+      "statuses": [
+        "Identity check asked first",
+        "Attorney mentioned",
+        "Bot keeps collecting",
+        "Flagged as a compliance fail"
+      ],
+      "optional": false
+    },
+    {
+      "id": "defect-ticket",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Hand the vendor a defect they can reproduce.",
+      "caption": "One ticket with the steps, the transcript and the expected behavior.",
+      "beat": "Here's the defect ticket for engineering and the vendor. It says exactly how to reproduce the problem, what the bot did, and what it should do. It stays open until the fix passes the retest.",
+      "details": [
+        "Detailed route only.",
+        "Severity follows the rubric: compliance failures are critical."
+      ],
+      "content": {
+        "name": "{{defect.id}}",
+        "subtitle": "Critical · compliance",
+        "sourceTitle": "Found in {{test.id}}",
+        "sourceFields": [
+          {
+            "label": "Flow",
+            "value": "Inbound voice · account inquiry"
+          },
+          {
+            "label": "Release",
+            "value": "{{release.name}}"
+          },
+          {
+            "label": "Evidence",
+            "value": "Transcript and recording, 0:14 to 0:21"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Steps to reproduce",
+            "value": "Pass the identity check, then say an attorney is handling the account."
+          },
+          {
+            "label": "Actual",
+            "value": "Bot offers a payment plan."
+          },
+          {
+            "label": "Expected",
+            "value": "Bot stops collection talk, takes the attorney's details and offers a live agent."
+          },
+          {
+            "label": "Assigned",
+            "value": "Voicebot vendor and engineering"
+          }
+        ],
+        "events": [
+          {
+            "title": "Logged",
+            "detail": "Sent to the vendor with the transcript"
+          },
+          {
+            "title": "Fix delivered",
+            "detail": "{{release.fix}}"
+          },
+          {
+            "title": "Retest passed",
+            "detail": "{{test.id}} and the attorney scripts rerun clean"
+          }
+        ],
+        "notice": "Sample defect ticket for the demonstration."
+      },
+      "statuses": [
+        "Defect logged",
+        "Fix delivered",
+        "Retest passed"
+      ],
+      "optional": true
+    },
+    {
+      "id": "release-signoff",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Sign off the release, then report the week.",
+      "caption": "The fix passes the same tests, and the weekly summary shows where quality stands.",
+      "beat": "The vendor sends {{release.fix}}, and the same tests run again. Everything passes, so the release is signed off. The automated grade that missed the attorney request is logged too. All of this rolls into the weekly quality summary your leadership can read in two minutes.",
+      "details": [
+        "1:10 to 1:40. Show result jumps to the signed-off release.",
+        "The weekly summary covers volume reviewed, pass rates by category, top defects, compliance flags and trends."
+      ],
+      "content": {
+        "name": "{{release.fix}}",
+        "subtitle": "Release decision",
+        "fields": [
+          {
+            "label": "Open critical defects",
+            "value": "None"
+          }
+        ],
+        "stages": [
+          "Tested",
+          "Fixed",
+          "Retested",
+          "Signed off"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Failed on first run",
+            "value": "1",
+            "note": "{{defect.id}}, attorney representation"
+          },
+          {
+            "label": "Passed on retest",
+            "value": "48 of 48",
+            "note": "Account inquiry regression, after {{release.fix}}"
+          },
+          {
+            "label": "Automated grades corrected",
+            "value": "1",
+            "note": "{{test.id}} was graded pass by the platform"
+          }
+        ],
+        "note": "Sample counts for the demonstration.",
+        "proof": {
+          "label": "Weekly quality summary",
+          "value": "Ready for Digital Operations",
+          "description": "Volume reviewed, pass rates by category, top defects, compliance flags and trends.",
+          "sourceNote": "Illustrative sample"
+        }
+      },
+      "statuses": [
+        "Regression run complete",
+        "Vendor fix received",
+        "Retest passed",
+        "Release signed off"
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Catch it in testing,",
+    "accent": "not in production.",
+    "caption": "We set the starting point in the baseline audit, then track these three every week.",
+    "metrics": [
+      {
+        "name": "Compliance defects reaching production",
+        "direction": "down",
+        "aim": "Catch them before release",
+        "definition": "Compliance defects found in live conversations that the pre-release tests did not catch, counted per release and per week."
+      },
+      {
+        "name": "Defect turnaround with the vendor",
+        "direction": "down",
+        "aim": "Shorten fix and retest time",
+        "definition": "Median time from a defect being logged to its retest passing, tracked by severity."
+      },
+      {
+        "name": "Rubric pass rate by category",
+        "direction": "up",
+        "aim": "Raise pass rates release over release",
+        "definition": "Scored conversations that pass each rubric category (accuracy, compliance, resolution, consumer experience), divided by all conversations scored in that category for the week."
+      }
+    ],
+    "baselineNote": "We'll set the baseline in the first audit and agree the targets with Digital Operations and Compliance.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd track compliance defects that reach production, how fast the vendor turns fixes around, and pass rates on each part of your rubric, starting from the baseline audit. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

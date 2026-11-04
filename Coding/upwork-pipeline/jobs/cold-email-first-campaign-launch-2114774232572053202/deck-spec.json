@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 1,
+  "id": "cold-email-first-campaign-launch-2114774232572053202",
+  "title": "Looking for a cold email outreach expert to help launch my first campaign",
+  "systemName": "Your first cold email campaign",
+  "account": {
+    "name": "First campaign workspace",
+    "initials": "FC",
+    "operatorInitials": "LV"
+  },
+  "personalization": {
+    "firstName": "David",
+    "source": "client_reviews",
+    "reviewCount": 2
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114774232572053202",
+    "facts": [
+      "Post (read-only Upwork lookup 2026-10-26 3:17 PM CT): first cold email campaign; build a targeted list, write and refine outreach messages, manage sending, track results, clear strategy, improve response rates, ongoing support. Part-time.",
+      "Client in Australia. No tools named in the post. No screening questions returned by the lookup.",
+      "First name David appears in two separate freelancer reviews of this client (ended 2026-10-26 and 2026-10-23). Not evidenced as owner.",
+      "All prospects, companies, domains and counts in this deck are invented samples. The target market is a placeholder until the real offer is agreed."
+    ]
+  },
+  "entities": {
+    "campaign": {
+      "name": "Clinic owners, first campaign",
+      "id": "CMP-01",
+      "inbox": "hello@getyourbrand.example",
+      "steps": "3"
+    },
+    "target": {
+      "who": "Owner-led physio clinics, 2 to 10 staff",
+      "region": "Australia (sample)"
+    },
+    "prospect": {
+      "name": "Hannah Moreau",
+      "first": "Hannah",
+      "role": "Practice owner",
+      "company": "Brightside Physio",
+      "email": "hannah@brightsidephysio.example",
+      "city": "Geelong",
+      "hook": "your second clinic opening in Torquay"
+    },
+    "call": {
+      "day": "Thursday",
+      "time": "10:30 AM"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your first cold email campaign",
+    "title": "From an empty list",
+    "accent": "to your first booked calls.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Target list built and checked",
+      "Three-email sequence",
+      "Replies tracked to a call"
+    ],
+    "previewSteps": [
+      {
+        "title": "Plan",
+        "detail": "Pick who to email and why they would care."
+      },
+      {
+        "title": "Write",
+        "detail": "Three short emails, each with a personal first line."
+      },
+      {
+        "title": "Track",
+        "detail": "See who replied and who booked a call."
+      }
+    ],
+    "footer": "Invented sample · no live system connected",
+    "beat": "This is your first cold email campaign laid out from start to finish, using one sample prospect so you can see every step."
+  },
+  "scenes": [
+    {
+      "id": "launch-plan",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Here's the launch plan, step by step.",
+      "caption": "This is the order your first campaign goes live in.",
+      "beat": "We start by agreeing exactly who you want to reach. Then I build the list and check every address, write the three emails, warm up the sending inboxes, and track every reply in one place.",
+      "details": [
+        "Sample target for this demo: {{target.who}}. We swap in your real offer and buyer on the call.",
+        "Proposed tools: Apify to find leads, MillionVerifier to check emails, Instantly to send and collect replies.",
+        "Sending runs from a separate lookalike domain so your main domain stays protected."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "The order your first campaign gets launched in.",
+        "nodes": [
+          {
+            "id": "audience",
+            "label": "Agree who to email",
+            "detail": "{{target.who}}, decision maker is the owner."
+          },
+          {
+            "id": "list",
+            "label": "Build and check the list",
+            "detail": "Find matching businesses, then remove bad or risky email addresses."
+          },
+          {
+            "id": "copy",
+            "label": "Write the three emails",
+            "detail": "A personal first line for each lead, then two short follow-ups."
+          },
+          {
+            "id": "inboxes",
+            "label": "Warm up the sending inboxes",
+            "detail": "Set up the domain records, then ramp up slowly before full volume."
+          },
+          {
+            "id": "replies",
+            "label": "Track every reply",
+            "detail": "Sort replies into interested, not now and unsubscribe, and flag calls to book."
+          }
+        ],
+        "edges": [
+          {
+            "from": "audience",
+            "to": "list"
+          },
+          {
+            "from": "list",
+            "to": "copy"
+          },
+          {
+            "from": "copy",
+            "to": "inboxes"
+          },
+          {
+            "from": "inboxes",
+            "to": "replies"
+          }
+        ],
+        "runOrder": [
+          "audience",
+          "list",
+          "copy",
+          "inboxes",
+          "replies"
+        ],
+        "context": {
+          "name": "{{campaign.id}}",
+          "subtitle": "Campaign settings (sample)",
+          "fields": [
+            {
+              "label": "Who we email",
+              "value": "{{target.who}}"
+            },
+            {
+              "label": "Sending inbox",
+              "value": "{{campaign.inbox}}"
+            },
+            {
+              "label": "Emails per lead",
+              "value": "{{campaign.steps}}"
+            },
+            {
+              "label": "Sample prospect",
+              "value": "{{prospect.name}}, {{prospect.company}}"
+            }
+          ],
+          "states": [
+            "Target buyer agreed",
+            "{{prospect.name}} found and email checked",
+            "Personal first line written for {{prospect.first}}",
+            "Inboxes warmed and ready to send",
+            "{{prospect.first}} replied and is marked interested"
+          ]
+        },
+        "related": [
+          {
+            "title": "Prospect list",
+            "detail": "One row per lead with where they were found and the email check result."
+          },
+          {
+            "title": "Sending checklist",
+            "detail": "Domain records, warm-up and daily limits, checked before launch."
+          }
+        ]
+      },
+      "statuses": [
+        "Target buyer agreed",
+        "List built and checked",
+        "Sequence written",
+        "Inboxes ready",
+        "Replies tracked"
+      ]
+    },
+    {
+      "id": "prospect-row",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "One lead from your list, fully checked.",
+      "caption": "Every lead gets a checked email and a reason to reach out.",
+      "beat": "Here's one lead from the list. We know where she came from, her email passed the check, and the first line mentions something real about her business.",
+      "details": [
+        "Invented sample lead. Real leads come from the market we agree on."
+      ],
+      "optional": true,
+      "content": {
+        "name": "{{prospect.name}}",
+        "subtitle": "{{prospect.role}}, {{prospect.company}}",
+        "sourceTitle": "Where this lead came from",
+        "sourceFields": [
+          {
+            "label": "Found through",
+            "value": "Public business listing (sample)"
+          },
+          {
+            "label": "Matches",
+            "value": "{{target.who}}"
+          },
+          {
+            "label": "Email check",
+            "value": "Valid, safe to send"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Email",
+            "value": "{{prospect.email}}"
+          },
+          {
+            "label": "City",
+            "value": "{{prospect.city}}"
+          },
+          {
+            "label": "Personal first line",
+            "value": "Saw {{prospect.company}} is getting ready for {{prospect.hook}}."
+          },
+          {
+            "label": "Campaign",
+            "value": "{{campaign.name}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Lead found",
+            "detail": "Matched the agreed target buyer."
+          },
+          {
+            "title": "Email checked",
+            "detail": "Address is valid and not a catch-all."
+          },
+          {
+            "title": "Added to campaign",
+            "detail": "Queued for email one of {{campaign.steps}}."
+          }
+        ],
+        "notice": "Illustrative sample lead. No real person or business."
+      },
+      "statuses": [
+        "Lead found",
+        "Email checked",
+        "Added to campaign"
+      ]
+    },
+    {
+      "id": "sequence",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Your three-email sequence, and a reply.",
+      "caption": "Each follow-up adds something new instead of just bumping the thread.",
+      "beat": "Email one opens with the personal line and asks one easy question. Email two shares a quick idea. Email three is a short, polite close. Here Hannah replies to the second email and asks for a time.",
+      "details": [
+        "Day 1, day 4 and day 9 spacing is a starting point we can adjust.",
+        "Replies stop the sequence for that lead automatically."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{prospect.name}}",
+        "subtitle": "{{prospect.email}}",
+        "fields": [
+          {
+            "label": "Campaign",
+            "value": "{{campaign.name}}"
+          },
+          {
+            "label": "Sent from",
+            "value": "{{campaign.inbox}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Email 1 of 3 (draft)",
+            "time": "Day 1",
+            "subject": "Torquay opening",
+            "body": "Hi {{prospect.first}}, saw {{prospect.company}} is getting ready for {{prospect.hook}}. When a second site opens, keeping both diaries full is usually the hard part. Is that on your radar right now?"
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Email 2 of 3 (draft)",
+            "time": "Day 4",
+            "subject": "Re: Torquay opening",
+            "body": "One idea, {{prospect.first}}: a short welcome offer for patients in the new area, sent before the doors open. Happy to share how we would set it up. Worth a quick chat?"
+          },
+          {
+            "channel": "email",
+            "direction": "incoming",
+            "sender": "{{prospect.name}}",
+            "time": "Day 5",
+            "subject": "Re: Torquay opening",
+            "body": "Good timing actually. Can you do {{call.day}} morning?"
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Reply (draft)",
+            "time": "Day 5",
+            "subject": "Re: Torquay opening",
+            "body": "{{call.day}} at {{call.time}} works. I'll send a calendar invite to {{prospect.email}}."
+          }
+        ],
+        "notice": "Sample drafts to an invented lead. Nothing is sent from this page. Email 3 stays unsent because Hannah replied."
+      },
+      "statuses": [
+        "Email 1 drafted",
+        "Email 2 drafted",
+        "Reply received",
+        "Call time confirmed"
+      ]
+    },
+    {
+      "id": "tracker",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Follow the campaign lead by lead.",
+      "caption": "The sending checks and the reply sit on one screen.",
+      "beat": "This is where you watch the campaign. The sending checks are all done, Hannah's reply is marked interested, and her call is booked for Thursday. Each week we look at this together and adjust the emails.",
+      "details": [
+        "Sending checklist: domain records set, inboxes warmed, daily limit per inbox, bounces watched.",
+        "Counts are illustrative, based on one sample lead."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "Campaign tracker, sample week one",
+        "fields": [
+          {
+            "label": "Domain records",
+            "value": "SPF, DKIM and DMARC set"
+          },
+          {
+            "label": "Warm-up",
+            "value": "Finished before launch"
+          },
+          {
+            "label": "Daily limit",
+            "value": "Kept low per inbox while it ramps up"
+          },
+          {
+            "label": "Latest reply",
+            "value": "{{prospect.name}}, interested"
+          },
+          {
+            "label": "Call booked",
+            "value": "{{call.day}}, {{call.time}}"
+          }
+        ],
+        "stages": [
+          "Checked",
+          "Emailed",
+          "Replied",
+          "Call booked"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Emails sent to Hannah",
+            "value": "2",
+            "note": "Illustrative, email 3 skipped after reply"
+          },
+          {
+            "label": "Replies",
+            "value": "1",
+            "note": "Illustrative, marked interested"
+          },
+          {
+            "label": "Calls booked",
+            "value": "1",
+            "note": "Illustrative, {{call.day}} {{call.time}}"
+          }
+        ],
+        "note": "Illustrative tracker for one invented lead. No live sending account is connected."
+      },
+      "statuses": [
+        "Email checked",
+        "Sequence started",
+        "Reply marked interested",
+        "Call booked"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Watch the replies,",
+    "accent": "not just the sends.",
+    "caption": "We agree a starting point in week one, then track these each week.",
+    "metrics": [
+      {
+        "name": "People writing back",
+        "direction": "up",
+        "aim": "Get more people writing back",
+        "definition": "Leads who replied divided by leads who received email one."
+      },
+      {
+        "name": "Emails that bounce",
+        "direction": "down",
+        "aim": "Keep bad addresses out of the list",
+        "definition": "Emails that bounced divided by all emails sent."
+      },
+      {
+        "name": "Replies turned into calls",
+        "direction": "up",
+        "aim": "Turn more replies into calls",
+        "definition": "Calls booked from the campaign divided by interested replies."
+      }
+    ],
+    "baselineNote": "Your first week sets the baseline; we agree targets from there.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "On the call we'd lock in who you want to reach and the offer for email one. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

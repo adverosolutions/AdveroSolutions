@@ -1,5 +1,7 @@
 # Upwork operating policy — 19 October 2026
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014.
+
 Lorenzo's later instructions supersede the earlier Astra-heavy batch setup. This
 is repository-local guidance, not a change to global app/model settings.
 

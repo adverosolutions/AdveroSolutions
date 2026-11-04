@@ -1,0 +1,686 @@
+{
+  "schemaVersion": 1,
+  "id": "openai-n8n-production-agents-2112525389850618800",
+  "title": "An operations request.",
+  "systemName": "A traceable tool result.",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112525389850618800",
+    "facts": [
+      "Original post retained in jd.txt. Synthetic illustrative sample. Adapter candidate requires native visual review."
+    ]
+  },
+  "entities": {
+    "request": {
+      "id": "REQ-1042",
+      "body": "Check order ORD-1042 and create a follow-up for Maya if delivery is pending."
+    },
+    "order": {
+      "id": "ORD-1042",
+      "status": "pending"
+    },
+    "task": {
+      "id": "TASK-1042",
+      "due": "22 October 2026"
+    },
+    "owner": {
+      "name": "Maya Chen"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Let the agent check the order",
+    "accent": "and create the follow-up.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "OpenAI + n8n agents, with tool results you can inspect."
+    ],
+    "previewSteps": [
+      {
+        "title": "Receive",
+        "detail": "One bounded operations request."
+      },
+      {
+        "title": "Check and act",
+        "detail": "Read the order before creating a task."
+      },
+      {
+        "title": "Inspect",
+        "detail": "Confirm the returned task and owner."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "Your first workflow",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "We’ll compare the agent with how your team handles these requests today.",
+    "metrics": [
+      {
+        "name": "Requests completed correctly",
+        "direction": "up",
+        "aim": "Complete more requests with verified results",
+        "definition": "Requests with the expected confirmed tool result divided by eligible requests attempted."
+      },
+      {
+        "name": "Manual work per request",
+        "direction": "down",
+        "aim": "Reduce the steps your team handles",
+        "definition": "Operator interventions per completed request, including exception recovery."
+      },
+      {
+        "name": "Time to fix failed requests",
+        "direction": "down",
+        "aim": "Get failed requests working sooner",
+        "definition": "Time from a failed execution to a correct terminal result; track unresolved failures separately."
+      }
+    ],
+    "baselineNote": "We’ll measure the current process first, then compare results after launch.",
+    "ctaTitle": "Choose the first workflow.",
+    "ctaCopy": "Reply here and I'll send times for a 15-minute call.",
+    "beat": "Reply here and I'll send times for a 15-minute call. We'll choose the first request you want the agent to handle."
+  },
+  "scenes": [
+    {
+      "id": "request-path",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Give the agent the tools it needs.",
+      "caption": "OpenAI handles the request. Separate tools look up the order and create the follow-up task.",
+      "beat": "A request comes into n8n here. OpenAI reads it, checks the order through this tool, and creates a follow-up through this second tool.",
+      "content": {
+        "name": "Order follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "Order follow-up",
+          "nodes": [
+            {
+              "id": "receive",
+              "type": "webhook",
+              "label": "Receive request",
+              "detail": "POST /operations-request"
+            },
+            {
+              "id": "agent",
+              "type": "ai_agent",
+              "label": "Handle request",
+              "detail": "Check order, then create follow-up"
+            }
+          ],
+          "edges": [
+            {
+              "from": "receive",
+              "to": "agent"
+            }
+          ],
+          "runOrder": [
+            "receive",
+            "agent"
+          ],
+          "context": {
+            "name": "{{request.id}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Order",
+                "value": "{{order.id}}"
+              }
+            ],
+            "states": [
+              "Request received",
+              "{{task.id}} assigned to {{owner.name}}"
+            ]
+          },
+          "related": []
+        },
+        "aiNodes": [
+          {
+            "id": "model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Model for the bounded request"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request_tool",
+            "label": "Get order",
+            "detail": "Read order status"
+          },
+          {
+            "id": "create",
+            "type": "http_request_tool",
+            "label": "Create follow-up",
+            "detail": "Return a confirmed task ID"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "model",
+            "to": "agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "lookup",
+            "to": "agent",
+            "type": "ai_tool"
+          },
+          {
+            "from": "create",
+            "to": "agent",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "receive",
+            "input": [
+              {
+                "label": "requestId",
+                "value": "{{request.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "requestId",
+                "value": "{{request.id}}"
+              },
+              {
+                "label": "request",
+                "value": "{{request.body}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "operations-request"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "agent",
+            "input": [
+              {
+                "label": "request",
+                "value": "{{request.body}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              },
+              {
+                "label": "deliveryStatus",
+                "value": "{{order.status}}"
+              },
+              {
+                "label": "taskId",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              },
+              {
+                "label": "due",
+                "value": "{{task.due}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "{{request.body}}"
+              },
+              {
+                "label": "System Message",
+                "value": "Read the order before acting. Create a follow-up only when delivery is pending. Report only IDs returned by tools. If a tool fails, stop without claiming completion."
+              }
+            ]
+          },
+          {
+            "node": "model",
+            "input": [
+              {
+                "label": "request",
+                "value": "{{request.body}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "response",
+                "value": "Use the order lookup tool before the follow-up tool."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Use Responses API",
+                "value": "Off"
+              }
+            ]
+          },
+          {
+            "node": "lookup",
+            "input": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              },
+              {
+                "label": "deliveryStatus",
+                "value": "{{order.status}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://example.com/api/orders/ORD-1042"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              }
+            ]
+          },
+          {
+            "node": "create",
+            "input": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              },
+              {
+                "label": "deliveryStatus",
+                "value": "{{order.status}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              },
+              {
+                "label": "due",
+                "value": "{{task.due}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "taskId",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              },
+              {
+                "label": "due",
+                "value": "{{task.due}}"
+              },
+              {
+                "label": "status",
+                "value": "open"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://example.com/api/tasks"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"orderId\":\"ORD-1042\",\"owner\":\"Maya Chen\",\"due\":\"2026-10-22\"}"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "agent"
+      },
+      "statuses": [
+        "Request received",
+        "Agent tools inspected"
+      ],
+      "details": [
+        "0:10–0:40. Point to Chat Model and the two Tool connections.",
+        "Click Get order or Create follow-up only if more detail is useful."
+      ],
+      "optional": false
+    },
+    {
+      "id": "agent-result",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "See the task the tool created.",
+      "caption": "The follow-up is assigned to Maya Chen and due on 22 October.",
+      "beat": "Here's the task returned by the follow-up tool. Maya owns it, it's due on 22 October, and its status is open. The input shows which order it belongs to and that delivery is still pending.",
+      "content": {
+        "name": "Order follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "node",
+        "graph": {
+          "name": "Order follow-up",
+          "nodes": [
+            {
+              "id": "receive",
+              "type": "webhook",
+              "label": "Receive request",
+              "detail": "POST /operations-request"
+            },
+            {
+              "id": "agent",
+              "type": "ai_agent",
+              "label": "Handle request",
+              "detail": "Check order, then create follow-up"
+            }
+          ],
+          "edges": [
+            {
+              "from": "receive",
+              "to": "agent"
+            }
+          ],
+          "runOrder": [
+            "receive",
+            "agent"
+          ],
+          "context": {
+            "name": "{{request.id}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Order",
+                "value": "{{order.id}}"
+              }
+            ],
+            "states": [
+              "Request received",
+              "{{task.id}} assigned to {{owner.name}}"
+            ]
+          },
+          "related": []
+        },
+        "aiNodes": [
+          {
+            "id": "model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Model for the bounded request"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request_tool",
+            "label": "Get order",
+            "detail": "Read order status"
+          },
+          {
+            "id": "create",
+            "type": "http_request_tool",
+            "label": "Create follow-up",
+            "detail": "Return a confirmed task ID"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "model",
+            "to": "agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "lookup",
+            "to": "agent",
+            "type": "ai_tool"
+          },
+          {
+            "from": "create",
+            "to": "agent",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "receive",
+            "input": [
+              {
+                "label": "requestId",
+                "value": "{{request.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "requestId",
+                "value": "{{request.id}}"
+              },
+              {
+                "label": "request",
+                "value": "{{request.body}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "operations-request"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "agent",
+            "input": [
+              {
+                "label": "request",
+                "value": "{{request.body}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              },
+              {
+                "label": "deliveryStatus",
+                "value": "{{order.status}}"
+              },
+              {
+                "label": "taskId",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              },
+              {
+                "label": "due",
+                "value": "{{task.due}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "{{request.body}}"
+              },
+              {
+                "label": "System Message",
+                "value": "Read the order before acting. Create a follow-up only when delivery is pending. Report only IDs returned by tools. If a tool fails, stop without claiming completion."
+              }
+            ]
+          },
+          {
+            "node": "model",
+            "input": [
+              {
+                "label": "request",
+                "value": "{{request.body}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "response",
+                "value": "Use the order lookup tool before the follow-up tool."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Use Responses API",
+                "value": "Off"
+              }
+            ]
+          },
+          {
+            "node": "lookup",
+            "input": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              },
+              {
+                "label": "deliveryStatus",
+                "value": "{{order.status}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://example.com/api/orders/ORD-1042"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              }
+            ]
+          },
+          {
+            "node": "create",
+            "input": [
+              {
+                "label": "orderId",
+                "value": "{{order.id}}"
+              },
+              {
+                "label": "deliveryStatus",
+                "value": "{{order.status}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              },
+              {
+                "label": "due",
+                "value": "{{task.due}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "taskId",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              },
+              {
+                "label": "due",
+                "value": "{{task.due}}"
+              },
+              {
+                "label": "status",
+                "value": "open"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://example.com/api/tasks"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"orderId\":\"ORD-1042\",\"owner\":\"Maya Chen\",\"due\":\"2026-10-22\"}"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "create"
+      },
+      "statuses": [
+        "Request received",
+        "Task result visible"
+      ],
+      "details": [
+        "0:40–1:35. Point to the tool’s returned taskId, owner, due and status in OUTPUT.",
+        "INPUT shows ORD-1042 and its pending status from the lookup. The output is the tool response, not the agent’s assertion.",
+        "Optional: close the panel to inspect the model and separate tool connections. Production failure and duplicate cases remain rollout acceptance work."
+      ],
+      "optional": false
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "applied": false,
+  "bid_stats_basis": {
+    "contract_type": "HOURLY",
+    "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+  },
+  "can_apply": true,
+  "client_record": {
+    "contracts_active": 1,
+    "contracts_total": 2,
+    "feedback_count": 1,
+    "feedback_score": 0,
+    "hire_rate_percent": 100,
+    "hours_total": 15,
+    "jobs_posted": 2,
+    "jobs_with_hires": 2,
+    "open_jobs": 1,
+    "spend_total": "$539.73"
+  },
+  "client_work_history": {
+    "closed": [
+      {
+        "ended": "2026-10-09T13:47:47.386Z",
+        "started": "2026-09-29T18:13:11.348Z",
+        "status": "CLOSED",
+        "title": "Microsoft 365 Migration Expert – New Domain, Email, Files & Website Setup",
+        "type": "HOURLY"
+      }
+    ],
+    "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+    "open": [
+      {
+        "started": "2026-09-02T18:38:08.429Z",
+        "status": "ACTIVE",
+        "title": "AWS S3/IAM Security Expert Needed Today — Two Restricted Access Levels",
+        "type": "HOURLY"
+      }
+    ],
+    "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+    "shown": 2
+  },
+  "connects_balance": 1475,
+  "connects_cost": 15,
+  "data": {
+    "marketplaceJobPosting": {
+      "activityStat": {
+        "applicationsBidStats": {
+          "avgRateBid": {
+            "currency": "USD",
+            "displayValue": "$28.61",
+            "rawValue": "28.614375"
+          },
+          "maxRateBid": {
+            "currency": "USD",
+            "displayValue": "$80.00",
+            "rawValue": "80.0"
+          },
+          "minRateBid": {
+            "currency": "USD",
+            "displayValue": "$10.00",
+            "rawValue": "10.0"
+          }
+        },
+        "jobActivity": {
+          "invitesSent": 0,
+          "totalHired": 0,
+          "totalInvitedToInterview": 0,
+          "totalOffered": 0
+        }
+      },
+      "classification": {
+        "category": {
+          "id": "531770282580668422",
+          "preferredLabel": "Sales & Marketing"
+        },
+        "subCategory": {
+          "id": "531770282597445636",
+          "preferredLabel": "Digital Marketing"
+        }
+      },
+      "clientCompanyPublic": {
+        "id": "1020090685",
+        "state": "MD",
+        "timezone": "America/Chicago"
+      },
+      "content": {
+        "description": "<untrusted_participant_content>\nGoHighLevel Expert / Marketing Automation & Business Systems Specialist\n\nProject Type: Initial setup with potential for ongoing work\nExperience Level: Intermediate to Expert\nLocation Preference: Mexico / Latin America\nEnglish: Strong working proficiency\nBudget: Open to hourly or fixed-price proposals\n\nOverview\n\nWe are launching a U.S.-based financial services marketing and customer acquisition business and are looking for a highly capable, hands-on technical specialist to help build and integrate our operating infrastructure.\n\nWe need someone who can take ownership of the technical setup, configure multiple applications, connect them, and ensure everything functions together.\n\nThis is not simply a GoHighLevel project. We are looking for a versatile technical professional who understands CRM systems, marketing automation, websites, business email, telecommunications, databases, and software integrations.\n\nWe prefer someone who can become a long-term technical resource as the business grows.\n\nScope of Work\n\n1. GoHighLevel — CRM & Marketing Automation\n\n* Complete initial account setup and configuration.\n* Configure sales pipelines, lead management, and customer workflows.\n* Import, organize, and segment large customer databases.\n* Set up automated email, SMS, and follow-up campaigns.\n* Configure forms, landing pages, and lead capture.\n* Establish reporting dashboards.\n* Integrate calling, messaging, and other applications.\n\n2. Microsoft 365 & Business Email\n\n* Configure business email accounts using Microsoft 365 / Outlook.\n* Set up domain-based email addresses.\n* Configure DNS, SPF, DKIM, and DMARC.\n* Ensure reliable email delivery and integration with GoHighLevel.\n\n3. Websites, Domains & Hosting\n\n* Configure domains and DNS through DreamHost.\n* Build an initial business website and landing pages using GoHighLevel.\n* Connect websites, forms, tracking, and CRM functionality.\n* Configure SSL and other necessary website settings.\n\n4. Phone Systems & Communications\n\n* Configure inbound and outbound calling through GoHighLevel and compatible providers.\n* Set up business phone numbers, call routing, voicemail, and SMS.\n* Establish automated responses and follow-up sequences.\n* Integrate communications with CRM customer records.\n\n5. Software Integrations & Business Infrastructure\n\n* Integrate GoHighLevel with other business applications.\n* Configure Zapier, Make, webhooks, or APIs as needed.\n* Assist with QuickBooks and other operational software.\n* Establish Bitwarden password management and appropriate user permissions.\n* Configure basic system security, backups, and access controls.\n\n6. Database & Marketing Support\n\n* Import and manage large customer databases.\n* Perform data cleaning, deduplication, and segmentation.\n* Configure marketing campaign tracking and reporting.\n* Assist with Google Ads and Meta advertising integrations.\n* Establish workflows supporting both direct mail and digital marketing campaigns.\n\nRequired Experience\n\n* Proven hands-on GoHighLevel implementation experience.\n* Strong understanding of CRM and marketing automation.\n* Experience with Microsoft 365, Outlook, and domain configuration.\n* Experience with Twilio or similar telecommunications integrations.\n* Knowledge of DNS, email authentication, and website hosting.\n* Experience with Zapier, Make, APIs, or webhooks.\n* Strong Excel/CSV and database management skills.\n* Ability to independently troubleshoot technical problems.\n\nIdeal Candidate\n\nWe are looking for a resourceful, technically proficient all-around systems implementer.\n\nSomeone who can:\n\n* Take a project from concept through implementation.\n* Recommend practical, cost-effective solutions.\n* Work independently without extensive supervision.\n* Troubleshoot problems across multiple applications.\n* Communicate clearly and provide regular progress updates.\n* Help us build an infrastructure that can scale as transaction volume increases.\n\nWe are not looking for an agency that delegates everything to different people. We prefer an individual who personally understands and performs the work.\n\nInitial Project Objectives\n\nOur immediate goal is to establish a fully functional operating platform within approximately 30 days, with the most important systems operational during the first two weeks.\n\nThe initial implementation includes:\n\n1. GoHighLevel fully configured.\n2. Business email accounts operational.\n3. Website and landing pages established.\n4. Phone and SMS systems integrated.\n5. Customer databases imported and segmented.\n6. Marketing automation workflows functioning.\n7. Core business applications connected.\n8. Systems tested and documented.\n\nWhen Applying\n\nPlease answer the following questions:\n\n1. How many GoHighLevel implementations have you personally completed?\n2. Have you configured Microsoft 365, DNS, email authentication, and domain-based business email?\n3. Have you integrated GoHighLevel with Twilio, Zapier, Make, or other applications?\n4. Are you comfortable working with large customer databases and building automated marketing workflows?\n5. Can you personally handle the entire scope, or would you need additional developers?\n6. What is your hourly rate, and approximately how many hours would you estimate for the initial setup?\n7. Are you available to begin immediately?\n\nWe are looking to hire quickly and establish an ongoing working relationship with the right person.\n</untrusted_participant_content>",
+        "title": "GoHighLevel Expert / Marketing Automation & Business Systems Specialist"
+      },
+      "contractTerms": {
+        "contractType": "HOURLY",
+        "experienceLevel": "EXPERT",
+        "hourlyContractTerms": {
+          "engagementType": "PART_TIME",
+          "hourlyBudgetMax": 30,
+          "hourlyBudgetMin": 25,
+          "hourlyBudgetType": "MANUAL"
+        },
+        "personsToHire": 1
+      },
+      "id": "2112918438611511394",
+      "url": "https://www.upwork.com/jobs/~022112918438611511394?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor",
+      "workFlowState": {
+        "status": "ACTIVE"
+      }
+    }
+  },
+  "plan": "Freelancer Plus",
+  "preferred_locations": {
+    "countries": [
+      "Mexico"
+    ],
+    "location_required": false
+  },
+  "preferred_qualifications": {
+    "contractor_type": "All freelancers",
+    "english_proficiency": "Any",
+    "has_portfolio": false,
+    "min_earnings": "Any",
+    "min_hours_worked": 0,
+    "min_job_success_score": 0,
+    "rising_talent": false
+  },
+  "proposals_tier_unavailable": true,
+  "status": "ok",
+  "trace_id": "b226bef632f1dccfe6390ddb40c07105",
+  "unanswered_invites_unavailable": true
+}

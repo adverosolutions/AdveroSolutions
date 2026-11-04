@@ -82,7 +82,7 @@ Public search-index signals have mixed crawl dates and category overlap; see the
 - Current implementation/readiness: Desktop sales candidate; bounded editor/node scope
 - Research snapshot adapter note (dated, not approval): Existing n8n renderer: visual rebuild; AI cluster unsupported
 - Rebuilt scope: Editor canvas and returned-node output table
-- Current boundary: Literal sample requests; no executed API/dynamic-expression proof. Mobile whole-flow entry limited. Full execution chrome/AI subnodes not accepted.
+- Current boundary: Literal sample requests; no executed API/dynamic-expression proof. Mobile whole-flow entry limited. Typed AI Agent/model/tool support and current 2026 references added on 20 October; approval remains exact-generation only.
 - Candidate preview: [n8n](previews/n8n/page.html)
 - Seed spec: [JSON](sources/pipeline/templates/sales-deck/native-templates/n8n.json)
 

@@ -1,0 +1,440 @@
+{
+  "schemaVersion": 1,
+  "id": "zoho-lead-status-followup-2115469770039955764",
+  "title": "Lead status and follow-up task automation",
+  "systemName": "Your lead status and follow-up automation",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022115469770039955764",
+    "facts": [
+      "Post (Zoho CRM Automation Expert Needed | Zoho One & Workflow Optimization): simple CRM automation that updates lead statuses and creates follow-up tasks on specific conditions; make sure current workflows run without duplicate tasks or unnecessary manual steps; test everything and explain what was changed; not a CRM rebuild.",
+      "Stack named in post: Zoho CRM, Zoho One, Zoho Creator, Deluge. No Zoho adapter exists, so the deck uses the custom workbench and no vendor name or screen appears on the page. In the client's CRM this maps to a workflow rule calling a Deluge custom function.",
+      "No client contact name in the post or reviews; personalization omitted (U-006 fallback: your team).",
+      "All people, IDs, dates and counts are invented sample data."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Teodora Lindqvist",
+      "first": "Teodora",
+      "company": "Northgate Office Interiors",
+      "email": "teodora@northgate.example",
+      "id": "LD-20418"
+    },
+    "owner": {
+      "name": "Marcus Reed"
+    },
+    "status": {
+      "before": "Contacted",
+      "after": "Follow-up due"
+    },
+    "task": {
+      "subject": "Follow-up call with Teodora Lindqvist",
+      "due": "Thu Oct 29, 10:00 AM",
+      "id": "TSK-5531"
+    },
+    "log": {
+      "id": "CHG-0142"
+    },
+    "rule": {
+      "name": "Stalled lead follow-up",
+      "wait": "2 business days"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your lead status and follow-up automation",
+    "title": "From a lead that went quiet",
+    "accent": "to a follow-up task, logged.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Workflow rule and custom function",
+      "Status updated on set conditions",
+      "One follow-up task, never two",
+      "Change log your team can read"
+    ],
+    "previewSteps": [
+      {
+        "title": "Check the lead",
+        "detail": "The rule looks at status, last activity and open tasks."
+      },
+      {
+        "title": "Update and assign",
+        "detail": "The status moves and the owner gets one follow-up task."
+      },
+      {
+        "title": "Test and explain",
+        "detail": "Each run is tested and written to a change log."
+      }
+    ],
+    "footer": "Illustrative sample · invented lead and data · no live CRM connected",
+    "beat": "You asked for a simple automation that updates lead statuses and creates follow-up tasks on set conditions, without duplicate tasks. Here is that setup, with one sample lead."
+  },
+  "scenes": [
+    {
+      "id": "rule-and-function",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "One workflow rule calls one custom function.",
+      "caption": "When a lead goes quiet, the function checks it, updates the status and creates the follow-up task.",
+      "beat": "The workflow rule runs whenever a lead is edited, and once a day for leads with no new activity. It calls one custom function. The function checks the conditions, moves {{lead.name}} from {{status.before}} to {{status.after}}, checks for an open follow-up task, creates one for {{owner.name}}, and writes what it did to the change log.",
+      "details": [
+        "Sample lead: {{lead.name}}, {{lead.company}}, {{lead.id}}",
+        "If an open follow-up task already exists, the function skips creating a new one and logs the skip.",
+        "Rule name: {{rule.name}}. The conditions are agreed with you before anything goes live."
+      ],
+      "content": {
+        "name": "{{rule.name}}",
+        "subtitle": "Workflow rule plus custom function",
+        "nodes": [
+          {
+            "id": "rule",
+            "label": "Workflow rule runs",
+            "detail": "On lead edit, and a daily check for leads with no new activity"
+          },
+          {
+            "id": "conditions",
+            "label": "Check the conditions",
+            "detail": "Status is {{status.before}}, no activity in {{rule.wait}}, owner assigned"
+          },
+          {
+            "id": "status",
+            "label": "Update the lead status",
+            "detail": "{{status.before}} becomes {{status.after}}"
+          },
+          {
+            "id": "dupe",
+            "label": "Look for an open follow-up task",
+            "detail": "Same lead, same task type, not completed"
+          },
+          {
+            "id": "task",
+            "label": "Create the follow-up task",
+            "detail": "{{task.subject}}, due {{task.due}}, owner {{owner.name}}"
+          },
+          {
+            "id": "log",
+            "label": "Write to the change log",
+            "detail": "{{log.id}}: what changed, when, and why"
+          }
+        ],
+        "edges": [
+          {
+            "from": "rule",
+            "to": "conditions"
+          },
+          {
+            "from": "conditions",
+            "to": "status",
+            "label": "Conditions met"
+          },
+          {
+            "from": "status",
+            "to": "dupe"
+          },
+          {
+            "from": "dupe",
+            "to": "task",
+            "label": "No open task"
+          },
+          {
+            "from": "dupe",
+            "to": "log",
+            "label": "Open task found, skip"
+          },
+          {
+            "from": "task",
+            "to": "log"
+          }
+        ],
+        "runOrder": [
+          "rule",
+          "conditions",
+          "status",
+          "dupe",
+          "task",
+          "log"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{lead.company}} · {{lead.id}}",
+          "fields": [
+            {
+              "label": "Lead owner",
+              "value": "{{owner.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "{{status.before}}"
+            },
+            {
+              "label": "Last activity",
+              "value": "Mon Oct 26"
+            },
+            {
+              "label": "Data",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Rule picked up {{lead.name}}",
+            "All three conditions met",
+            "Status set to {{status.after}}",
+            "No open follow-up task found",
+            "{{task.id}} created for {{owner.name}}",
+            "Run written to {{log.id}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Custom function",
+            "detail": "Holds the condition checks, status update, duplicate check and task creation in one place"
+          },
+          {
+            "title": "Existing workflows",
+            "detail": "Rules that already create tasks are checked so two rules never fire for the same lead"
+          }
+        ]
+      },
+      "statuses": [
+        "Rule picked up {{lead.name}}",
+        "All three conditions met",
+        "Status set to {{status.after}}",
+        "No open follow-up task found",
+        "{{task.id}} created for {{owner.name}}",
+        "Run written to {{log.id}}"
+      ],
+      "optional": false
+    },
+    {
+      "id": "lead-record",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "The lead before and after the function runs.",
+      "caption": "{{lead.name}} now shows the right status and one open follow-up task for {{owner.name}}.",
+      "beat": "Here is {{lead.name}}'s lead record. On the left is what the function saw: {{status.before}}, no reply since Monday, and no open task. On the right is the result: the status is {{status.after}}, and {{owner.name}} has one follow-up call due {{task.due}}.",
+      "details": [
+        "Before: {{status.before}}, last activity Mon Oct 26, no open task",
+        "After: {{status.after}}, {{task.id}} open for {{owner.name}}"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.company}} · {{lead.id}}",
+        "sourceTitle": "What the function checked",
+        "sourceFields": [
+          {
+            "label": "Lead status",
+            "value": "{{status.before}}"
+          },
+          {
+            "label": "Last activity",
+            "value": "Mon Oct 26, intro email sent"
+          },
+          {
+            "label": "Open follow-up tasks",
+            "value": "None"
+          },
+          {
+            "label": "Lead owner",
+            "value": "{{owner.name}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Lead status",
+            "value": "{{status.after}}"
+          },
+          {
+            "label": "Follow-up task",
+            "value": "{{task.subject}}"
+          },
+          {
+            "label": "Due",
+            "value": "{{task.due}}"
+          },
+          {
+            "label": "Assigned to",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Task ID",
+            "value": "{{task.id}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Status changed",
+            "detail": "{{status.before}} to {{status.after}} by the {{rule.name}} rule"
+          },
+          {
+            "title": "Task created",
+            "detail": "{{task.id}} assigned to {{owner.name}}"
+          },
+          {
+            "title": "Change logged",
+            "detail": "Entry {{log.id}} added"
+          }
+        ],
+        "notice": "Illustrative sample record. Field names are matched to your CRM during setup."
+      },
+      "statuses": [
+        "Status updated",
+        "Task created",
+        "Change logged"
+      ],
+      "optional": false
+    },
+    {
+      "id": "team-note",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "What your team sees after the change.",
+      "caption": "{{owner.name}} gets the task, and your admin gets a plain summary of what changed.",
+      "beat": "{{owner.name}} gets one task notice for {{lead.name}}. Your admin gets a short summary of what was changed in the setup and why.",
+      "details": [
+        "Both are drafts in the sample; nothing is sent from this page"
+      ],
+      "content": {
+        "name": "Team updates",
+        "subtitle": "Sample notes for {{lead.id}}",
+        "fields": [
+          {
+            "label": "Lead",
+            "value": "{{lead.name}}"
+          },
+          {
+            "label": "Status",
+            "value": "Draft notes"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{rule.name}} rule",
+            "time": "Wed 9:00 AM",
+            "body": "New follow-up task for {{owner.name}}: {{task.subject}}, due {{task.due}}. Status is now {{status.after}}."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Lorenzo",
+            "time": "Wed 9:05 AM",
+            "body": "What changed: one new rule ({{rule.name}}) and one custom function. Any older rule that also creates a task for these leads is switched off, so each lead gets one follow-up task. Every run is written to the change log."
+          }
+        ],
+        "notice": "Illustrative drafts. Nothing is sent from this demo."
+      },
+      "statuses": [
+        "Task notice drafted",
+        "Change summary drafted"
+      ],
+      "optional": true
+    },
+    {
+      "id": "tested-and-logged",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Tested, with every change written down.",
+      "caption": "Each test case ran once, the duplicate check held, and the change log shows exactly what the function did.",
+      "beat": "Before anything goes live, I run test leads through every condition, including one that already has an open task. That lead gets no second task, and the skip shows in the log. The change log entry {{log.id}} records what changed for {{lead.name}}, so your team can always see why a status moved.",
+      "details": [
+        "Test counts are illustrative",
+        "Change log entry {{log.id}} for {{lead.name}}"
+      ],
+      "content": {
+        "name": "Test run and change log",
+        "subtitle": "{{rule.name}} · sample tests",
+        "fields": [
+          {
+            "label": "Change log entry",
+            "value": "{{log.id}}"
+          },
+          {
+            "label": "Lead",
+            "value": "{{lead.name}}, {{lead.id}}"
+          },
+          {
+            "label": "Changed",
+            "value": "Status {{status.before}} to {{status.after}}; {{task.id}} created"
+          },
+          {
+            "label": "Duplicate check",
+            "value": "Test lead with an open task: skipped, no second task"
+          }
+        ],
+        "stages": [
+          "Test leads loaded",
+          "Conditions checked",
+          "Statuses updated",
+          "Duplicate check passed",
+          "Change log written"
+        ],
+        "stageSequence": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Test cases passed",
+            "value": "5 of 5",
+            "note": "Illustrative sample run"
+          },
+          {
+            "label": "Duplicate tasks created",
+            "value": "None",
+            "note": "Lead with an open task was skipped"
+          },
+          {
+            "label": "Statuses changed by hand",
+            "value": "None",
+            "note": "In the sample run"
+          }
+        ],
+        "note": "Illustrative test run on invented leads. We run the same tests on your setup before go-live."
+      },
+      "statuses": [
+        "Five test leads loaded",
+        "Statuses updated on matching leads",
+        "Duplicate check held",
+        "Change log written"
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Right status, one task,",
+    "accent": "and less work by hand.",
+    "caption": "We agree a starting point with you, then track these three.",
+    "metrics": [
+      {
+        "name": "Leads with the right status",
+        "direction": "up",
+        "aim": "More leads show their real stage",
+        "definition": "Leads whose status matches the agreed conditions, divided by all open leads."
+      },
+      {
+        "name": "Duplicate follow-up tasks",
+        "direction": "down",
+        "aim": "Fewer double tasks for the same lead",
+        "definition": "Open leads with more than one open follow-up task of the same type."
+      },
+      {
+        "name": "Status changes made by hand",
+        "direction": "down",
+        "aim": "Fewer updates your team makes by hand",
+        "definition": "Lead status changes made by a person instead of the rule, per week."
+      }
+    ],
+    "baselineNote": "We set the baseline from your current CRM data and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your current rules and conditions with you on a quick 15-minute call. Just reply here and I'll send over three times."
+  }
+}

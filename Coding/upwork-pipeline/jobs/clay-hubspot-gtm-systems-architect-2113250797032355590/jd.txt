@@ -1,0 +1,146 @@
+url: https://www.upwork.com/jobs/~022113250797032355590
+Senior Clay + HubSpot GTM Systems Architect | Enrichment, CRM Governance & Signals
+metadata: posted 2026-10-22 07:50 CT; hourly contract, 15 to 25 hr initial sprint; US-only; Connects 17; client United States, hire rate 66%, feedback 4.91
+budget (raw lookup, private, never in proposal copy): hourly $60-85
+screening questions (in post, "When Applying"): 1 most relevant Clay + HubSpot production environment; 2 what you built vs team; 3 HubSpot writeback, field precedence, conflicting data; 4 controlling Clay credits/provider costs; 5 documentation and handoff; 6 hourly rate or project structure; 7 availability and timing for 15-25 hr sprint. Preferred: short Loom of a sanitized Clay workflow you personally built.
+what NOT to claim: HubSpot builds (not confirmed, ask Lorenzo); Clay production experience (not in approved facts); any past Clay credit savings; certifications.
+client first name: (none in post; business name Bumblebee IT Services / BBITS)
+source: ~/advero/upwork/runs/picks_20261022_1000.md section 2 (Upwork Manager raw lookup, 2026-10-22)
+
+Senior Clay + HubSpot GTM Systems Architect | Enrichment, CRM Governance & Signals
+
+Project Type: Initial architecture and implementation sprint
+Estimated Initial Engagement: Approximately 15–25 hours
+Experience Level: Expert
+Work Arrangement: Remote
+Budget: $60–$85/hour; exceptional candidates with highly relevant experience may be considered above range
+Primary Platforms: Clay + HubSpot
+
+Project Overview
+Bumblebee IT Services (BBITS) is seeking a hands-on Clay + HubSpot GTM Systems Architect to design and implement a reusable data, enrichment, and market-intelligence foundation for our business-development programs.
+
+This is not a traditional lead-generation, list-building, or outbound-campaign assignment.
+
+We need a consultant who can architect the underlying system: how companies and contacts are discovered, qualified, enriched, validated, written to HubSpot, protected from bad overwrites, monitored for meaningful business signals, and maintained after the consultant's engagement ends.
+The ideal consultant has personally designed and implemented production Clay-to-HubSpot environments and can make sound architecture decisions when data sources conflict, workflows fail, enrichment costs increase, or CRM governance requirements become complex.
+
+The initial engagement is expected to require approximately 15–25 hours. Successful completion may lead to additional implementation, optimization, or ongoing GTM systems work as future needs are identified.
+
+What We Need Built
+
+The initial engagement will prioritize a practical, reusable architecture that may include:
+Clay + HubSpot Architecture
+•	Review the existing Clay and HubSpot environment before implementing changes.
+•	Establish clear source-of-truth, field-precedence, and writeback rules.
+•	Protect known-good HubSpot data from inappropriate enrichment overwrites.
+•	Define staging, verification, exception, and review logic where appropriate.
+•	Maintain reliable company/contact associations and record matching.
+
+Reusable Enrichment Workflows
+•	Create reusable company and contact enrichment templates.
+•	Build enrichment waterfalls and conditional logic.
+•	Validate decision-makers and contact information before CRM activation.
+•	Support enrichment of existing HubSpot records as well as discovery of new qualified accounts and contacts.
+•	Develop appropriate deduplication and normalization controls.
+
+Market & Trigger Intelligence
+Help establish reusable methods for identifying and qualifying business-development signals such as:
+•	leadership changes;
+•	organizational expansion;
+•	cybersecurity or technology events;
+•	funding or investment activity;
+•	technology initiatives;
+•	acquisitions or organizational changes;
+•	other defined account-level triggers.
+
+Trigger workflows should include appropriate recency, source, relevance, deduplication, and CRM-governance controls.
+
+Clay Credit & Provider Cost Management
+•	Prevent unnecessary enrichment runs.
+•	Use stop-on-success and conditional logic where appropriate.
+•	Sequence providers intentionally.
+•	Avoid paying for data already available in HubSpot.
+•	Establish testing practices before large production runs.
+•	Recommend cost-conscious architecture without sacrificing data quality.
+
+QA & Failure Recovery
+•	Establish QA checkpoints before production writeback.
+•	Identify failed, incomplete, or conflicting records.
+•	Support batch/run tracking where appropriate.
+•	Design workflows so erroneous updates can be identified and corrected without blindly overwriting legitimate later changes.
+
+Documentation & Knowledge Transfer
+The engagement should leave BBITS with an architecture we can understand and maintain.
+Expected handoff should include appropriate:
+•	workflow documentation;
+•	field/writeback map;
+•	naming conventions;
+•	operating guidance;
+•	exception handling;
+•	maintenance instructions;
+•	Loom/video walkthroughs or live knowledge-transfer session.
+
+What We Are Looking For
+
+You should have hands-on production experience, not simply familiarity with Clay or experience generating prospect lists.
+
+Strong candidates will have experience with several of the following:
+•	advanced Clay workflows;
+•	Clay + HubSpot integration;
+•	CRM field governance;
+•	controlled writeback;
+•	enrichment waterfalls;
+•	company/contact matching;
+•	data normalization and deduplication;
+•	HubSpot custom properties and associations;
+•	CRM cleanup and bounced-contact remediation;
+•	signal or trigger-based GTM workflows;
+•	APIs or webhooks;
+•	enrichment-provider optimization;
+•	RevOps or GTM systems architecture;
+•	workflow QA and error recovery;
+•	documentation and handoff.
+
+What Success Looks Like
+
+At the end of the initial engagement, BBITS should be able to:
+•	discover and qualify appropriate target organizations;
+•	identify and enrich relevant decision-makers;
+•	safely improve existing CRM records;
+•	create qualified new HubSpot records without unnecessary duplication;
+•	identify meaningful account-level business signals;
+•	control enrichment costs;
+•	understand why and when data is written to HubSpot;
+•	identify workflow failures or exceptions;
+•	duplicate and maintain the core workflows without depending on the original consultant for every change.
+
+We value accuracy, architecture quality, maintainability, documentation, and sound technical judgment over raw volume.
+
+When Applying
+
+Please keep your response focused. We are more interested in evidence of architecture experience than a long cover letter.
+
+Please provide:
+1.	A brief description of the most relevant Clay + HubSpot production environment you personally designed or implemented.
+2.	What you personally built versus what other team members handled.
+3.	How you handled HubSpot writeback, field precedence, or conflicting data.
+4.	An example of how you controlled Clay credits or enrichment-provider costs.
+5.	Your approach to documentation and handoff.
+6.	Your hourly rate or proposed project structure.
+7.	Your availability to begin and estimated timing for a 15–25 hour initial sprint.
+
+Strongly Preferred: Short Technical Walkthrough
+
+If possible, include a short Loom or similar walkthrough of a sanitized Clay workflow you personally built.
+
+Please do not expose client-confidential information.
+
+In approximately 3–5 minutes, show or explain:
+source → Clay logic → enrichment/qualification → validation → CRM/writeback → QA
+
+We are specifically looking for evidence that you personally understand and build these systems.
+Important
+
+This project is not primarily about generating the largest possible prospect list.
+
+We are looking for someone who can leave BBITS with a reliable, governed, reusable Clay + HubSpot system that supports future research, enrichment, market intelligence, segmentation, and business-development activity.

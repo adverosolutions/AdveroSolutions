@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-automation-specialist-crm-lead-management-2113409159971093497",
+  "title": "GoHighLevel Automation Specialist: CRM, Lead Management and Workflow Automation",
+  "systemName": "Your enquiry hub",
+  "account": {
+    "name": "Marvellous Property Services",
+    "initials": "MP",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113409159971093497",
+    "facts": [
+      "Post: UK plumbing, heating and property maintenance business using GoHighLevel with Tradify and QuickBooks.",
+      "Post asks: capture enquiries from forms, email, phone, missed calls and WhatsApp; quiet-lead follow-up; missed call and voicemail workflows; internal notifications; reduce duplicate entry between GHL, Tradify and QuickBooks; review requests.",
+      "No first name in post; business name used per U-006. Content reused from tour/ built 2026-10-22 19:08 CT."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Hannah Okafor",
+      "first": "Hannah",
+      "phone": "07700 900418",
+      "job": "No hot water"
+    },
+    "office": {
+      "name": "Sam"
+    },
+    "quote": {
+      "name": "Chloe Barnes",
+      "first": "Chloe",
+      "job": "Hot water cylinder swap"
+    },
+    "biz": {
+      "name": "Marvellous Property Services"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your enquiry hub",
+    "title": "From a missed call",
+    "accent": "to a booked job.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "GoHighLevel with Tradify and QuickBooks",
+      "Missed calls and voicemail",
+      "Quotes that go quiet"
+    ],
+    "previewSteps": [
+      {
+        "title": "Catch the missed call",
+        "detail": "A text back, a card on the board and an urgent alert."
+      },
+      {
+        "title": "The office replies",
+        "detail": "Sam checks the AI draft and sends it himself."
+      },
+      {
+        "title": "Book the job",
+        "detail": "The card moves to booked and the job goes to Tradify."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · made-up customers and numbers"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure every enquiry",
+    "accent": "from first call to booked job.",
+    "caption": "We measure how enquiries are handled today, then track these three after each stage goes live.",
+    "metrics": [
+      {
+        "name": "Enquiries with a source tag",
+        "direction": "up",
+        "aim": "Tag more enquiries by source",
+        "definition": "Enquiries carrying a source tag (website form, email, phone, missed call or WhatsApp) divided by all enquiries received in the same period."
+      },
+      {
+        "name": "Missed calls with no reply",
+        "direction": "down",
+        "aim": "Leave fewer missed callers waiting",
+        "definition": "Missed calls that received neither a text back nor a ring back within the agreed time, divided by all missed calls in the same period."
+      },
+      {
+        "name": "Quotes left without follow-up",
+        "direction": "down",
+        "aim": "Follow up more quotes",
+        "definition": "Quoted enquiries with no customer contact logged within two days of the quote, divided by all quotes sent in the same period."
+      }
+    ],
+    "baselineNote": "We'll measure the starting baseline in the audit and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "We'd start with an audit and measure today: source tags, missed calls with no reply, and quotes with no follow-up. Then we build in stages and compare. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "missed-call",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "A missed call at 7:52 becomes an urgent card.",
+      "caption": "Hannah gets a text back, her voicemail is read for urgency, and the office is alerted.",
+      "beat": "Say {{lead.first}} rings at 7:52 and nobody picks up. She gets a text back straight away and a card goes on the board. Her voicemail says no hot water with young children at home, so the office and the on-call engineer are alerted.",
+      "details": [
+        "Missed call 07:52 · {{lead.name}} · {{lead.phone}}",
+        "Urgent voicemail · office app and on-call engineer alerted"
+      ],
+      "content": {
+        "name": "After a missed call",
+        "nodes": [
+          {
+            "id": "tag",
+            "type": "contact_tag",
+            "label": "Missed call tag added",
+            "detail": "Tag missed-call added when nobody answers"
+          },
+          {
+            "id": "textback",
+            "type": "sms",
+            "label": "Text back in a minute",
+            "detail": "Sorry we missed you. Reply here or we'll ring you back shortly."
+          },
+          {
+            "id": "card",
+            "type": "opportunity",
+            "label": "Card added to New",
+            "detail": "Source tag: Missed call · Job: {{lead.job}}"
+          },
+          {
+            "id": "urgent",
+            "type": "condition",
+            "label": "Voicemail marked urgent?",
+            "detail": "AI reads the transcript for words like no hot water or leak"
+          },
+          {
+            "id": "alert",
+            "type": "notification",
+            "label": "Office and on-call engineer alerted",
+            "detail": "Urgent: {{lead.job}}, call back now"
+          },
+          {
+            "id": "callback",
+            "type": "assign_user",
+            "label": "Office rings back in hours",
+            "detail": "Assigned to {{office.name}} for a normal call back"
+          }
+        ],
+        "edges": [
+          {
+            "from": "tag",
+            "to": "textback"
+          },
+          {
+            "from": "textback",
+            "to": "card"
+          },
+          {
+            "from": "card",
+            "to": "urgent"
+          },
+          {
+            "from": "urgent",
+            "to": "alert",
+            "label": "Urgent"
+          },
+          {
+            "from": "urgent",
+            "to": "callback",
+            "label": "Not urgent"
+          }
+        ],
+        "runOrder": [
+          "tag",
+          "textback",
+          "card",
+          "urgent",
+          "alert"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{lead.phone}} · Missed call",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            },
+            {
+              "label": "Job",
+              "value": "{{lead.job}}"
+            }
+          ],
+          "states": [
+            "Missed call at 07:52",
+            "Text back sent 07:53",
+            "Card in New",
+            "Voicemail read: urgent",
+            "Office alerted 07:54"
+          ]
+        },
+        "related": [
+          {
+            "title": "Voicemail transcript",
+            "detail": "No hot water since last night, boiler shows an error."
+          },
+          {
+            "title": "Every step logged",
+            "detail": "Each action is saved on Hannah's contact record."
+          }
+        ]
+      },
+      "statuses": [
+        "Missed call at 07:52",
+        "Text back sent",
+        "Card added to New",
+        "Voicemail marked urgent",
+        "Office and engineer alerted"
+      ],
+      "optional": false
+    },
+    {
+      "id": "conversation",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "The office replies, not the AI.",
+      "caption": "The AI drafts the reply. Sam reads it and presses send.",
+      "beat": "Here's {{lead.first}}'s thread. The text back, her voicemail as text, and the urgent alert. The AI drafted a reply, but {{office.name}} in the office read it and sent it. Nothing goes to a customer on its own.",
+      "details": [
+        "AI drafts, a person sends",
+        "Thread and alert saved on {{lead.name}}'s contact"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}}",
+        "fields": [
+          {
+            "label": "Source",
+            "value": "Missed call"
+          },
+          {
+            "label": "Job",
+            "value": "{{lead.job}}"
+          },
+          {
+            "label": "Handled by",
+            "value": "{{office.name}}, office"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{biz.name}}",
+            "time": "07:53",
+            "body": "Sorry we missed you. Reply here or we'll ring you back shortly."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Voicemail transcript",
+            "time": "07:54",
+            "body": "Hi, it's Hannah. We've had no hot water since last night and the boiler shows an error. Two little ones at home."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Urgent alert",
+            "time": "07:54",
+            "body": "No hot water, call back now. {{lead.name}}, {{lead.phone}}. Sent to the office app and the on-call engineer."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{office.name}}",
+            "time": "07:57",
+            "body": "Hi Hannah, thanks for the message. It's Sam from the office, I'll ring you in the next few minutes to sort a visit."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "07:58",
+            "body": "Thank you, I'm in all morning."
+          }
+        ],
+        "notice": "Sam checked the AI draft before sending. The AI never messages a customer on its own."
+      },
+      "statuses": [
+        "Text back sent",
+        "Voicemail transcribed",
+        "Urgent alert sent",
+        "Sam sends the reply",
+        "Hannah replies"
+      ],
+      "optional": false
+    },
+    {
+      "id": "quiet-quote",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Quotes that go quiet get followed up.",
+      "caption": "Chloe hasn't replied in four days. A text, an email, then a call task for the office.",
+      "beat": "{{quote.first}} got a quote and went quiet. She gets a text on day two, an email on day four, and on day six the office gets a call task. It stops the moment she replies or books.",
+      "details": [
+        "{{quote.name}} · {{quote.job}}",
+        "Stops on reply, booking or a no"
+      ],
+      "content": {
+        "name": "Quote follow-up",
+        "nodes": [
+          {
+            "id": "qtag",
+            "type": "contact_tag",
+            "label": "Quote sent tag added",
+            "detail": "Tag quote-sent added when the quote goes out"
+          },
+          {
+            "id": "w2",
+            "type": "wait",
+            "label": "Wait 2 days",
+            "detail": "Day 2 after the quote"
+          },
+          {
+            "id": "replied",
+            "type": "condition",
+            "label": "Replied or booked?",
+            "detail": "Checks the thread and the card stage"
+          },
+          {
+            "id": "stop",
+            "type": "opportunity",
+            "label": "Follow-up stops",
+            "detail": "Card moves to In touch"
+          },
+          {
+            "id": "d2",
+            "type": "sms",
+            "label": "Day 2 text",
+            "detail": "Any questions on the quote, Chloe?"
+          },
+          {
+            "id": "w4",
+            "type": "wait",
+            "label": "Wait 2 more days",
+            "detail": "Day 4 after the quote"
+          },
+          {
+            "id": "d4",
+            "type": "email",
+            "label": "Day 4 email",
+            "detail": "The quote attached again"
+          },
+          {
+            "id": "d6",
+            "type": "notification",
+            "label": "Day 6 call task",
+            "detail": "Office asked to ring {{quote.first}}"
+          }
+        ],
+        "edges": [
+          {
+            "from": "qtag",
+            "to": "w2"
+          },
+          {
+            "from": "w2",
+            "to": "replied"
+          },
+          {
+            "from": "replied",
+            "to": "stop",
+            "label": "Yes"
+          },
+          {
+            "from": "replied",
+            "to": "d2",
+            "label": "No"
+          },
+          {
+            "from": "d2",
+            "to": "w4"
+          },
+          {
+            "from": "w4",
+            "to": "d4"
+          },
+          {
+            "from": "d4",
+            "to": "d6"
+          }
+        ],
+        "runOrder": [
+          "qtag",
+          "w2",
+          "replied",
+          "d2",
+          "w4",
+          "d4",
+          "d6"
+        ],
+        "context": {
+          "name": "{{quote.name}}",
+          "subtitle": "{{quote.job}} · Email",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            },
+            {
+              "label": "Stage",
+              "value": "Quoted"
+            }
+          ],
+          "states": [
+            "Quote sent",
+            "Day 2",
+            "No reply yet",
+            "Day 2 text sent",
+            "Day 4",
+            "Day 4 email sent",
+            "Call task for the office"
+          ]
+        },
+        "related": [
+          {
+            "title": "Stops on reply",
+            "detail": "Any reply, booking or no ends the sequence."
+          }
+        ]
+      },
+      "statuses": [
+        "Quote sent",
+        "Two days pass",
+        "No reply yet",
+        "Day 2 text sent",
+        "Two more days",
+        "Day 4 email sent",
+        "Day 6 call task created"
+      ],
+      "optional": true
+    },
+    {
+      "id": "booked",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "Hannah's call turns into a booked visit.",
+      "caption": "Her card moves across the board, then the job goes to Tradify and the customer to QuickBooks.",
+      "beat": "{{lead.first}}'s card moves from New to Visit booked, and her details go to Tradify as a job and to QuickBooks as a customer, so nobody types them twice. We'd confirm how each link works in the audit. A relevant past project: $750M+ in annual bid volume runs through a routing and follow-up system I built for a commercial roofing contractor.",
+      "details": [
+        "{{lead.name}} · New → In touch → Visit booked → Job in Tradify",
+        "Tradify and QuickBooks links are planned, confirmed in the audit"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.job}} · source: Missed call",
+        "fields": [
+          {
+            "label": "Handled by",
+            "value": "{{office.name}}, office"
+          },
+          {
+            "label": "Next",
+            "value": "Tradify job and QuickBooks customer"
+          }
+        ],
+        "stages": [
+          "New",
+          "In touch",
+          "Visit booked",
+          "Job in Tradify"
+        ],
+        "stageSequence": [
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Live enquiries",
+            "value": "10",
+            "note": "Illustrative sample board"
+          },
+          {
+            "label": "Sources tagged",
+            "value": "5",
+            "note": "Forms, email, phone, missed calls, WhatsApp"
+          },
+          {
+            "label": "Missed calls texted back",
+            "value": "2 of 2",
+            "note": "Illustrative, not a promised result"
+          }
+        ],
+        "note": "Sample data. Tradify and QuickBooks links are planned, confirmed in the audit.",
+        "proof": {
+          "label": "Relevant past project · roofing contractor",
+          "value": "$750M+ annual bid volume",
+          "description": "Runs through a routing and follow-up system I built for a commercial roofing contractor.",
+          "sourceNote": "Past project, separate from this illustrative sample."
+        }
+      },
+      "statuses": [
+        "Hannah in touch",
+        "Visit booked",
+        "Job sent to Tradify"
+      ],
+      "optional": false
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import tempfile
 from schema import ValidationError, validate, public_job
 
 ROOT = Path(__file__).resolve().parent
-LOCK_FILES = ("schema.py", "native_schema.py", "build.py", "runtime/shell.html", "runtime/base.css", "runtime/components.css", "runtime/platforms.css", "runtime/platforms.js", "runtime/native.js", "runtime/native.css", "runtime/app.js", "assets/inter-variable.woff2", "platforms.json")
+LOCK_FILES = ("schema.py", "native_schema.py", "gmail_schema.py", "funnel_schema.py", "product_schema.py", "intelligence_schema.py", "build.py", "runtime/shell.html", "runtime/base.css", "runtime/components.css", "runtime/platforms.css", "runtime/platforms.js", "runtime/native.js", "runtime/native.css", "runtime/gmail.js", "runtime/gmail.css", "runtime/funnel.js", "runtime/funnel.css", "runtime/intelligence.js", "runtime/intelligence.css", "runtime/product.js", "runtime/product.css", "runtime/architecture.js", "runtime/architecture.css", "runtime/cinematic.js", "runtime/cinematic.css", "runtime/app.js", "assets/inter-variable.woff2", "platforms.json")
 OUTPUT_FILES = ("page.html", "recording-script.txt", "build-report.json")
 
 
@@ -99,9 +99,13 @@ def js_json(data):
 
 
 def page(job, catalog):
-    css = "\n".join((ROOT / n).read_text(encoding="utf-8") for n in ("runtime/base.css", "runtime/platforms.css", "runtime/components.css", "runtime/native.css"))
+    css = "\n".join((ROOT / n).read_text(encoding="utf-8") for n in ("runtime/base.css", "runtime/platforms.css", "runtime/components.css", "runtime/native.css", "runtime/intelligence.css", "runtime/gmail.css", "runtime/funnel.css", "runtime/product.css", "runtime/architecture.css", "runtime/cinematic.css"))
     script = "const PLATFORM_CATALOG=" + js_json(catalog) + ";\nconst DATA=" + js_json(job) + ";\n"
-    script += "\n".join((ROOT / n).read_text(encoding="utf-8") for n in ("runtime/platforms.js", "runtime/native.js", "runtime/app.js"))
+    company = job["account"]["name"].strip() or "your team"
+    motion_config = {"company": company, "recipient": job.get("personalization", {}).get("firstName") or company,
+                     "initials": job["account"]["initials"], "systemName": job["systemName"], "steps": job["cover"]["previewSteps"]}
+    script += "window.MotionConfig=" + js_json(motion_config) + ";\n"
+    script += "\n".join((ROOT / n).read_text(encoding="utf-8") for n in ("runtime/platforms.js", "runtime/native.js", "runtime/intelligence.js", "runtime/gmail.js", "runtime/funnel.js", "runtime/product.js", "runtime/architecture.js", "runtime/cinematic.js", "runtime/app.js"))
     font = base64.b64encode((ROOT / "assets/inter-variable.woff2").read_bytes()).decode("ascii")
     replacements = {"__PAGE_TITLE__": html.escape(job["title"], quote=True), "__INLINE_CSS__": css, "__INLINE_JS__": script, "__INLINE_FONT__": font}
     shell = (ROOT / "runtime/shell.html").read_text(encoding="utf-8")

@@ -1,0 +1,410 @@
+{
+  "schemaVersion": 1,
+  "id": "smartlead-outlook-deliverability-2114731961935701099",
+  "title": "Get your cold emails out of Outlook Junk with real placement tests",
+  "systemName": "Your sending setup and placement tests",
+  "account": {
+    "name": "Your outreach team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114731961935701099",
+    "facts": [
+      "Post: China-based custom manufacturer emailing EU manufacturing, engineering and product development companies.",
+      "Post: existing n8n, Google Sheets and Smartlead workflow researches sites and writes personalized emails.",
+      "Post: emails land in Spam/Junk, especially Microsoft 365 / Outlook; SPF, DKIM and DMARC pass.",
+      "Post: wants real test emails from the actual sending accounts to Microsoft 365 / Outlook and Gmail test inboxes, checking Inbox, Spam/Junk or rejected; not warm-up scores.",
+      "Post: neutral professional sending domains; Microsoft 365 preferred; own Smartlead login required."
+    ]
+  },
+  "entities": {
+    "mailbox": {
+      "address": "anna@meridianparts.example",
+      "domain": "meridianparts.example",
+      "provider": "Microsoft 365 mailbox",
+      "warmup": "Warm-up week 3",
+      "cap": "20 a day",
+      "newCap": "12 a day"
+    },
+    "test": {
+      "id": "PT-0412",
+      "retest": "PT-0419"
+    },
+    "campaign": {
+      "name": "EU engineering Q4"
+    },
+    "main": {
+      "domain": "your main website domain"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your sending setup and placement tests",
+    "title": "Cold emails that land",
+    "accent": "in the Outlook inbox.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n placement test",
+      "Mailbox health card",
+      "Retest result"
+    ],
+    "previewSteps": [
+      {
+        "title": "Test",
+        "detail": "Send a real email from the mailbox to Outlook, Microsoft 365 and Gmail test inboxes."
+      },
+      {
+        "title": "Fix",
+        "detail": "Pause the mailbox in Smartlead and fix what the test found."
+      },
+      {
+        "title": "Retest",
+        "detail": "Put it back in the campaign once it lands in the inbox."
+      }
+    ],
+    "footer": "Sample mailbox and test results · no live accounts connected",
+    "beat": "Your SPF, DKIM and DMARC already pass, so this is about the mailboxes and domains doing the sending. Your n8n and Smartlead flow stays as it is."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Know where every email lands",
+    "accent": "before you send.",
+    "caption": "We agree a starting point from your first real tests, then track these three each week.",
+    "metrics": [
+      {
+        "name": "Outlook inbox placement",
+        "direction": "up",
+        "aim": "More test emails land in the Outlook inbox",
+        "definition": "Test emails that land in the Inbox of the Outlook and Microsoft 365 test accounts, divided by all test emails sent to them."
+      },
+      {
+        "name": "Bounce rate",
+        "direction": "down",
+        "aim": "Fewer emails bounce or get rejected",
+        "definition": "Emails that bounce or are rejected, divided by all emails sent from the sending mailboxes."
+      },
+      {
+        "name": "Reply rate",
+        "direction": "up",
+        "aim": "More prospects reply",
+        "definition": "Prospects who reply, divided by prospects emailed from the Smartlead campaigns."
+      }
+    ],
+    "baselineNote": "Your first real placement tests set the starting point. We agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your current domains and mailboxes with you and set up the first round of tests. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "placement-test",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "A real test email, not a warm-up score.",
+      "caption": "Every week, each sending mailbox emails your Outlook, Microsoft 365 and Gmail test inboxes, and n8n checks where it landed.",
+      "beat": "This is the weekly placement test. n8n sends a real email from {{mailbox.address}} to three test inboxes, then reads back whether it landed in the Inbox, in Junk, or got rejected. In test {{test.id}} it hit Junk at Microsoft 365, so the mailbox is paused in Smartlead and the result goes to your Google Sheet.",
+      "details": [
+        "Mailbox under test: {{mailbox.address}}",
+        "Test {{test.id}}: Outlook Inbox, Microsoft 365 Junk, Gmail Inbox",
+        "The Smartlead step is an HTTP Request; the account login and endpoint are set up with you."
+      ],
+      "content": {
+        "name": "Weekly placement test",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "manual_trigger",
+            "label": "Start weekly test",
+            "detail": "Runs once per mailbox"
+          },
+          {
+            "id": "pick",
+            "type": "edit_fields",
+            "label": "Pick mailbox and test email",
+            "detail": "{{mailbox.address}} with this week's campaign copy"
+          },
+          {
+            "id": "send",
+            "type": "http_request",
+            "label": "Send real test email",
+            "detail": "From {{mailbox.address}} to Outlook, Microsoft 365 and Gmail test inboxes"
+          },
+          {
+            "id": "read",
+            "type": "http_request",
+            "label": "Check where it landed",
+            "detail": "Reads each test inbox: Inbox, Junk or rejected"
+          },
+          {
+            "id": "junk",
+            "type": "if",
+            "label": "Landed in Junk anywhere?",
+            "detail": "Any test inbox shows Junk or a rejection"
+          },
+          {
+            "id": "pause",
+            "type": "http_request",
+            "label": "Pause mailbox in Smartlead",
+            "detail": "Takes {{mailbox.address}} out of {{campaign.name}} until the retest passes"
+          },
+          {
+            "id": "log",
+            "type": "google_sheets",
+            "label": "Log result and fix",
+            "detail": "Adds {{test.id}} with the result for each test inbox"
+          },
+          {
+            "id": "ok",
+            "type": "google_sheets",
+            "label": "Log inbox result",
+            "detail": "Mailbox keeps sending at its daily limit"
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "pick"
+          },
+          {
+            "from": "pick",
+            "to": "send"
+          },
+          {
+            "from": "send",
+            "to": "read"
+          },
+          {
+            "from": "read",
+            "to": "junk"
+          },
+          {
+            "from": "junk",
+            "to": "pause",
+            "label": "true"
+          },
+          {
+            "from": "junk",
+            "to": "ok",
+            "label": "false"
+          },
+          {
+            "from": "pause",
+            "to": "log"
+          }
+        ],
+        "runOrder": [
+          "start",
+          "pick",
+          "send",
+          "read",
+          "junk",
+          "pause",
+          "log"
+        ],
+        "context": {
+          "name": "{{mailbox.address}}",
+          "subtitle": "{{mailbox.provider}} · {{mailbox.warmup}}",
+          "fields": [
+            {
+              "label": "Sending domain",
+              "value": "{{mailbox.domain}}"
+            },
+            {
+              "label": "Campaign",
+              "value": "{{campaign.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Test {{test.id}} started",
+            "Mailbox and test email picked",
+            "Test email sent to three test inboxes",
+            "Outlook: Inbox · Microsoft 365: Junk · Gmail: Inbox",
+            "Junk found at Microsoft 365",
+            "Mailbox paused in {{campaign.name}}",
+            "Result logged in Google Sheets"
+          ]
+        },
+        "related": [
+          {
+            "title": "Your existing workflow",
+            "detail": "Your n8n research and personalized email flow keeps feeding Smartlead as it does today."
+          },
+          {
+            "title": "Test inboxes",
+            "detail": "One Outlook, one Microsoft 365 and one Gmail inbox, used only for these tests."
+          }
+        ]
+      },
+      "statuses": [
+        "Test {{test.id}} started",
+        "Mailbox and test email picked",
+        "Test email sent",
+        "Results read from each test inbox",
+        "Junk found at Microsoft 365",
+        "Mailbox paused in Smartlead",
+        "Result logged"
+      ],
+      "optional": false
+    },
+    {
+      "id": "mailbox-health",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "What the test found, and the fix.",
+      "caption": "Each sending mailbox gets a health card with its setup, its latest test and what changed.",
+      "beat": "Here is the health card for {{mailbox.address}}. It sends from its own domain, so your main website domain never sends cold email. Authentication passes, but test {{test.id}} landed in Junk at Microsoft 365. So the daily limit drops from {{mailbox.cap}} to {{mailbox.newCap}}, the tracking link comes out of the copy, and the retest is booked.",
+      "details": [
+        "Main website domain is kept out of cold sending",
+        "Daily limit: {{mailbox.cap}} lowered to {{mailbox.newCap}}",
+        "Retest {{test.retest}} booked after the change"
+      ],
+      "content": {
+        "name": "{{mailbox.address}}",
+        "subtitle": "{{mailbox.provider}} · {{mailbox.warmup}}",
+        "sourceTitle": "Mailbox setup",
+        "sourceFields": [
+          {
+            "label": "Sending domain",
+            "value": "{{mailbox.domain}}, separate from {{main.domain}}"
+          },
+          {
+            "label": "SPF, DKIM, DMARC",
+            "value": "Passing"
+          },
+          {
+            "label": "Warm-up",
+            "value": "{{mailbox.warmup}}"
+          },
+          {
+            "label": "Daily limit",
+            "value": "{{mailbox.cap}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Test",
+            "value": "{{test.id}}"
+          },
+          {
+            "label": "Outlook test inbox",
+            "value": "Inbox"
+          },
+          {
+            "label": "Microsoft 365 test inbox",
+            "value": "Junk"
+          },
+          {
+            "label": "Gmail test inbox",
+            "value": "Inbox"
+          },
+          {
+            "label": "Smartlead",
+            "value": "Paused in {{campaign.name}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Junk at Microsoft 365",
+            "detail": "Test {{test.id}} landed in Junk at the Microsoft 365 test inbox."
+          },
+          {
+            "title": "Daily limit lowered",
+            "detail": "From {{mailbox.cap}} to {{mailbox.newCap}} while warm-up continues."
+          },
+          {
+            "title": "Tracking link removed",
+            "detail": "The test email goes out as plain text with no tracking link."
+          },
+          {
+            "title": "Retest booked",
+            "detail": "Test {{test.retest}} runs after the change."
+          }
+        ],
+        "notice": "Illustrative sample mailbox and test results. No live mailbox or Smartlead account is connected."
+      },
+      "statuses": [
+        "Setup checked",
+        "Junk found",
+        "Daily limit lowered",
+        "Copy changed",
+        "Retest booked"
+      ],
+      "optional": false
+    },
+    {
+      "id": "retest",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Back in the campaign once it lands in the inbox.",
+      "caption": "The retest lands in the inbox at all three test inboxes, so the mailbox goes back into Smartlead.",
+      "beat": "Retest {{test.retest}} lands in the Inbox at Outlook, Microsoft 365 and Gmail. Only then does {{mailbox.address}} go back into {{campaign.name}}, at {{mailbox.newCap}}. You can see every test in the sheet, and your team keeps its own Smartlead login.",
+      "details": [
+        "Retest {{test.retest}} for {{mailbox.address}}",
+        "Results are sample values"
+      ],
+      "content": {
+        "name": "{{mailbox.address}}",
+        "subtitle": "Retest {{test.retest}}",
+        "fields": [
+          {
+            "label": "Outlook test inbox",
+            "value": "Inbox"
+          },
+          {
+            "label": "Microsoft 365 test inbox",
+            "value": "Inbox"
+          },
+          {
+            "label": "Gmail test inbox",
+            "value": "Inbox"
+          },
+          {
+            "label": "Smartlead",
+            "value": "Back in {{campaign.name}} at {{mailbox.newCap}}"
+          }
+        ],
+        "stages": [
+          "Audited",
+          "Paused and fixed",
+          "Retested",
+          "Back in campaign"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Test inboxes reached",
+            "value": "3 of 3",
+            "note": "Sample retest result"
+          },
+          {
+            "label": "Landed in Junk",
+            "value": "0",
+            "note": "Sample retest result"
+          },
+          {
+            "label": "Daily limit",
+            "value": "12",
+            "note": "Raised again only after more clean tests"
+          }
+        ],
+        "note": "Illustrative sample retest. Real results come from your own sending mailboxes and test inboxes."
+      },
+      "statuses": [
+        "Audited",
+        "Paused and fixed",
+        "Retested",
+        "Back in campaign"
+      ],
+      "optional": false
+    }
+  ]
+}

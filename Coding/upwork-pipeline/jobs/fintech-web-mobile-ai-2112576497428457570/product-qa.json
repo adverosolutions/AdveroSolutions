@@ -1,0 +1,20 @@
+{
+  "viewportChecks": [
+    1280,
+    390
+  ],
+  "errors": [],
+  "requests": [],
+  "checks": [
+    "settled result",
+    "derived amounts",
+    "evidence toggle",
+    "review again",
+    "local approve",
+    "initial reset",
+    "suggestion state",
+    "mobile no overflow",
+    "reduced motion settled"
+  ],
+  "scope": "Isolated adapter fixture, not full deck navigation or independent review"
+}

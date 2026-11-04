@@ -1,0 +1,667 @@
+<!doctype html>
+<!-- Hiring runway live tour (U-017 frame, U-021 custom content). Job: recruitment-onboarding-n8n-m365-2112895866829374925 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Your hiring runway, a prototype for your team</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%225%22 fill=%22%235b4cf0%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font:"Geist","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ink:#15151d;--ink2:#4a4b5a;--ink3:#8a8b9c;--line:#e6e6ee;--line2:#d9d9e4;
+  --bg:#f6f6f9;--panel:#fff;
+  --acc:#2a5bd7;--acc2:#5b8cf0;--accbg:#eef3ff;
+  --green:#14915f;--greenbg:#e5f6ee;--amber:#b86e0b;--amberbg:#fdf1de;
+  --ease:cubic-bezier(.2,.9,.25,1);
+  --cam:1s;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased;background:#05070c}
+.wall{position:fixed;inset:0;background:
+  radial-gradient(900px 700px at 12% 18%,rgba(47,116,245,.62),transparent 60%),
+  radial-gradient(800px 600px at 88% 10%,rgba(31,95,214,.42),transparent 62%),
+  radial-gradient(900px 700px at 85% 95%,rgba(47,116,245,.40),transparent 60%),
+  radial-gradient(800px 700px at 8% 100%,rgba(31,95,214,.30),transparent 60%),
+  linear-gradient(160deg,#0a1630,#05070c 60%,#081226)}
+.wall::after{content:"";position:absolute;inset:0;opacity:.18;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* page chrome */
+.top{position:fixed;top:0;left:0;right:0;height:52px;background:linear-gradient(180deg,rgba(5,8,16,.92),rgba(5,8,16,.72));border-bottom:1px solid rgba(255,255,255,.1);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 clamp(14px,2.4vw,32px);z-index:20;color:#fff;transition:opacity .3s}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;white-space:nowrap}
+.brand i{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#8fb6ff,#2f74f5);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset}
+.brand span{opacity:.7;font-weight:500}
+.badge{font-size:12px;font-weight:600;color:#fff;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);white-space:nowrap}
+.badge b{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffc46b;margin-right:7px;vertical-align:1px}
+
+/* camera */
+.viewport{position:fixed;inset:0;overflow:hidden}
+.app{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;border-radius:16px;background:var(--bg);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.5),0 60px 120px -30px rgba(0,3,12,.75),0 30px 60px -30px rgba(0,3,12,.6);
+  transition:transform var(--cam) var(--ease);font-size:14px}
+
+/* title bar */
+.tb{height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;background:#fbfbfd;border-bottom:1px solid var(--line)}
+.lights{display:flex;gap:7px}.lights i{width:12px;height:12px;border-radius:50%;background:#ff5f57}.lights i:nth-child(2){background:#febc2e}.lights i:nth-child(3){background:#28c840}
+.tb .ttl{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--ink2)}
+.tb .ttl span{color:var(--ink3);font-weight:500}
+.proto{font-size:11.5px;font-weight:600;color:var(--amber);background:var(--amberbg);border:1px solid #f3d7a8;padding:4px 10px;border-radius:99px;white-space:nowrap}
+
+.body{position:absolute;top:44px;left:0;right:0;bottom:0;display:grid;grid-template-columns:232px 1fr}
+
+/* sidebar */
+.side{position:relative;background:#fbfbfd;border-right:1px solid var(--line);padding:16px 14px;display:flex;flex-direction:column;gap:16px}
+.ws{display:flex;align-items:center;gap:10px;padding:4px 6px}
+.ws i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#8b7dfb,#5b4cf0);display:grid;place-items:center;color:#fff;font-style:normal;font-weight:700;font-size:13px}
+.ws b{display:block;font-size:14.5px}.ws small{display:block;font-size:12px;color:var(--ink3)}
+.navl{position:relative;display:flex;flex-direction:column;gap:2px}
+.navl .ind{position:absolute;left:0;right:0;top:0;height:38px;border-radius:10px;background:var(--accbg);transition:transform .6s var(--ease)}
+.navl a{position:relative;display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border-radius:10px;font-weight:600;font-size:14px;color:var(--ink2);text-decoration:none}
+.navl a svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.navl a .ct{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:99px;background:#ececf3;color:var(--ink2);font-size:12px;font-weight:700;display:grid;place-items:center;position:relative}
+.navl a .ct span{grid-area:1/1;transition:opacity .3s,transform .4s var(--ease)}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3)}
+.stack{margin-top:auto;padding:4px 6px}
+.stack .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;font-weight:600;padding:5px 9px;border-radius:8px;background:#fff;border:1px solid var(--line2);color:var(--ink2);white-space:nowrap}
+/* main */
+.main{position:relative;padding:0 18px 18px}
+.mh{height:62px;display:flex;align-items:center;gap:12px}
+.mh h3{font-size:19px;font-weight:700;letter-spacing:-.02em;position:relative;min-width:120px;height:26px}
+.mh h3 span{position:absolute;left:0;top:0;white-space:nowrap;transition:opacity .4s,transform .5s var(--ease)}
+.mh h3 span:not(.on){opacity:0;transform:translateY(6px)}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;width:240px;height:34px;padding:0 12px;border-radius:10px;background:#fff;border:1px solid var(--line2);color:var(--ink3);font-size:13px}
+.av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f59e8b,#e0607e)}
+.views{position:absolute;left:18px;right:18px;top:62px;bottom:18px}
+.view{position:absolute;inset:0;transition:opacity .5s,transform .7s var(--ease);opacity:0;transform:translateX(24px);pointer-events:none}
+.panel{position:absolute;top:0;bottom:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(20,20,40,.04);overflow:hidden}
+.ph{display:flex;align-items:center;gap:8px;height:48px;padding:0 16px;border-bottom:1px solid var(--line)}
+.ph .r{margin-left:auto}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;background:#f0f0f5;color:var(--ink2);white-space:nowrap}
+.pill.acc{background:var(--accbg);color:var(--acc)}
+.pill.green{background:var(--greenbg);color:var(--green)}
+.pill.amber{background:var(--amberbg);color:var(--amber)}
+.pill .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.swap{display:inline-grid;vertical-align:middle}
+.swap > *{grid-area:1/1;transition:opacity .35s,transform .45s var(--ease)}
+/* spotlight */
+.spot{position:absolute;left:0;top:0;width:1280px;height:800px;border-radius:16px;pointer-events:none;z-index:9;opacity:0;
+  box-shadow:0 0 0 3px rgba(79,141,255,.9),0 0 0 9px rgba(79,141,255,.24),0 0 0 3000px rgba(3,6,14,.50);
+  transition:transform var(--cam) var(--ease),width var(--cam) var(--ease),height var(--cam) var(--ease),opacity .5s}
+.spot.on{opacity:1}
+
+/* dock */
+.dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(1120px,calc(100vw - 32px));z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px 24px;padding:16px 18px 16px 22px;border-radius:20px;color:#fff;
+  background:rgba(6,10,20,.80);border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 60px -20px rgba(0,0,0,.55);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);transition:opacity .3s}
+.cap{min-width:0}
+.cap.in{animation:capin .45s var(--ease) both}
+@keyframes capin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.kick{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#a9c8ff}
+.kick em{font-style:normal;letter-spacing:0;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.55);text-transform:none;font-weight:500}
+.cap h2{font-size:clamp(20px,2vw,27px);font-weight:700;letter-spacing:-.025em;line-height:1.15;margin-top:5px;text-wrap:balance}
+.cap p{font-size:clamp(14px,1.15vw,16px);line-height:1.45;color:rgba(255,255,255,.78);margin-top:5px;text-wrap:pretty;max-width:58em}
+.ctl{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.dots{display:flex;gap:6px}
+.dots button{width:22px;height:5px;border-radius:99px;border:0;padding:0;background:rgba(255,255,255,.22);cursor:pointer;transition:background .3s,width .4s var(--ease)}
+.dots button.done{background:rgba(169,200,255,.6)}
+.dots button.cur{background:#fff;width:34px}
+.btnrow{display:flex;gap:8px}
+.nb{font:600 14px var(--font);color:#fff;padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);cursor:pointer;white-space:nowrap}
+.nb.next{background:#fff;color:#0b1426;border-color:#fff}
+.nb:disabled{opacity:.35;cursor:default}
+.nb:focus-visible,.dots button:focus-visible{outline:2px solid #a9c8ff;outline-offset:2px}
+body.clean .dock,body.clean .top{opacity:0;pointer-events:none}
+
+.notes{position:fixed;right:16px;top:60px;width:min(420px,calc(100vw - 32px));max-height:50vh;overflow:auto;padding:16px 18px;border-radius:16px;background:rgba(4,7,15,.96);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:15px;line-height:1.5;z-index:30;display:none}
+.notes.show{display:block}
+.notes .lbl{color:#a9c8ff;margin-bottom:6px}
+
+@media (max-width:820px){
+  .top{height:46px}
+  .brand{font-size:13px}.brand span{display:none}
+  .badge{font-size:11px;padding:5px 10px}
+  .dock{left:10px;right:10px;bottom:10px;transform:none;width:auto;grid-template-columns:1fr;gap:12px;padding:14px 14px 12px 16px;border-radius:18px}
+  .cap h2{font-size:21px}
+  .cap p{font-size:14.5px}
+  .ctl{flex-direction:row;align-items:center;justify-content:space-between}
+  .dots button{width:14px}.dots button.cur{width:24px}
+  .nb{padding:9px 14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+/* ===== custom: hiring runway ===== */
+.navl .ind{height:38px}
+.app.v-cand .navl a.n1,.app.v-paper .navl a.n2,.app.v-live .navl a.n3,.app.v-audit .navl a.n4{color:var(--acc)}
+.app.v-paper .navl .ind{transform:translateY(40px)}
+.app.v-live .navl .ind{transform:translateY(80px)}
+.app.v-audit .navl .ind{transform:translateY(120px)}
+.navl a .ct{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:99px;background:#ececf3;color:var(--ink2);font-size:12px;font-weight:700;display:grid;place-items:center}
+.navl a .ct span{grid-area:1/1;transition:opacity .3s}
+.ct .k1{opacity:0}.app.r1 .ct .k0{opacity:0}.app.r1 .ct .k1{opacity:1;transition-delay:.6s}
+.route{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 13px 8px}
+.route .rr{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;font-weight:500}
+.route .rr:first-of-type{border-top:0;margin-top:6px}
+.route .rr em{font-style:normal;font-size:11.5px;font-weight:700;padding:3px 7px;border-radius:6px;background:#eef3ff;color:#2a5bd7;min-width:52px;text-align:center}
+.route .rr.hot{transition:background .4s}
+.app.r5 .route .rr.hot{background:linear-gradient(90deg,#eef3ff,transparent);transition-delay:.3s}
+.route small{display:block;font-size:11.5px;color:var(--ink3);padding:4px 0 2px}
+.stack .lbl small{text-transform:none;letter-spacing:0;font-weight:500}
+
+.hd{display:flex;align-items:center;gap:8px;height:46px;padding:0 14px;border-bottom:1px solid var(--line)}
+.hd strong{font-size:14px;font-weight:700}
+.hd .tag{margin-left:auto}
+.foot{position:absolute;left:14px;right:14px;bottom:12px;font-size:11.5px;color:var(--ink3);line-height:1.4}
+.foot code,.mono{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.pill.blue{background:#eef3ff;color:#2a5bd7}
+.pill.red{background:#fdecec;color:#b3261e}
+
+/* board */
+#board{left:0;width:600px}
+.col{position:absolute;top:58px;bottom:44px;width:138px;border-radius:12px;background:#f7f7fa;padding:8px}
+.col.c1{left:12px}.col.c2{left:160px}.col.c3{left:308px}.col.c4{left:456px}
+.colh{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);height:22px}
+.slot{height:80px;border-radius:10px;border:1.5px dashed #dedee8;margin-bottom:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;height:80px;margin-bottom:8px;box-shadow:0 1px 2px rgba(20,20,40,.04)}
+.card b{display:block;font-size:13px;font-weight:600}
+.card small{display:block;font-size:11.5px;color:var(--ink3);margin:2px 0 6px}
+.card .pill{font-size:11px;padding:3px 7px}
+#lena{position:absolute;left:20px;top:88px;width:122px;height:80px;margin:0;border-color:#9dbbff;box-shadow:0 8px 18px -10px rgba(47,116,245,.7);opacity:0;transform:translateY(-12px);transition:opacity .5s .3s,transform .9s var(--ease)}
+.app.r1 #lena{opacity:1;transform:none}
+.app.r2 #lena{transform:translateX(148px)}
+.app.r3 #lena{transform:translateX(296px)}
+.app.r4 #lena{transform:translateX(444px)}
+.lt{display:inline-grid}.lt>*{grid-area:1/1;transition:opacity .35s}
+.lt .t1,.lt .t2,.lt .t3,.lt .t4{opacity:0}
+.app.s1 .lt .t0,.app.s2 .lt .t0,.app.s3 .lt .t0,.app.r4 .lt .t0{opacity:0}
+.app.s1 .lt .t1{opacity:1}.app.s2 .lt .t2{opacity:1;transition-delay:.8s}.app.s3 .lt .t3{opacity:1;transition-delay:.8s}.app.r4 .lt .t4{opacity:1}
+
+/* drawer */
+#drawer{left:612px;right:0}
+.dwe{position:absolute;top:46px;left:0;right:0;bottom:0;display:grid;place-items:center;color:var(--ink3);font-size:13px;text-align:center;transition:opacity .4s}
+.app.r1 .dwe{opacity:0}
+#dwHead{display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid var(--line);opacity:0;transition:opacity .5s .4s}
+.app.r1 #dwHead{opacity:1}
+.ava{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7fb0ff,#2f74f5)}
+#dwHead h5{font-size:16px;font-weight:700}
+#dwHead small{display:block;font-size:12px;color:var(--ink3);margin-top:2px}
+.sec{position:absolute;top:116px;left:14px;right:14px;bottom:40px;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .6s var(--ease);pointer-events:none}
+.app.s1 #dwForm,.app.s2 #dwScore,.app.s3 #dwCal{opacity:1;transform:none;transition-delay:.5s}
+.sech{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.q{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px;margin-bottom:6px;background:#fff}
+.q span{color:var(--ink2)}
+.q b{font-weight:600}
+.q.skip{background:#fafafc;border-style:dashed;color:var(--ink3)}
+.q.skip span{color:var(--ink3)}
+.q.branch{margin-left:18px;position:relative}
+.q.branch::before{content:"";position:absolute;left:-12px;top:-8px;width:9px;height:24px;border-left:1.5px solid var(--line2);border-bottom:1.5px solid var(--line2);border-bottom-left-radius:6px}
+.files{display:flex;gap:6px;margin:8px 0 10px}
+.file{flex:1;display:flex;align-items:center;gap:7px;padding:8px 9px;border-radius:10px;background:#f7f7fa;font-size:12.5px;font-weight:600}
+.file i{width:18px;height:22px;border-radius:3px;background:#dfe7fb;flex:none}
+.saved{display:flex;gap:8px;align-items:flex-start;padding:10px;border-radius:10px;background:#eef8f2;font-size:12.5px;line-height:1.4;color:#185c3e}
+.saved .mono{display:block;color:#3d6b55;margin-top:3px}
+
+.fit{display:flex;align-items:center;gap:14px;padding:4px 0 12px}
+.ring{width:66px;height:66px;border-radius:50%;background:conic-gradient(#2f74f5 0 78%,#e7ecf7 78% 100%);display:grid;place-items:center}
+.ring b{width:52px;height:52px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:18px;font-weight:700}
+.fit p{font-size:13px;color:var(--ink2);line-height:1.4}
+.fit p strong{display:block;color:var(--ink);font-size:14px}
+.why{list-style:none}
+.why li{display:grid;grid-template-columns:24px 1fr;gap:8px;padding:8px 0;border-top:1px dashed var(--line2);font-size:13px;line-height:1.4;opacity:0;transform:translateX(-6px);transition:opacity .4s,transform .5s var(--ease)}
+.app.s2 .why li{opacity:1;transform:none;transition-delay:calc(.9s + var(--i) * .35s)}
+.why li i{font-style:normal;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:#eef3ff;color:#2a5bd7}
+.why li.warn i{background:var(--amberbg);color:var(--amber)}
+.why li span{color:var(--ink3);font-size:12px;display:block}
+.advice{margin-top:10px;padding:10px;border-radius:10px;background:#f7f7fa;font-size:12.5px;color:var(--ink2);line-height:1.4}
+
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.day{border:1px solid var(--line);border-radius:10px;padding:8px}
+.day b{display:block;font-size:12.5px;margin-bottom:6px}
+.sl{height:28px;border-radius:7px;margin-top:5px;font-size:12px;font-weight:600;display:flex;align-items:center;padding:0 8px}
+.sl.busy{background:repeating-linear-gradient(135deg,#f1f1f5 0 6px,#fafafc 6px 12px);color:var(--ink3)}
+.sl.free{background:#eef3ff;color:#2a5bd7}
+.sl.pick{background:#eef3ff;color:#2a5bd7;transition:background .4s,color .4s,box-shadow .4s}
+.app.s3 .sl.pick{background:#2f74f5;color:#fff;box-shadow:0 6px 14px -6px rgba(47,116,245,.8);transition-delay:1.6s}
+.booked{margin-top:12px;padding:10px;border-radius:10px;background:#eef8f2;color:#185c3e;font-size:12.5px;line-height:1.4;opacity:0;transition:opacity .4s}
+.app.s3 .booked{opacity:1;transition-delay:2s}
+.calnote{margin-top:10px;font-size:12.5px;color:var(--ink2);line-height:1.4}
+
+/* paperwork */
+#docs{left:0;width:400px}
+.page{position:absolute;top:60px;left:16px;right:16px;bottom:44px;border-radius:6px;background:#fff;box-shadow:0 0 0 1px var(--line),0 12px 24px -16px rgba(20,20,40,.35);padding:20px 22px;font-size:12.5px;line-height:1.65;color:#33343f}
+.page h6{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.page .sub{font-size:11px;color:var(--ink3);margin-bottom:12px}
+.mf{padding:0 3px;border-radius:4px;background:transparent;transition:background .5s}
+.app.r4 .mf{background:#fff1c9;transition-delay:calc(.6s + var(--i) * .25s)}
+.gl{height:7px;border-radius:4px;background:#ececf2;margin:9px 0}
+.tabs2{display:flex;gap:6px;margin-left:auto}
+.sigline{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px;color:var(--ink3)}
+.sigline div{border-top:1px solid #c9c9d6;padding-top:4px}
+
+#sign{left:412px;width:300px}
+.env{margin:12px 14px 0;padding:10px 12px;border-radius:10px;background:#f7f7fa;font-size:12.5px;color:var(--ink2)}
+.env b{display:block;color:var(--ink);font-size:13px}
+.signer{display:flex;align-items:center;gap:10px;margin:8px 14px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px}
+.signer .sw{margin-left:auto}
+.ev{margin:12px 14px 0}
+.ev .e{display:grid;grid-template-columns:52px 1fr;gap:8px;padding:7px 0;border-top:1px dashed var(--line2);font-size:12.5px;opacity:0;transition:opacity .4s}
+.ev .e time{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.app.r4 .ev .e.a{opacity:1;transition-delay:calc(1s + var(--i) * .3s)}
+.app.r5 .ev .e.b{opacity:1;transition-delay:calc(.4s + var(--i) * .35s)}
+.sw2{display:inline-grid}.sw2>*{grid-area:1/1;transition:opacity .35s}
+.sw2 .y{opacity:0}.app.r5 .sw2 .n{opacity:0;transition-delay:var(--d,1s)}.app.r5 .sw2 .y{opacity:1;transition-delay:var(--d,1s)}
+
+#gate{left:724px;right:0}
+#gateLock{margin:12px 14px 0;padding:14px;border-radius:12px;border:1.5px solid #f3c9c4;background:#fff7f6;transition:border-color .5s,background .5s}
+.app.r5 #gateLock{border-color:#a6dcc1;background:#f1faf5;transition-delay:1.6s}
+#gateLock b{display:block;font-size:14px;margin-top:6px}
+#gateLock small{display:block;font-size:12px;color:var(--ink2);margin-top:3px;line-height:1.4}
+#teams{margin:12px 14px 0;border-radius:12px;border:1px solid var(--line);overflow:hidden;opacity:.35;transition:opacity .5s}
+.app.r5 #teams{opacity:1;transition-delay:1.9s}
+.tmh{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#f1f0fb;font-size:12px;font-weight:600;color:#4b4a8a}
+.tmh i{width:16px;height:16px;border-radius:4px;background:#6264a7}
+.tmb{padding:10px 12px;font-size:12.5px;line-height:1.45}
+.tmb b{display:block;font-size:13.5px;margin-bottom:4px}
+.tmb .kv2{display:grid;grid-template-columns:70px 1fr;gap:2px 8px;color:var(--ink2)}
+.tmb .kv2 span{color:var(--ink3)}
+.tbtn{display:flex;gap:8px;margin-top:10px}
+.tbtn span{font:600 12.5px var(--font);padding:7px 12px;border-radius:8px;border:1px solid var(--line2)}
+.tbtn .ok{background:#5b5fc7;border-color:#5b5fc7;color:#fff}
+.app.s5 .tbtn .ok{animation:tap .5s 2.5s both}
+@keyframes tap{0%,100%{transform:none}45%{transform:scale(.92)}}
+
+/* go-live */
+#graph{left:0;width:480px}
+.gs{display:grid;grid-template-columns:28px 1fr;gap:4px 12px;margin:0 14px;padding:13px 0;border-top:1px solid var(--line)}
+.gs:first-of-type{border-top:0;margin-top:6px}
+.gs .ck{grid-row:1/span 2;width:28px;height:28px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;font-size:13px;font-weight:700;color:transparent;transition:background .35s,border-color .35s,color .35s}
+.app.r6 .gs .ck{background:#14915f;border-color:#14915f;color:#fff;transition-delay:calc(.7s + var(--i) * .45s)}
+.gs b{font-size:13.5px;font-weight:600}
+.gs code{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+#welcome{left:492px;right:0}
+.mail{margin:12px 14px 0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .6s var(--ease)}
+.app.r6 .mail{opacity:1;transform:none;transition-delay:2.2s}
+.mail .mh2{display:grid;grid-template-columns:56px 1fr;gap:2px 8px;font-size:12px;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.mail .mh2 span{color:var(--ink3)}
+.post{margin:12px 14px 0;border-radius:12px;background:#f5f5fb;padding:12px 14px;font-size:13px;line-height:1.45;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .6s var(--ease)}
+.app.r6 .post{opacity:1;transform:none;transition-delay:2.5s}
+.post .who{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#4b4a8a;margin-bottom:6px}
+.post .who i{width:16px;height:16px;border-radius:4px;background:#6264a7}
+
+/* audit */
+#log{left:0;width:580px}
+.tbl{margin:4px 14px 0}
+.tr{display:grid;grid-template-columns:96px 1fr 92px;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;align-items:center}
+.tr.th{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);border-top:0}
+.tr time{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.tr em{font-style:normal;font-size:11.5px;color:var(--ink3)}
+.tr.nw{opacity:0;transition:opacity .4s}
+.app.r7 .tr.nw{opacity:1;transition-delay:calc(.5s + var(--i) * .12s)}
+#aims{left:592px;right:0;padding:0}
+.ask{margin:10px 14px 0;font-size:12.5px;line-height:1.4;color:var(--ink2)}
+.ask q{display:block;padding:6px 0 6px 10px;border-left:2px solid #9dbbff;margin-top:6px;font-weight:600;color:var(--ink)}
+.gm{margin:10px 14px 0;display:grid;grid-template-columns:30px 1fr;gap:2px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+.gm .ar{grid-row:1/span 3;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;background:#eef3ff;color:#2a5bd7}
+.gm b{font-size:13.5px}
+.gm small{font-size:12px;color:var(--ink2);line-height:1.35}
+.gm .nb2{margin-top:4px;font-size:11px;font-weight:600;color:var(--ink3);padding:3px 8px;border-radius:6px;border:1px dashed var(--line2);width:max-content}
+
+/* closing card */
+.veil{position:absolute;inset:0;background:rgba(10,16,32,.42);opacity:0;transition:opacity .5s;pointer-events:none;z-index:5}
+.app.r8 .veil{opacity:1}
+#callcard{position:absolute;left:380px;top:150px;width:540px;background:#fff;border-radius:18px;padding:26px 26px 22px;z-index:6;box-shadow:0 40px 90px -30px rgba(5,10,30,.6);opacity:0;transform:translateY(14px);transition:opacity .45s,transform .6s var(--ease);pointer-events:none}
+.app.r8 #callcard{opacity:1;transform:none;transition-delay:.4s}
+#callcard h5{font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:6px}
+.picks{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.picks div{padding:10px 12px;border-radius:12px;border:1px solid var(--line2);font-size:14.5px;font-weight:600;line-height:1.3}
+.picks div small{display:block;font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
+.picks div.on{border-color:#2f74f5;background:#eef3ff}
+.picks div.on small{color:#2a5bd7}
+.callbtn{margin-top:14px;padding:15px 16px;border-radius:14px;background:linear-gradient(135deg,#2f74f5,#1f5fd6);color:#fff}
+.callbtn b{display:block;font-size:19px;font-weight:700;line-height:1.3}
+.callbtn small{display:block;font-size:14px;opacity:.85;margin-top:3px}
+.byline{margin-top:12px;font-size:13.5px;color:var(--ink2);line-height:1.45}
+.byline b{color:var(--ink)}
+.app.v-cand .view.vc,.app.v-paper .view.vp,.app.v-live .view.vl,.app.v-audit .view.va{opacity:1;transform:none}
+
+</style>
+</head>
+<body>
+<div class="wall" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand"><i></i>AdveroSolutions <span>· prepared for your team</span></div>
+  <div class="badge"><b></b>Illustrative prototype · made-up data</div>
+</header>
+
+<div class="viewport" id="vp">
+<div class="app" id="app" aria-label="Illustrative prototype of the hiring runway for your team">
+  <div class="tb">
+    <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="ttl">Hiring runway <span>· your team</span></div>
+    <div class="proto">Illustrative prototype, not a Microsoft 365 screen</div>
+  </div>
+
+  <div class="body">
+    <aside class="side" id="side">
+      <div class="ws"><i>YT</i><div><b>Your team</b><small>Hiring runway</small></div></div>
+      <nav class="navl" aria-hidden="true">
+        <div class="ind"></div>
+        <a class="n1"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.5c1.6.7 2.7 2.2 3 4.5"/></svg>Candidates<span class="ct"><span class="k0">5</span><span class="k1">6</span></span></a>
+        <a class="n2"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/></svg>Paperwork</a>
+        <a class="n3"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4"/></svg>Go-live</a>
+        <a class="n4"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Audit trail</a>
+      </nav>
+      <div class="route" id="route">
+        <div class="lbl">Approval routing</div>
+        <div class="rr hot"><em>North</em>Henrik Dahl</div>
+        <div class="rr"><em>South</em>Elena Marino</div>
+        <div class="rr"><em>West</em>Paul Mercer</div>
+        <small>Sample validators. Region picks who approves.</small>
+      </div>
+      <div class="stack">
+        <div class="lbl">Planned stack <small>· from your post</small></div>
+        <div class="chips"><span class="chip">n8n</span><span class="chip">SharePoint</span><span class="chip">Teams</span><span class="chip">Microsoft Graph</span><span class="chip">DocuSign or Adobe Sign</span><span class="chip">OpenAI or Claude</span></div>
+      </div>
+    </aside>
+
+    <section class="main">
+      <div class="mh">
+        <h3><span class="t-cand on">Candidates</span><span class="t-paper">Paperwork</span><span class="t-live">Go-live</span><span class="t-audit">Audit trail</span></h3>
+        <div class="search">Search candidates</div>
+        <div class="av c3">CB</div>
+      </div>
+      <div class="views">
+
+        <div class="view vc">
+          <div class="panel" id="board">
+            <div class="hd"><strong>Hiring board</strong><span class="pill">Field Sales Associate</span><span class="pill tag">Sample data</span></div>
+            <div class="col c1"><div class="colh">Applied<span>3</span></div><div class="slot"></div>
+              <div class="card"><b>Tomasz Nowak</b><small>Form · yesterday</small><span class="pill">Parsing CV</span></div>
+              <div class="card"><b>Aisha Karimi</b><small>Form · Monday</small><span class="pill amber">ID unreadable</span></div></div>
+            <div class="col c2"><div class="colh">Screened<span>1</span></div><div class="slot"></div>
+              <div class="card"><b>Marco Rossi</b><small>Fit 64 of 100</small><span class="pill">Recruiter review</span></div></div>
+            <div class="col c3"><div class="colh">Interview<span>1</span></div><div class="slot"></div>
+              <div class="card"><b>Sofia Lind</b><small>Thu 14:00 · Clara</small><span class="pill blue">Booked</span></div></div>
+            <div class="col c4"><div class="colh">Contract<span>1</span></div>
+              <div class="card"><b>Jonas Weber</b><small>Contract and NDA</small><span class="pill amber">1 of 2 signed</span></div></div>
+            <div class="card" id="lena"><b>Lena Hoffmann</b><small>Region North</small><span class="lt"><span class="pill t0">New</span><span class="pill blue t1"><span class="d"></span>Just applied</span><span class="pill blue t2">Fit 78, suggested</span><span class="pill green t3">Wed 10:30</span><span class="pill amber t4">Contract out</span></span></div>
+            <div class="foot">Made-up candidates. Each card is one SharePoint list item.</div>
+          </div>
+
+          <div class="panel" id="drawer">
+            <div class="hd"><strong>Candidate</strong><span class="pill tag">SharePoint item 214</span></div>
+            <div class="dwe"><div>Pick a candidate to open their file.</div></div>
+            <div id="dwHead"><div class="ava">LH</div><div><h5>Lena Hoffmann</h5><small>Field Sales Associate · Region North · made up</small></div></div>
+
+            <div class="sec" id="dwForm">
+              <div class="sech">Smart form answers</div>
+              <div class="q"><span>Where do you live?</span><b>Inside the EU</b></div>
+              <div class="q skip branch"><span>Work permit upload</span><b>Skipped</b></div>
+              <div class="q"><span>Do you hold a driving license?</span><b>Yes</b></div>
+              <div class="q branch"><span>License photo</span><b>Uploaded</b></div>
+              <div class="q"><span>Earliest start</span><b>1 March</b></div>
+              <div class="files"><div class="file"><i></i>CV.pdf</div><div class="file"><i></i>ID card.jpg</div></div>
+              <div class="saved"><div>Saved as one record in the SharePoint list Candidates, files in the HR library.<span class="mono">Graph: POST /sites/hr/lists/Candidates/items</span></div></div>
+            </div>
+
+            <div class="sec" id="dwScore">
+              <div class="sech">AI pre-qualification · OpenAI or Claude</div>
+              <div class="fit"><div class="ring"><b>78</b></div><p><strong>Suggested: invite to interview</strong>Fit score out of 100, from your role criteria.</p></div>
+              <ul class="why">
+                <li style="--i:0"><i>CV</i><div>Four years in field sales<span>Parsed from CV.pdf</span></div></li>
+                <li style="--i:1"><i>ID</i><div>Name and birth date match the form<span>ID number masked before saving</span></div></li>
+                <li style="--i:2"><i>✓</i><div>Has a driving license, the role needs one<span>From the form branch</span></div></li>
+                <li class="warn" style="--i:3"><i>?</i><div>German level not stated<span>Added as a question for the interview</span></div></li>
+              </ul>
+              <div class="advice">The score is advice. Clara, the recruiter, decides who moves on.</div>
+            </div>
+
+            <div class="sec" id="dwCal">
+              <div class="sech">Interview booking · Clara Bauer's calendar</div>
+              <div class="days">
+                <div class="day"><b>Tue</b><div class="sl busy">09:00 busy</div><div class="sl busy">11:00 busy</div><div class="sl free">15:00</div></div>
+                <div class="day"><b>Wed</b><div class="sl busy">09:00 busy</div><div class="sl pick">10:30</div><div class="sl free">16:00</div></div>
+                <div class="day"><b>Thu</b><div class="sl free">09:30</div><div class="sl busy">14:00 busy</div><div class="sl busy">16:00 busy</div></div>
+              </div>
+              <p class="calnote">The link reads Clara's live calendar, so busy times are never offered.</p>
+              <div class="booked">Booked Wed 10:30 with Clara. Teams meeting added to both calendars.</div>
+            </div>
+            <div class="foot">Illustrative run. Nothing here ran in your Microsoft 365.</div>
+          </div>
+        </div>
+
+        <div class="view vp">
+          <div class="panel" id="docs">
+            <div class="hd"><strong>Contract and NDA</strong><span class="tabs2"><span class="pill blue">Contract</span><span class="pill">NDA</span></span></div>
+            <div class="page">
+              <h6>Employment contract</h6>
+              <div class="sub">Word template, saved as PDF · sample</div>
+              <p>This contract is made between your company and <span class="mf" style="--i:0">Lena Hoffmann</span>, starting on <span class="mf" style="--i:1">1 March</span>.</p>
+              <div class="gl"></div><div class="gl" style="width:80%"></div>
+              <p>Role: <span class="mf" style="--i:2">Field Sales Associate</span>, reporting to <span class="mf" style="--i:3">Region North</span>.</p>
+              <div class="gl"></div><div class="gl" style="width:64%"></div><div class="gl" style="width:90%"></div>
+              <p>Probation and notice terms follow the template clause for this role.</p>
+              <div class="sigline"><div>Signed by the candidate</div><div>Signed for the company</div></div>
+            </div>
+            <div class="foot">Highlighted fields are merged from SharePoint item 214.</div>
+          </div>
+
+          <div class="panel" id="sign">
+            <div class="hd"><strong>E-signature</strong><span class="pill tag">DocuSign or Adobe Sign</span></div>
+            <div class="env"><b>Envelope: contract plus NDA</b>2 documents, 2 signers</div>
+            <div class="signer"><div class="ava" style="width:28px;height:28px;font-size:11px;border-radius:8px">LH</div>Lena<span class="sw sw2"><span class="pill amber n">Waiting</span><span class="pill green y" style="--d:.5s">Signed</span></span></div>
+            <div class="signer"><div class="ava" style="width:28px;height:28px;font-size:11px;border-radius:8px;background:linear-gradient(135deg,#9db4ff,#5b74e0)">HR</div>HR lead<span class="sw sw2"><span class="pill amber n">Waiting</span><span class="pill green y" style="--d:1.1s">Signed</span></span></div>
+            <div class="ev">
+              <div class="e a" style="--i:0"><time>Fri 09:12</time>Envelope sent</div>
+              <div class="e a" style="--i:1"><time>Fri 09:13</time>Delivered to Lena</div>
+              <div class="e b" style="--i:0"><time>Fri 11:40</time>Lena signed</div>
+              <div class="e b" style="--i:1"><time>Fri 13:05</time>HR lead signed</div>
+              <div class="e b" style="--i:2"><time>Fri 13:05</time>Completed, webhook received</div>
+            </div>
+            <div class="foot">Status comes in by webhook: <code>POST /webhook/esign-status</code></div>
+          </div>
+
+          <div class="panel" id="gate">
+            <div class="hd"><strong>Next step</strong></div>
+            <div id="gateLock"><span class="sw2"><span class="pill red n">Locked</span><span class="pill green y" style="--d:1.6s">Open</span></span><b>Provisioning waits for both signatures</b><small>n8n holds the run until the webhook says the envelope is complete.</small></div>
+            <div id="teams">
+              <div class="tmh"><i></i>Teams · Approvals</div>
+              <div class="tmb"><b>Approve new hire: Lena Hoffmann</b>
+                <div class="kv2"><span>Region</span>North<span>Sent to</span>Henrik Dahl<span>Start</span>1 March</div>
+                <div class="tbtn"><span class="ok">Approve</span><span>Decline</span></div>
+              </div>
+            </div>
+            <div class="foot">Made-up validators, routed by region.</div>
+          </div>
+        </div>
+
+        <div class="view vl">
+          <div class="panel" id="graph">
+            <div class="hd"><strong>Account setup</strong><span class="pill tag">Microsoft Graph</span></div>
+            <div class="gs" style="--i:0"><div class="ck">✓</div><b>Create her account</b><code>POST /users</code></div>
+            <div class="gs" style="--i:1"><div class="ck">✓</div><b>Assign her Microsoft 365 license</b><code>POST /users/{id}/assignLicense</code></div>
+            <div class="gs" style="--i:2"><div class="ck">✓</div><b>Add her to Sales North and All staff</b><code>POST /groups/{id}/members/$ref</code></div>
+            <div class="gs" style="--i:3"><div class="ck">✓</div><b>Set Clara as her manager</b><code>PUT /users/{id}/manager/$ref</code></div>
+            <div class="foot">Runs only after the signature gate and the Teams approval.</div>
+          </div>
+          <div class="panel" id="welcome">
+            <div class="hd"><strong>Welcome</strong><span class="pill tag">Sent after setup</span></div>
+            <div class="mail">
+              <div class="mh2"><span>To</span>Lena, personal email<span>Subject</span>Welcome aboard, your first day is 1 March</div>
+              Hi Lena, your laptop login and email are ready. Clara will meet you at 9:00 on your first day.
+            </div>
+            <div class="post"><div class="who"><i></i>Teams · Sales North</div>Please welcome Lena Hoffmann, joining as Field Sales Associate on 1 March.</div>
+            <div class="foot">Sample wording. Your team writes the real templates.</div>
+          </div>
+        </div>
+
+        <div class="view va">
+          <div class="panel" id="log">
+            <div class="hd"><strong>Audit trail · Lena Hoffmann</strong><span class="pill tag">Timestamped</span></div>
+            <div class="tbl">
+              <div class="tr th"><span>When</span><span>What happened</span><span>By</span></div>
+              <div class="tr"><time>Mon 09:02</time><span>Application saved to SharePoint</span><em>Smart form</em></div>
+              <div class="tr"><time>Mon 09:03</time><span>CV and ID parsed, ID number masked</span><em>AI agent</em></div>
+              <div class="tr"><time>Mon 10:15</time><span>Interview invite approved</span><em>Clara</em></div>
+              <div class="tr"><time>Mon 10:41</time><span>Interview booked, Wed 10:30</span><em>Lena</em></div>
+              <div class="tr"><time>Fri 09:12</time><span>Contract and NDA sent</span><em>n8n</em></div>
+              <div class="tr"><time>Fri 13:05</time><span>Both signatures confirmed</span><em>Webhook</em></div>
+              <div class="tr nw" style="--i:0"><time>Fri 13:20</time><span>New hire approved in Teams</span><em>Henrik</em></div>
+              <div class="tr nw" style="--i:1"><time>Fri 13:21</time><span>Account, license and groups set</span><em>Graph</em></div>
+              <div class="tr nw" style="--i:2"><time>Fri 13:22</time><span>Welcome email and announcement sent</span><em>n8n</em></div>
+            </div>
+            <div class="foot">Sample entries. One export answers a GDPR access request.</div>
+          </div>
+          <div class="panel" id="aims">
+            <div class="hd"><strong>What we'd measure</strong></div>
+            <div class="ask">In your words:<q>a single source of truth</q><q>blocking the next step until signatures are confirmed</q><q>full timestamped audit traceability</q></div>
+            <div class="gm"><div class="ar">↓</div><b>Application to signed contract</b><small>Days from form to completed envelope.</small><span class="nb2">Baseline not measured yet</span></div>
+            <div class="gm"><div class="ar">↓</div><b>Fields typed by hand</b><small>Per hire, across contract, NDA and accounts.</small><span class="nb2">Baseline not measured yet</span></div>
+            <div class="gm"><div class="ar">↑</div><b>Ready on day one</b><small>New hires with login and groups set before they start.</small><span class="nb2">Baseline not measured yet</span></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <div class="veil"></div>
+  <div id="callcard" role="dialog" aria-label="Your next step">
+    <div class="lbl">Your next step</div>
+    <h5>Choose the first stretch of the runway.</h5>
+    <div class="picks">
+      <div class="on">Application to signed contract<small>Shown today</small></div>
+      <div>Graph provisioning<small>From your post</small></div>
+      <div>AI scoring and parsing<small>From your post</small></div>
+      <div>WhatsApp intake agent<small>Optional in your post</small></div>
+    </div>
+    <div class="callbtn"><b>Reply here and I'll send times for a 15-minute call.</b><small>We'll agree where to start building.</small></div>
+    <p class="byline">n8n is where I build every day, next to Make and Claude Code.<br><b>Lorenzo</b> · AdveroSolutions</p>
+  </div>
+
+  <div class="spot" id="spot" aria-hidden="true"></div>
+</div>
+</div>
+
+<div class="dock" id="dock">
+  <div class="cap" id="cap" aria-live="polite">
+    <div class="kick"><span id="kick"></span><em id="count"></em></div>
+    <h2 id="head"></h2>
+    <p id="sub"></p>
+  </div>
+  <div class="ctl">
+    <div class="dots" id="dots"></div>
+    <div class="btnrow">
+      <button class="nb" id="prev" type="button" aria-label="Previous step">Back</button>
+      <button class="nb next" id="next" type="button" aria-label="Next step">Next →</button>
+    </div>
+  </div>
+</div>
+
+<aside class="notes" id="notes"><div class="lbl">Say this</div><div id="notesText"></div></aside>
+
+<script>
+(function(){
+  /* Steps for the hiring runway. Lorenzo advances every step (Next or Right Arrow). */
+  var S=[
+    {k:"Prepared for your team",h:"This is your hiring runway.",p:"A prototype of the n8n and Microsoft 365 flow from your post. One candidate, from application to day one.",
+     v:"cand",cd:["#app"],cm:["#board"],sp:null,
+     n:"Hi, I'm Lorenzo. I took your post and built a prototype of the hiring runway your team would use. It's not a Microsoft 365 screen, it's the workflow seen from your side. Let's follow one candidate all the way through."},
+    {k:"Smart form",h:"Lena applies through the smart form.",p:"Questions change with her answers. Her application and files land in SharePoint as one record.",
+     v:"cand",cd:["#board","#drawer"],cm:["#dwHead","#dwForm"],sp:["#dwHead","#dwForm"],spm:["#dwForm"],
+     n:"Lena applies through the smart form. She lives in the EU, so the work permit question is skipped. She has a driving license, so it asks for a photo. Everything lands in one SharePoint list item, your single source of truth."},
+    {k:"AI pre-qualification",h:"The agent reads her CV and her ID.",p:"It parses both, checks them against the form and suggests a score. Your recruiter makes the call.",
+     v:"cand",cd:["#board","#drawer"],cm:["#dwHead","#dwScore"],sp:["#dwScore"],
+     n:"Next the AI agent reads her CV and her ID card. It checks her name matches the form, pulls out her experience, flags what's missing, and suggests a fit score. The score is advice. Clara, your recruiter, decides."},
+    {k:"Interview",h:"She books a time on Clara's live calendar.",p:"The booking link only offers times when Clara is actually free.",
+     v:"cand",cd:["#board","#drawer"],cm:["#dwCal"],sp:["#dwCal","#lena"],spm:["#dwCal"],
+     n:"Clara approves the interview, and Lena gets a booking link tied to Clara's live calendar. Busy times never show up. She picks Wednesday at half past ten, and her card moves to Interview."},
+    {k:"Contract and NDA",h:"Her contract fills itself in.",p:"Word templates filled from her SharePoint record, saved as PDF and sent for e-signature.",
+     v:"paper",cd:["#docs","#sign","#gate"],cm:["#docs"],sp:["#docs"],
+     n:"After the interview, n8n fills the Word contract and NDA from her SharePoint record, saves them as PDFs and sends them through DocuSign or Adobe Sign. See the gate on the right. Nothing moves until both are signed."},
+    {k:"Signed and approved",h:"Signed, then approved in Teams.",p:"The signing webhook opens the gate. Her region decides which validator gets the approval card.",
+     v:"paper",cd:["#sign","#gate","#route"],cm:["#gate"],sp:["#gate"],spm:["#teams"],
+     n:"When the last signature comes in, the webhook updates her record and the gate opens. Lena is in Region North, so the approval card goes to Henrik in Teams, and he approves it right there."},
+    {k:"Day one",h:"Her accounts are ready before she arrives.",p:"Microsoft Graph creates her account, assigns her license and adds her groups. Then the welcome goes out.",
+     v:"live",cd:["#graph","#welcome"],cm:["#graph"],sp:["#graph","#welcome"],spm:["#graph"],
+     n:"Now Microsoft Graph creates her account, assigns her Microsoft 365 license, adds her to her groups and sets her manager. Then Lena gets a welcome email, and her new team gets an announcement in Teams."},
+    {k:"Audit trail",h:"Every step, with a timestamp.",p:"One log per candidate, ready for a GDPR request. These are goals, not results, until we measure today.",
+     v:"audit",cd:["#log","#aims"],cm:["#aims"],sp:["#aims"],
+     n:"Every step lands in a timestamped audit trail, so a GDPR request is one export. On the right are the goals from your post. They're goals, not results. We'd measure how hiring runs today first, then compare."},
+    {k:"Your next step",h:"A quick 15-minute call.",p:"Reply here and I'll send times. We'll pick which stretch of the runway to build first.",
+     v:"audit",cd:["#app"],cm:["#callcard"],sp:["#callcard"],
+     n:"The WhatsApp intake agent from your post would feed this same runway. Reply here and I'll send times for a quick 15-minute call, and we'll pick where to start."}
+  ];
+  var app=document.getElementById('app'),spot=document.getElementById('spot'),dock=document.getElementById('dock'),top=document.querySelector('.top');
+  var cap=document.getElementById('cap'),kick=document.getElementById('kick'),head=document.getElementById('head'),sub=document.getElementById('sub'),count=document.getElementById('count');
+  var prev=document.getElementById('prev'),next=document.getElementById('next'),dots=document.getElementById('dots');
+  var notes=document.getElementById('notes'),notesText=document.getElementById('notesText');
+  var titles={cand:'.t-cand',paper:'.t-paper',live:'.t-live',audit:'.t-audit'};
+  var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cur=-1,first=true;
+  S.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Go to step '+(i+1));b.addEventListener('click',function(){go(i)});dots.appendChild(b)});
+  var bars=[].slice.call(dots.children);
+
+  function rectOf(el){var x=0,y=0,e=el;while(e&&e!==app){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}
+    if(el===app)return{x:0,y:0,w:1280,h:800};return{x:x,y:y,w:el.offsetWidth,h:el.offsetHeight}}
+  function union(sels){var a=null;sels.forEach(function(q){var r=rectOf(document.querySelector(q));
+    if(!a)a={x:r.x,y:r.y,r:r.x+r.w,b:r.y+r.h};else{a.x=Math.min(a.x,r.x);a.y=Math.min(a.y,r.y);a.r=Math.max(a.r,r.x+r.w);a.b=Math.max(a.b,r.y+r.h)}});
+    return{x:a.x,y:a.y,w:a.r-a.x,h:a.b-a.y}}
+  function layout(){
+    if(cur<0)return;
+    var s=S[cur],mob=innerWidth<=820;
+    var clean=document.body.classList.contains('clean');
+    var t=clean?0:top.getBoundingClientRect().bottom, b=clean?innerHeight:dock.getBoundingClientRect().top;
+    var pad=mob?10:28,full=(mob?s.cm:s.cd)[0]==='#app';
+    var r=union(mob?s.cm:s.cd);
+    var ext=full?0:(mob?10:22);
+    r={x:r.x-ext,y:r.y-ext,w:r.w+ext*2,h:r.h+ext*2};
+    var aw=innerWidth-pad*2,ah=b-t-pad*2;
+    var sc=Math.min(aw/r.w,ah/r.h,mob?1.25:1.55);
+    var tx=pad+(aw-r.w*sc)/2-r.x*sc, ty=t+pad+(ah-r.h*sc)/2-r.y*sc;
+    app.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+sc.toFixed(4)+')';
+    var spx=(mob&&s.spm)?s.spm:s.sp;if(spx){var q=union(spx),e=8;
+      spot.style.transform='translate('+(q.x-e)+'px,'+(q.y-e)+'px)';spot.style.width=(q.w+e*2)+'px';spot.style.height=(q.h+e*2)+'px';spot.style.borderRadius='18px';spot.classList.add('on');
+    }else{spot.classList.remove('on')}
+  }
+  function setCap(s,i){kick.textContent=s.k;count.textContent=(i+1)+' of '+S.length;head.textContent=s.h;sub.textContent=s.p;notesText.textContent=s.n}
+  function go(i){
+    i=Math.max(0,Math.min(S.length-1,i));if(i===cur)return;
+    cur=i;var s=S[i];
+    var cls=['app','v-'+s.v,'s'+i];for(var k=1;k<=i;k++)cls.push('r'+k);
+    app.className=cls.join(' ');
+    for(var v in titles){document.querySelector(titles[v]).classList.toggle('on',v===s.v)}
+    bars.forEach(function(b,j){b.className=j<i?'done':(j===i?'cur':'');if(j===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
+    prev.disabled=i===0;next.disabled=i===S.length-1;
+    setCap(s,i);if(!first&&!rm){cap.classList.remove('in');void cap.offsetWidth;cap.classList.add('in')}
+    if(first){app.style.transition='none';spot.style.transition='none';layout();void app.offsetWidth;app.style.transition='';spot.style.transition='';first=false}else layout();
+    if(history.replaceState)history.replaceState(null,'','#'+(i+1));
+  }
+  prev.addEventListener('click',function(){go(cur-1)});
+  next.addEventListener('click',function(){go(cur+1)});
+  document.addEventListener('keydown',function(e){
+    if(e.metaKey||e.ctrlKey||e.altKey)return;var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){e.preventDefault();go(cur+1)}
+    else if(k==='Enter'){if(document.activeElement&&document.activeElement.tagName==='BUTTON')return;e.preventDefault();go(cur+1)}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();go(cur-1)}
+    else if(k==='Home'){go(0)}else if(k==='End'){go(S.length-1)}
+    else if(k==='n'||k==='N'){notes.classList.toggle('show')}
+    else if(k==='h'||k==='H'){document.body.classList.toggle('clean');layout()}
+  });
+  var tx0=null;
+  document.addEventListener('touchstart',function(e){tx0=e.touches[0].clientX},{passive:true});
+  document.addEventListener('touchend',function(e){if(tx0===null)return;var dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)go(cur+(dx<0?1:-1));tx0=null},{passive:true});
+  window.addEventListener('resize',layout);
+  var h=parseInt((location.hash||'').slice(1),10);
+  go(isNaN(h)?0:h-1);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(layout);
+})();
+</script>
+</body>
+</html>

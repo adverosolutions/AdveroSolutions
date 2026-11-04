@@ -1,0 +1,454 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-meta-ads-corporate-ai-training-2113218509523991208",
+  "title": "GoHighLevel (GHL) & Meta Ads Setup Specialist for Corporate AI Training Company",
+  "systemName": "Your Meta to GoHighLevel lead system",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113218509523991208",
+    "facts": [
+      "Dubai-based corporate AI training company; audience HR, L&D and senior management.",
+      "Landing page HTML, Meta creatives and copy already prepared; strictly technical implementation.",
+      "Scope: GHL landing pages, forms, pipelines, tagging, lead source tracking, email follow-up from provided content, notifications, appointment booking; Meta campaigns, Pixel, CAPI, UTMs, lead forms into GHL; testing and reporting on leads, cost per lead and conversions.",
+      "Individual freelancers only, no agencies.",
+      "No Meta Ads adapter: Meta is shown only through the GHL Facebook lead trigger and source fields on GHL records."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "first": "Sara",
+      "name": "Sara Mansour",
+      "role": "Head of Learning and Development",
+      "company": "Gulfline Logistics",
+      "email": "sara.mansour@example.com",
+      "phone": "+971 50 000 0142"
+    },
+    "owner": {
+      "name": "Omar Haddad"
+    },
+    "campaign": {
+      "name": "HR and L&D leaders, Q4",
+      "form": "AI training enquiry form",
+      "utm": "facebook / paid_social / ai-training-hr-ld"
+    },
+    "call": {
+      "service": "AI training discovery call",
+      "when": "Tuesday 27 October, 11:30 am GST"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your Meta to GoHighLevel lead system",
+    "title": "Every Meta lead lands in GoHighLevel",
+    "accent": "with its source and a booked call.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Meta lead forms into GHL",
+      "Your landing page and emails",
+      "Source tracked to a booked call"
+    ],
+    "previewSteps": [
+      {
+        "title": "Catch the Meta lead",
+        "detail": "The lead form lands in GHL with its campaign and UTMs."
+      },
+      {
+        "title": "Book the discovery call",
+        "detail": "Your follow-up email links to the booking page on your landing page."
+      },
+      {
+        "title": "Report by source",
+        "detail": "Leads, booked calls and cost per lead, by campaign."
+      }
+    ],
+    "footer": "Illustrative sample with invented contacts. Your HTML, creatives and email copy go in during setup.",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "close": {
+    "eyebrow": "What I would track",
+    "title": "Track each campaign",
+    "accent": "from ad click to booked call.",
+    "caption": "We set the starting point from your first live week, then watch cost per lead, booked calls and source data.",
+    "metrics": [
+      {
+        "name": "Cost per lead",
+        "direction": "down",
+        "aim": "Pay less for each lead",
+        "definition": "Meta spend for a campaign divided by the leads GoHighLevel recorded from that campaign over the same dates, using the UTM campaign on each contact."
+      },
+      {
+        "name": "Leads that book a discovery call",
+        "direction": "up",
+        "aim": "Book more calls from the same leads",
+        "definition": "Contacts with a booked discovery call divided by all new Meta leads in the same period, counting each contact once, shown per campaign."
+      },
+      {
+        "name": "Leads with full source data",
+        "direction": "up",
+        "aim": "Keep the source on every lead",
+        "definition": "Share of new contacts that carry the Meta campaign, form and UTM values, checked weekly so reporting matches what Meta Ads Manager shows."
+      }
+    ],
+    "baselineNote": "We'll set the starting numbers together and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "Once it's live I'd track cost per lead, how many leads book a call, and whether every lead keeps its source, starting from your first week's numbers. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "lead-workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "A Meta lead form fills in GoHighLevel.",
+      "caption": "Sara submits your Meta lead form, gets an owner and an opportunity, and your first email goes out with the booking link.",
+      "beat": "Here's the workflow in GoHighLevel. Sara, a Head of L and D, fills in your Meta lead form. She lands in GHL with the campaign attached, Omar is assigned, an opportunity opens in your pipeline, and your first follow-up email goes out with a link to book a call. Omar gets a notification at the same time.",
+      "details": [
+        "Meta lead form → Sara Mansour → Omar Haddad",
+        "Campaign and UTMs saved on the contact"
+      ],
+      "content": {
+        "name": "Meta lead to discovery call",
+        "nodes": [
+          {
+            "id": "meta-form",
+            "type": "facebook_lead",
+            "label": "Meta lead form submitted",
+            "detail": "{{campaign.form}} · {{campaign.name}}"
+          },
+          {
+            "id": "open-opp",
+            "type": "opportunity",
+            "label": "Opportunity in Training enquiries",
+            "detail": "Stage: New enquiry · Source: Meta lead form"
+          },
+          {
+            "id": "assign-owner",
+            "type": "assign_user",
+            "label": "Route to {{owner.name}}, L&D enquiries",
+            "detail": "Owner for HR and L&D enquiries"
+          },
+          {
+            "id": "email-one",
+            "type": "email",
+            "label": "Follow-up email 1 with booking link",
+            "detail": "Your provided copy · link to the discovery call page"
+          },
+          {
+            "id": "notify-owner",
+            "type": "notification",
+            "label": "Notify {{owner.name}}",
+            "detail": "{{lead.name}} from {{lead.company}} needs a reply"
+          }
+        ],
+        "edges": [
+          {
+            "from": "meta-form",
+            "to": "open-opp"
+          },
+          {
+            "from": "open-opp",
+            "to": "assign-owner"
+          },
+          {
+            "from": "assign-owner",
+            "to": "email-one"
+          },
+          {
+            "from": "email-one",
+            "to": "notify-owner"
+          }
+        ],
+        "runOrder": [
+          "meta-form",
+          "open-opp",
+          "assign-owner",
+          "email-one",
+          "notify-owner"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{lead.role}} · {{lead.company}}",
+          "fields": [
+            {
+              "label": "Campaign",
+              "value": "{{campaign.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Lead form received",
+            "Opportunity: New enquiry",
+            "Owner: {{owner.name}}",
+            "Email 1 sent with booking link",
+            "{{owner.name}} notified"
+          ]
+        },
+        "related": [
+          {
+            "title": "Discovery call booking",
+            "detail": "Booked time moves the opportunity to Call booked."
+          },
+          {
+            "title": "Lead source report",
+            "detail": "Campaign and UTMs feed leads, calls and cost per lead."
+          }
+        ]
+      },
+      "statuses": [
+        "Meta lead form received",
+        "Opportunity opened",
+        "Assigned to Omar Haddad",
+        "Follow-up email 1 sent",
+        "Omar notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "contact-source",
+      "kind": "record",
+      "platform": "ghl",
+      "title": "Sara's contact keeps where she came from.",
+      "caption": "The Meta campaign, form and UTM values sit on her contact, so every report can trace her back to the ad.",
+      "beat": "This is Sara's contact. The campaign name, the lead form and the UTM values are saved as fields, and the tag tells your team she came from Meta. That's what the source report reads from later.",
+      "details": [
+        "UTM source, medium and campaign saved as contact fields",
+        "Tag: meta-lead · hr-ld"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}} · {{lead.phone}}",
+        "sourceTitle": "Lead source",
+        "sourceFields": [
+          {
+            "label": "Source",
+            "value": "Meta lead form"
+          },
+          {
+            "label": "Campaign",
+            "value": "{{campaign.name}}"
+          },
+          {
+            "label": "UTM",
+            "value": "{{campaign.utm}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Role",
+            "value": "{{lead.role}}"
+          },
+          {
+            "label": "Company",
+            "value": "{{lead.company}}"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Tags",
+            "value": "meta-lead, hr-ld"
+          }
+        ],
+        "events": [
+          {
+            "title": "Meta form sent in",
+            "detail": "{{campaign.form}}"
+          },
+          {
+            "title": "Email 1 sent",
+            "detail": "Booking link included"
+          }
+        ],
+        "notice": "Sample contact. Field names follow the tracking plan we agree."
+      },
+      "statuses": [
+        "Contact created",
+        "Source fields saved"
+      ],
+      "optional": true
+    },
+    {
+      "id": "book-call",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Sara books her call on your landing page.",
+      "caption": "The link in email 1 opens your landing page in GoHighLevel, built from your HTML, with the booking calendar behind the button.",
+      "beat": "Sara clicks the link in the email and lands on your page, running in GoHighLevel from the HTML you already have. The button opens the calendar for a 30-minute discovery call.",
+      "details": [
+        "Landing page from your HTML, hosted in GoHighLevel",
+        "Book a discovery call opens the calendar"
+      ],
+      "content": {
+        "surface": "landing",
+        "name": "Discovery call page",
+        "subtitle": "Your landing page in GoHighLevel",
+        "brand": "Corporate AI Training",
+        "heading": "AI training for your leadership and L&D teams",
+        "body": "Book a 30-minute discovery call to talk through your team's training needs.",
+        "cta": "Book a discovery call",
+        "booking": {
+          "service": "AI training discovery call",
+          "durationMinutes": 30,
+          "location": "Video call",
+          "staff": "Omar Haddad",
+          "staffOptions": [
+            "Omar Haddad",
+            "Any available team member"
+          ],
+          "slots": [
+            "10:00",
+            "11:30",
+            "14:00",
+            "15:30"
+          ],
+          "dateISO": "2026-10-27",
+          "timezone": "Asia/Dubai",
+          "timezoneLabel": "Gulf Standard Time (GST)",
+          "selectedSlot": "11:30",
+          "smsConsent": false,
+          "contact": {
+            "name": "Sara Mansour",
+            "email": "sara.mansour@example.com",
+            "phone": "+971 50 000 0142"
+          }
+        }
+      },
+      "statuses": [
+        "Landing page opened from email 1",
+        "Ready to book · 30-minute discovery call"
+      ],
+      "optional": false
+    },
+    {
+      "id": "call-confirmed",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Sara's discovery call is confirmed.",
+      "caption": "She picks Tuesday at 11:30 Dubai time with Omar, and the confirmation shows exactly what she booked.",
+      "beat": "Sara picks Tuesday the 27th at 11:30 Dubai time with Omar and gets this confirmation. That booking is what moves her opportunity to Call booked in the next screen.",
+      "details": [
+        "Tuesday 27 October, 11:30 am GST · Omar Haddad",
+        "Confirmation goes to sara.mansour@example.com"
+      ],
+      "content": {
+        "surface": "confirmation",
+        "name": "Discovery call confirmation",
+        "subtitle": "Your booking confirmation page in GoHighLevel",
+        "brand": "Corporate AI Training",
+        "heading": "AI training for your leadership and L&D teams",
+        "body": "Omar will meet you on a video call. Your confirmation email has the joining details.",
+        "cta": "Book a discovery call",
+        "booking": {
+          "service": "AI training discovery call",
+          "durationMinutes": 30,
+          "location": "Video call",
+          "staff": "Omar Haddad",
+          "staffOptions": [
+            "Omar Haddad",
+            "Any available team member"
+          ],
+          "slots": [
+            "10:00",
+            "11:30",
+            "14:00",
+            "15:30"
+          ],
+          "dateISO": "2026-10-27",
+          "timezone": "Asia/Dubai",
+          "timezoneLabel": "Gulf Standard Time (GST)",
+          "selectedSlot": "11:30",
+          "smsConsent": false,
+          "contact": {
+            "name": "Sara Mansour",
+            "email": "sara.mansour@example.com",
+            "phone": "+971 50 000 0142"
+          }
+        }
+      },
+      "statuses": [
+        "Time chosen · Tuesday 11:30 am GST",
+        "Discovery call confirmed with Omar Haddad"
+      ],
+      "optional": false
+    },
+    {
+      "id": "source-report",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "See which campaigns book calls.",
+      "caption": "Sara's opportunity moves to Call booked, and the report counts leads and calls by campaign.",
+      "beat": "Sara's opportunity is now at Call booked, still tagged to the HR and L and D campaign. The report counts leads and booked calls per campaign, and cost per lead comes from your Meta spend divided by those leads. The numbers here are a sample. Separately, on a past project I generated five million dollars in loan applications in 30 days on fifteen hundred dollars of ad spend for a lender.",
+      "details": [
+        "Illustrative week: 24 Meta leads, 7 discovery calls booked",
+        "Past project: $5M in loan applications · 30 days · $1,500 ad spend"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.company}} · {{campaign.name}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Discovery call",
+            "value": "{{call.when}}"
+          },
+          {
+            "label": "UTM",
+            "value": "{{campaign.utm}}"
+          }
+        ],
+        "stages": [
+          "New enquiry",
+          "Contacted",
+          "Call booked",
+          "Proposal sent",
+          "Won"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Meta leads",
+            "value": "24",
+            "note": "Sample week, illustrative"
+          },
+          {
+            "label": "Calls booked",
+            "value": "7",
+            "note": "Illustrative, not a promised result"
+          },
+          {
+            "label": "Cost per lead",
+            "value": "Spend ÷ leads",
+            "note": "Calculated from your Meta spend per campaign"
+          }
+        ],
+        "note": "Sample counts. The opportunity keeps the campaign it came from.",
+        "proof": {
+          "label": "Relevant past project · lender",
+          "value": "$5M in loan applications",
+          "description": "Generated in 30 days on $1,500 of ad spend.",
+          "sourceNote": "Past project, separate from this sample. Loan applications are not revenue."
+        }
+      },
+      "statuses": [
+        "New enquiry",
+        "Email 1 sent",
+        "Call booked · source kept"
+      ],
+      "optional": false
+    }
+  ]
+}

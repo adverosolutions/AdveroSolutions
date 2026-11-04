@@ -1,0 +1,562 @@
+{
+  "schemaVersion": 1,
+  "id": "support-kb-ai-email-automation-2114796252721848157",
+  "title": "AI support drafts and a knowledge base that trains new VAs",
+  "systemName": "Your support knowledge base and email drafting",
+  "account": {
+    "name": "Your support team",
+    "initials": "ST",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114796252721848157",
+    "facts": [
+      "Upwork post 2026-10-26: AI Automation Engineer for Support, Knowledge Base and Workflow Automation. Online brand selling configurable technical products; wants faster email answers, one AI knowledge base of product knowledge and policies, and VA training material from it. Uses an unnamed helpdesk, open to change. Names OpenAI and Claude.",
+      "No contact name in the post; recipient falls back to your team (U-006).",
+      "Product line, customer, articles and VA are invented sample data."
+    ]
+  },
+  "entities": {
+    "brand": {
+      "name": "Your store"
+    },
+    "customer": {
+      "name": "Dana Whitfield",
+      "first": "Dana",
+      "email": "dana.whitfield@example.com"
+    },
+    "ticket": {
+      "id": "SUP-4182",
+      "received": "Mon 9:12 AM"
+    },
+    "product": {
+      "name": "PX-48 battery",
+      "kit": "PX parallel cable kit",
+      "inverter": "3000 W inverter"
+    },
+    "kb": {
+      "article": "KB-112",
+      "articleTitle": "Pairing two PX-48 batteries",
+      "policy": "POL-07",
+      "policyTitle": "Warranty for multi-battery setups",
+      "lesson": "Lesson 3: battery pairing questions"
+    },
+    "agent": {
+      "name": "Priya",
+      "role": "Support VA"
+    }
+  },
+  "cover": {
+    "eyebrow": "Support knowledge base and email drafting",
+    "title": "Detailed product questions,",
+    "accent": "answered from your own docs.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n AI agent workflow",
+      "Draft reply in Gmail for approval",
+      "Knowledge base that trains new VAs"
+    ],
+    "previewSteps": [
+      {
+        "title": "Read the email",
+        "detail": "Pull out the real question and the products named."
+      },
+      {
+        "title": "Draft from your docs",
+        "detail": "The agent searches the knowledge base and cites what it used."
+      },
+      {
+        "title": "Train new VAs",
+        "detail": "The same articles become short training lessons."
+      }
+    ],
+    "footer": "Illustrative sample data, no live accounts connected",
+    "beat": "A customer asks a detailed product question. Here's how the answer gets drafted from your own docs, and how the same docs train your new VAs."
+  },
+  "scenes": [
+    {
+      "id": "draft-workflow",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "A new support email becomes a drafted answer.",
+      "caption": "The AI agent only answers from your product docs and policies, and names the articles it used.",
+      "beat": "When {{customer.first}}'s email comes in, n8n pulls out the actual question, the AI agent searches your knowledge base, writes a reply that cites the articles, and saves it as a draft for your team.",
+      "details": [
+        "Open the AI Agent node to show the system message: answer only from the knowledge base.",
+        "The Search knowledge base tool returned {{kb.article}} and {{kb.policy}}.",
+        "If the docs don't cover a question, the agent flags it for a person instead of guessing."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Support email to drafted answer",
+        "subtitle": "n8n workflow editor",
+        "surface": "editor",
+        "graph": {
+          "name": "Support email to drafted answer",
+          "nodes": [
+            {
+              "id": "new-email",
+              "type": "webhook",
+              "label": "New support email",
+              "detail": "{{ticket.id}} from {{customer.name}}"
+            },
+            {
+              "id": "tidy-question",
+              "type": "edit_fields",
+              "label": "Pull out the question",
+              "detail": "Question, products, topic"
+            },
+            {
+              "id": "answer-agent",
+              "type": "ai_agent",
+              "label": "Answer from your docs",
+              "detail": "Cites {{kb.article}} and {{kb.policy}}"
+            },
+            {
+              "id": "save-draft",
+              "type": "http_request",
+              "label": "Hold reply for your VA",
+              "detail": "Unsent draft for {{agent.name}}"
+            }
+          ],
+          "edges": [
+            {
+              "from": "new-email",
+              "to": "tidy-question"
+            },
+            {
+              "from": "tidy-question",
+              "to": "answer-agent"
+            },
+            {
+              "from": "answer-agent",
+              "to": "save-draft"
+            }
+          ],
+          "runOrder": [
+            "new-email",
+            "tidy-question",
+            "answer-agent",
+            "save-draft"
+          ],
+          "context": {
+            "name": "{{ticket.id}}",
+            "subtitle": "{{customer.name}}",
+            "fields": [
+              {
+                "label": "Topic",
+                "value": "Compatibility and warranty"
+              },
+              {
+                "label": "Status",
+                "value": "Illustrative sample"
+              }
+            ],
+            "states": [
+              "Email received",
+              "Question pulled out",
+              "Answer drafted with 2 sources",
+              "Draft waiting for review"
+            ]
+          },
+          "related": [
+            {
+              "title": "{{kb.article}}",
+              "detail": "{{kb.articleTitle}}"
+            },
+            {
+              "title": "{{kb.policy}}",
+              "detail": "{{kb.policyTitle}}"
+            }
+          ]
+        },
+        "aiNodes": [
+          {
+            "id": "chat-model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Writes the reply"
+          },
+          {
+            "id": "kb-search",
+            "type": "http_request_tool",
+            "label": "Search knowledge base",
+            "detail": "Product docs and policies"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "chat-model",
+            "to": "answer-agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "kb-search",
+            "to": "answer-agent",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "new-email",
+            "input": [
+              {
+                "label": "From",
+                "value": "{{customer.email}}"
+              },
+              {
+                "label": "Subject",
+                "value": "Two PX-48s on one inverter?"
+              }
+            ],
+            "output": [
+              {
+                "label": "ticket_id",
+                "value": "{{ticket.id}}"
+              },
+              {
+                "label": "body",
+                "value": "Can I run two {{product.name}} units on my {{product.inverter}}? Will that void the warranty?"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "support-new-email"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "tidy-question",
+            "input": [
+              {
+                "label": "body",
+                "value": "Full email with signature and quoted history"
+              }
+            ],
+            "output": [
+              {
+                "label": "question",
+                "value": "Pair two {{product.name}} units on a {{product.inverter}}, and is the warranty affected?"
+              },
+              {
+                "label": "products",
+                "value": "{{product.name}}, {{product.inverter}}"
+              },
+              {
+                "label": "topic",
+                "value": "Compatibility and warranty"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Mode",
+                "value": "Manual Mapping"
+              },
+              {
+                "label": "Fields to Set",
+                "value": "question, products, topic, ticket_id"
+              }
+            ]
+          },
+          {
+            "node": "answer-agent",
+            "input": [
+              {
+                "label": "question",
+                "value": "Pair two {{product.name}} units on a {{product.inverter}}, and is the warranty affected?"
+              }
+            ],
+            "output": [
+              {
+                "label": "draft",
+                "value": "Yes, with the {{product.kit}}. Warranty stays valid with the kit."
+              },
+              {
+                "label": "sources",
+                "value": "{{kb.article}}, {{kb.policy}}"
+              },
+              {
+                "label": "needs_human",
+                "value": "false"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "Answer this customer question using only the knowledge base. Question field: question"
+              },
+              {
+                "label": "System Message",
+                "value": "You are a support writer for a store selling configurable products. Answer only from knowledge base results, name the article IDs you used, and mark needs_human true if the docs do not cover the question."
+              }
+            ]
+          },
+          {
+            "node": "save-draft",
+            "input": [
+              {
+                "label": "to",
+                "value": "{{customer.email}}"
+              },
+              {
+                "label": "draft",
+                "value": "Reply text plus cited articles"
+              }
+            ],
+            "output": [
+              {
+                "label": "draft_status",
+                "value": "Saved as unsent draft"
+              },
+              {
+                "label": "assigned_to",
+                "value": "{{agent.name}}, {{agent.role}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://gmail.googleapis.com/gmail/v1/users/me/drafts"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"ticket\": \"SUP-4182\", \"to\": \"dana.whitfield@example.com\", \"status\": \"draft\"}"
+              }
+            ]
+          },
+          {
+            "node": "chat-model",
+            "input": [
+              {
+                "label": "messages",
+                "value": "System message, question and knowledge base results"
+              }
+            ],
+            "output": [
+              {
+                "label": "text",
+                "value": "Drafted reply with two cited sources"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Sampling Temperature",
+                "value": "0.2"
+              }
+            ]
+          },
+          {
+            "node": "kb-search",
+            "input": [
+              {
+                "label": "query",
+                "value": "pair two PX-48 3000 W inverter warranty"
+              }
+            ],
+            "output": [
+              {
+                "label": "top_result",
+                "value": "{{kb.article}} {{kb.articleTitle}}"
+              },
+              {
+                "label": "second_result",
+                "value": "{{kb.policy}} {{kb.policyTitle}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://kb.example.com/api/search"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Description",
+                "value": "Search product docs and company policies"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "answer-agent"
+      },
+      "statuses": [
+        "{{customer.name}}'s email arrives as {{ticket.id}}",
+        "The question and products are pulled out",
+        "The agent finds {{kb.article}} and {{kb.policy}} and drafts a reply",
+        "The reply is saved as a draft for {{agent.name}} to review"
+      ]
+    },
+    {
+      "id": "gmail-draft",
+      "kind": "gmail",
+      "platform": "gmail",
+      "title": "Your VA reviews the draft and sends it.",
+      "caption": "Nothing goes to the customer until someone on your team reads it and clicks send.",
+      "beat": "Here's {{customer.first}}'s original email, and right under it the reply the agent drafted. {{agent.name}} can edit it, check the two cited articles, and send it herself.",
+      "details": [
+        "The draft cites {{kb.article}} and {{kb.policy}} so the VA can check the answer fast.",
+        "Edits to the draft stay in place; Replay restores the original draft.",
+        "Send is disabled in this demo; it is a sample thread."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Support inbox",
+        "subtitle": "Reply drafted from the knowledge base",
+        "surface": "thread",
+        "thread": {
+          "id": "{{ticket.id}}",
+          "subject": "Two PX-48s on one inverter?",
+          "fromName": "{{customer.name}}",
+          "fromEmail": "{{customer.email}}",
+          "toEmail": "support@example.com",
+          "received": "{{ticket.received}}",
+          "label": "Support",
+          "body": "Hi, I already have one {{product.name}} on my {{product.inverter}}. Can I add a second one to get more run time? And would that void the warranty? Thanks, {{customer.first}}"
+        },
+        "draft": {
+          "id": "draft-{{ticket.id}}",
+          "recipient": "{{customer.email}}",
+          "status": "draft",
+          "body": "Hi {{customer.first}}, yes, you can run two {{product.name}} units on your {{product.inverter}}. Connect them in parallel with the {{product.kit}} so they charge and drain evenly. Your warranty stays valid as long as the kit is used for the connection. Setup steps are in {{kb.article}}, and the warranty terms are in {{kb.policy}}. Let me know if you'd like the step by step guide sent over."
+        }
+      },
+      "statuses": [
+        "Customer email in the support inbox",
+        "Unsent draft ready for {{agent.name}}"
+      ]
+    },
+    {
+      "id": "kb-training",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "The same knowledge base trains your new VAs.",
+      "caption": "Each article your agent answers from also becomes a short lesson and quiz for new hires.",
+      "beat": "The article that answered {{customer.first}} came from your spec sheet and warranty policy. The same article turns into {{kb.lesson}}, with a short quiz, so a new VA learns the questions customers actually ask.",
+      "details": [
+        "Sources: PX-48 spec sheet, inverter compatibility table, warranty policy.",
+        "Lesson and quiz are generated from the article and reviewed by your team before use.",
+        "Counts are illustrative sample values."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Knowledge base and training",
+        "subtitle": "{{kb.article}} {{kb.articleTitle}}",
+        "fields": [
+          {
+            "label": "Built from",
+            "value": "PX-48 spec sheet, inverter compatibility table, {{kb.policy}}"
+          },
+          {
+            "label": "Used in",
+            "value": "{{ticket.id}} reply draft for {{customer.name}}"
+          },
+          {
+            "label": "Training lesson",
+            "value": "{{kb.lesson}}"
+          },
+          {
+            "label": "Quiz question",
+            "value": "A customer wants two PX-48s on one inverter. What do they need, and is the warranty affected?"
+          }
+        ],
+        "stages": [
+          "Docs collected",
+          "Article written",
+          "Used in a reply",
+          "Lesson and quiz made"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Source docs",
+            "value": "3",
+            "note": "Illustrative sample"
+          },
+          {
+            "label": "Replies citing it",
+            "value": "1",
+            "note": "Today's sample ticket"
+          },
+          {
+            "label": "Quiz questions",
+            "value": "4",
+            "note": "Reviewed before use"
+          }
+        ],
+        "note": "Illustrative sample. Articles and lessons are reviewed by your team before they go live."
+      },
+      "statuses": [
+        "Spec sheet, compatibility table and warranty policy collected",
+        "{{kb.article}} written from them",
+        "{{kb.article}} answered {{ticket.id}}",
+        "{{kb.lesson}} and its quiz are ready for new VAs"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Faster answers,",
+    "accent": "from one source your team trusts.",
+    "caption": "We'd agree a starting point from your current helpdesk before setting any targets.",
+    "metrics": [
+      {
+        "name": "Wait for a customer answer",
+        "direction": "down",
+        "aim": "Answer customers sooner",
+        "definition": "Time from a customer email arriving to your team sending the first reply."
+      },
+      {
+        "name": "Drafts sent with light edits",
+        "direction": "up",
+        "aim": "More drafts usable as written",
+        "definition": "Share of AI drafts your team sends with only small changes."
+      },
+      {
+        "name": "New VA ramp time",
+        "direction": "down",
+        "aim": "Get new VAs answering sooner",
+        "definition": "Days from a new VA starting to handling product questions on their own."
+      }
+    ],
+    "baselineNote": "We'd measure your current numbers first and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd start by looking at how your team answers emails today and which docs you already have. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

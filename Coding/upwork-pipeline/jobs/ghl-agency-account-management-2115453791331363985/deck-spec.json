@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-agency-account-management-2115453791331363985",
+  "title": "Go high level expert",
+  "systemName": "Your GoHighLevel agency account",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022115453791331363985",
+    "facts": [
+      "Post (verbatim): looking for a company that is fluent in English that is qualified to manage the go high level agency account. you need to be an expert in go high level",
+      "Hourly, expert, part-time, 2 hires, US-only location required. No screening questions returned.",
+      "Client signals (private, not shown): US (NY) repeat GHL hirer; past contracts include A2P brand registrations and Twilio help. Phone/A2P appears in the deck only as a standard GHL sub-account setup step, never as a claimed approval count."
+    ]
+  },
+  "entities": {
+    "client": {
+      "name": "Northfield Home Services",
+      "contact": "Dana Reyes",
+      "first": "Dana"
+    },
+    "manager": {
+      "name": "Jordan Blake",
+      "first": "Jordan"
+    },
+    "snapshot": {
+      "name": "Home Services Starter"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your GoHighLevel agency account",
+    "title": "Every client sub-account set up,",
+    "accent": "and kept running.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "New client onboarding",
+      "Phone number and A2P registration tracked",
+      "Client requests fixed and confirmed"
+    ],
+    "previewSteps": [
+      {
+        "title": "Onboard a new client",
+        "detail": "One tag assigns an account manager, loads the snapshot and sends the checklist."
+      },
+      {
+        "title": "Fix a client request",
+        "detail": "Find the cause, fix it, test it and confirm with the client."
+      },
+      {
+        "title": "See every sub-account",
+        "detail": "Each client's stage, owner and open requests on one board."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · sample clients and data"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure how your agency account",
+    "accent": "runs week to week.",
+    "caption": "Start from today's baseline, then track launch time, request response and tested workflows.",
+    "metrics": [
+      {
+        "name": "Days from signed client to live sub-account",
+        "direction": "down",
+        "aim": "Launch new clients sooner",
+        "definition": "Calendar days from the new client tag to the Live stage, measured per sub-account, using a definition of live we agree on together."
+      },
+      {
+        "name": "Client requests answered within one business day",
+        "direction": "up",
+        "aim": "Answer more requests on time",
+        "definition": "Client support requests that get a fix or a clear update within one business day of being opened, divided by all requests opened in the same period."
+      },
+      {
+        "name": "Sub-accounts with every workflow tested",
+        "direction": "up",
+        "aim": "Keep more sub-accounts fully working",
+        "definition": "Live sub-accounts whose published workflows all passed a test run at the latest review, divided by all live sub-accounts."
+      }
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd track how fast new clients go live, how quickly client requests get answered, and how many sub-accounts have every workflow tested, starting from your current baseline. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "onboarding-workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Set up every new client's sub-account the same way.",
+      "caption": "One tag starts it. The account manager, onboarding stage, checklist and follow-up happen in order.",
+      "beat": "When a new client signs, like {{client.name}} here, one tag starts this workflow. {{manager.first}} is assigned as the account manager, the onboarding stage moves to Snapshot loaded, and {{client.first}} gets the checklist for her phone number and A2P registration. When the checklist comes back, {{manager.first}} gets told it's ready to submit and test. If it doesn't come back, {{client.first}} gets a reminder text instead.",
+      "details": [
+        "Click Show result to finish the sample path.",
+        "New client tag → {{manager.name}} assigned → checklist sent → checklist back → {{manager.first}} notified"
+      ],
+      "content": {
+        "name": "New client sub-account onboarding",
+        "nodes": [
+          {
+            "id": "signed",
+            "type": "contact_tag",
+            "label": "New client signed",
+            "detail": "Tag added: new-client-signed"
+          },
+          {
+            "id": "assign",
+            "type": "assign_user",
+            "label": "Assign the account manager",
+            "detail": "{{manager.name}} owns this setup"
+          },
+          {
+            "id": "stage",
+            "type": "opportunity",
+            "label": "Onboarding stage: Snapshot loaded",
+            "detail": "Sub-account built from the {{snapshot.name}} snapshot"
+          },
+          {
+            "id": "checklist",
+            "type": "email",
+            "label": "Send the onboarding checklist",
+            "detail": "Business details for the phone number and A2P registration, logo and team users"
+          },
+          {
+            "id": "wait",
+            "type": "wait",
+            "label": "Wait for the checklist",
+            "detail": "Up to two business days"
+          },
+          {
+            "id": "returned",
+            "type": "condition",
+            "label": "Checklist returned?",
+            "detail": "Checks the Checklist received field"
+          },
+          {
+            "id": "ready",
+            "type": "notification",
+            "label": "Tell {{manager.first}} it's ready",
+            "detail": "Submit the A2P registration, then test the workflows"
+          },
+          {
+            "id": "reminder",
+            "type": "sms",
+            "label": "Send a reminder text",
+            "detail": "Short reminder to {{client.contact}} about the checklist"
+          }
+        ],
+        "edges": [
+          {
+            "from": "signed",
+            "to": "assign"
+          },
+          {
+            "from": "assign",
+            "to": "stage"
+          },
+          {
+            "from": "stage",
+            "to": "checklist"
+          },
+          {
+            "from": "checklist",
+            "to": "wait"
+          },
+          {
+            "from": "wait",
+            "to": "returned"
+          },
+          {
+            "from": "returned",
+            "to": "ready",
+            "label": "Yes"
+          },
+          {
+            "from": "returned",
+            "to": "reminder",
+            "label": "No"
+          }
+        ],
+        "runOrder": [
+          "signed",
+          "assign",
+          "stage",
+          "checklist",
+          "wait",
+          "returned",
+          "ready"
+        ],
+        "context": {
+          "name": "{{client.name}}",
+          "subtitle": "{{client.contact}} · account manager {{manager.name}}",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            },
+            {
+              "label": "Snapshot",
+              "value": "{{snapshot.name}}"
+            }
+          ],
+          "states": [
+            "New client tag added",
+            "{{manager.name}} assigned",
+            "Snapshot loaded",
+            "Checklist sent to {{client.first}}",
+            "Waiting on the checklist",
+            "Checklist received",
+            "{{manager.first}} notified · ready to submit"
+          ]
+        },
+        "related": [
+          {
+            "title": "Phone number and A2P registration",
+            "detail": "Business details collected before anything is submitted."
+          },
+          {
+            "title": "Workflow test",
+            "detail": "Each published workflow gets a test run before the client goes live."
+          }
+        ]
+      },
+      "statuses": [
+        "New client tag added",
+        "{{manager.name}} assigned",
+        "Snapshot loaded",
+        "Checklist sent to {{client.first}}",
+        "Waiting on the checklist",
+        "Checklist received",
+        "{{manager.first}} notified · ready to submit"
+      ],
+      "optional": false
+    },
+    {
+      "id": "subaccount-record",
+      "kind": "record",
+      "platform": "ghl",
+      "title": "Keep each sub-account's setup in one record.",
+      "caption": "Snapshot, phone number, A2P registration, users and workflows, all on the client's record.",
+      "beat": "This is the {{client.name}} record in your agency's own account. {{manager.first}} can see what's done and what's waiting: the snapshot is loaded, the phone number is assigned, the A2P registration is submitted and waiting on carrier review, and the workflows are published.",
+      "details": [
+        "{{client.name}} · {{client.contact}}",
+        "A2P review time is set by the carriers, not by us."
+      ],
+      "content": {
+        "name": "{{client.name}}",
+        "subtitle": "Sub-account · {{snapshot.name}} snapshot",
+        "sourceTitle": "Onboarding checklist",
+        "sourceFields": [
+          {
+            "label": "Business name",
+            "value": "{{client.name}}"
+          },
+          {
+            "label": "Main contact",
+            "value": "{{client.contact}}"
+          },
+          {
+            "label": "Checklist",
+            "value": "Received"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Account manager",
+            "value": "{{manager.name}}"
+          },
+          {
+            "label": "Phone number",
+            "value": "Assigned"
+          },
+          {
+            "label": "A2P 10DLC registration",
+            "value": "Brand and campaign submitted, waiting on carrier review"
+          },
+          {
+            "label": "Team users",
+            "value": "Three added"
+          },
+          {
+            "label": "Workflows",
+            "value": "Five published"
+          }
+        ],
+        "events": [
+          {
+            "title": "Snapshot loaded",
+            "detail": "Pipelines, calendars and workflows copied in"
+          },
+          {
+            "title": "Checklist received",
+            "detail": "Business details saved to the sub-account"
+          },
+          {
+            "title": "A2P registration submitted",
+            "detail": "Waiting on carrier review"
+          }
+        ],
+        "notice": "Demonstration record with sample data."
+      },
+      "statuses": [
+        "Snapshot loaded",
+        "Checklist received",
+        "A2P registration submitted"
+      ],
+      "optional": true
+    },
+    {
+      "id": "client-request",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "Fix client requests and confirm them the same morning.",
+      "caption": "{{client.first}} reports a problem, {{manager.first}} finds the cause, fixes and tests it, then confirms with her.",
+      "beat": "Here's the day-to-day part of managing the account. {{client.first}} texts that her missed-call text-back stopped. {{manager.first}} finds the workflow was left in draft after an edit, publishes it, runs a test call, and confirms with {{client.first}}, all in one conversation.",
+      "details": [
+        "Request at 9:12 am → fixed and confirmed at 9:26 am",
+        "The internal note is visible to your team only."
+      ],
+      "content": {
+        "name": "{{client.contact}}",
+        "subtitle": "{{client.name}}",
+        "fields": [
+          {
+            "label": "Account manager",
+            "value": "{{manager.name}}"
+          },
+          {
+            "label": "Request",
+            "value": "Missed-call text-back stopped"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{client.contact}}",
+            "time": "9:12 am",
+            "body": "Hi {{manager.first}}, our missed-call text-back hasn't gone out since Friday. Can you check?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{manager.name}}",
+            "time": "9:20 am",
+            "body": "Found it. The Missed call text-back workflow was left in Draft after Friday's edit. Published it and ran a test call."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{manager.name}}",
+            "time": "9:26 am",
+            "body": "Hi {{client.first}}, it's fixed. The workflow is published again and our test call got the text back. I'll keep an eye on it today."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{client.contact}}",
+            "time": "9:31 am",
+            "body": "Perfect, thank you!"
+          }
+        ],
+        "notice": "Opened at 9:12 am, fixed, tested and confirmed by 9:26 am."
+      },
+      "statuses": [
+        "{{client.first}} reports the problem",
+        "Cause found and fixed",
+        "Fix confirmed with {{client.first}}",
+        "{{client.first}} confirms"
+      ],
+      "optional": false
+    },
+    {
+      "id": "agency-board",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "See where every client stands in one place.",
+      "caption": "{{client.name}} moves from Snapshot loaded to Live, next to every other sub-account.",
+      "beat": "And this is the agency view. {{client.name}} moves through Snapshot loaded, Phone and A2P submitted, and Workflows tested, then goes Live. Every other client sits on the same board with its account manager and open requests.",
+      "details": [
+        "Click Show result to land on Live.",
+        "Sample board: 14 sub-accounts, 11 live, 2 open requests"
+      ],
+      "content": {
+        "name": "{{client.name}}",
+        "subtitle": "Agency onboarding board · account manager {{manager.name}}",
+        "fields": [
+          {
+            "label": "Sub-account",
+            "value": "{{client.name}}"
+          },
+          {
+            "label": "Account manager",
+            "value": "{{manager.name}}"
+          },
+          {
+            "label": "Workflows",
+            "value": "Five published and tested"
+          }
+        ],
+        "stages": [
+          "Signed",
+          "Snapshot loaded",
+          "Phone and A2P submitted",
+          "Workflows tested",
+          "Live"
+        ],
+        "stageSequence": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Sub-accounts on the board",
+            "value": "14",
+            "note": "Illustrative sample"
+          },
+          {
+            "label": "Live",
+            "value": "11",
+            "note": "Illustrative sample"
+          },
+          {
+            "label": "Open client requests",
+            "value": "2",
+            "note": "Illustrative sample"
+          }
+        ],
+        "note": "Counts are illustrative. Each sub-account shows its stage, account manager and open requests."
+      },
+      "statuses": [
+        "Snapshot loaded",
+        "Phone and A2P submitted",
+        "Workflows tested",
+        "{{client.name}} is live"
+      ],
+      "optional": false
+    }
+  ]
+}

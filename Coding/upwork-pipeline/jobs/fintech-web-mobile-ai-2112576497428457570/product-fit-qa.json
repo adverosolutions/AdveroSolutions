@@ -1,0 +1,30 @@
+{
+  "fit": {
+    "frame": {
+      "top": 233.73336791992188,
+      "bottom": 783.4153747558594,
+      "height": 549.6820068359375
+    },
+    "layoutHeight": 498,
+    "layoutScrollHeight": 498,
+    "audit": {
+      "top": 654.4113159179688,
+      "bottom": 726.0730590820312
+    },
+    "amounts": {
+      "top": 346.7957763671875,
+      "bottom": 414.4557800292969
+    },
+    "evidenceHidden": true,
+    "pageScroll": 0
+  },
+  "errors": [],
+  "source": "Canonical queued page with current product.js/css injected in memory, no page or queue mutation",
+  "checks": [
+    "1440x900 complete presentation fit",
+    "amounts and approved audit simultaneously inside native frame",
+    "evidence initially collapsed and expandable",
+    "review again and approve",
+    "Show result restores compact state"
+  ]
+}

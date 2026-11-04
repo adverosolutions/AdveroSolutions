@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "id": "ai-lead-follow-up-qualification-booking-2114758253431035934",
+  "title": "Follow up with every new lead, qualify it and offer a booking link",
+  "systemName": "Your lead follow-up and booking system",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114758253431035934",
+    "facts": [
+      "Post text from the Vollna RSS copy pulled 2026-10-26 12:28 CT; the Upwork job page returned PERMISSION twice, so screening questions and client details are unknown.",
+      "Post: leads come from the website and sometimes Facebook, follow-up is slow. Wants: check the details, ask a few basic qualifying questions if needed, save everything in the CRM, tell the team if the lead is worth calling, offer a qualified lead a booking link or schedule a call.",
+      "Post: already uses a CRM (not named), open to n8n, Make or another tool, wants something simple and reliable. Asks what we built, tools used and how long it took. A short demo or screen recording is welcome.",
+      "CRM is unnamed, so the CRM step is an n8n HTTP Request to their CRM's API and the record view is the custom workspace, never a vendor screen. The team alert uses the n8n Slack node as the sample channel; the real channel is agreed with the client."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Dana Ruiz",
+      "first": "Dana",
+      "email": "dana.ruiz@example.com",
+      "source": "Website contact form",
+      "need": "Quote for a new project",
+      "start": "Within the next month",
+      "contact": "Phone call, weekday afternoons",
+      "needText": "quote for a new project",
+      "startText": "within the next month"
+    },
+    "team": {
+      "owner": "Sam",
+      "channel": "#new-leads"
+    },
+    "reference": {
+      "id": "LEAD-1042"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your lead follow-up and booking system",
+    "title": "Reply to every lead while they're still interested,",
+    "accent": "and hand the good ones a booking link.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n lead workflow",
+      "Team alert and booking email",
+      "Lead saved in your CRM"
+    ],
+    "previewSteps": [
+      {
+        "title": "Lead submits a form",
+        "detail": "A website or Facebook form starts the workflow."
+      },
+      {
+        "title": "Answers get checked",
+        "detail": "AI reads the answers and decides if it's worth a call."
+      },
+      {
+        "title": "Team and lead hear back",
+        "detail": "Your team gets an alert and the lead gets a booking link."
+      }
+    ],
+    "footer": "Illustrative sample data · no live system connected",
+    "beat": "Here's the follow-up system for your website and Facebook leads. One sample lead, {{lead.name}}, goes through it from the form to the booking link."
+  },
+  "close": {
+    "eyebrow": "What I'd measure with you",
+    "title": "Reply to leads faster",
+    "accent": "and book more of the good ones.",
+    "caption": "We'd agree a starting point from your current leads, then track these three.",
+    "metrics": [
+      {
+        "name": "How long a lead waits to hear back",
+        "direction": "down",
+        "aim": "Reply to new leads sooner",
+        "definition": "Time between a lead submitting a form and getting the first reply."
+      },
+      {
+        "name": "Qualified leads sent a booking link",
+        "direction": "up",
+        "aim": "Get more qualified leads to a booking link",
+        "definition": "Qualified leads that received a booking link, divided by all qualified leads."
+      },
+      {
+        "name": "Leads still waiting after a day",
+        "direction": "down",
+        "aim": "Leave fewer leads waiting",
+        "definition": "Leads with no reply or team action after one business day, divided by all new leads."
+      }
+    ],
+    "baselineNote": "We'd measure where you are today first, then agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd want to check your qualifying questions and your CRM fields with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "A new lead comes in and gets sorted right away.",
+      "caption": "The form starts the workflow, AI checks the answers, and the lead is saved to your CRM before anyone touches it.",
+      "beat": "When {{lead.name}} fills in the website form, this n8n workflow starts. It cleans up the details, has AI check the answers against your qualifying questions, and saves the lead to your CRM. Because {{lead.first}} is worth a call, your team gets an alert and {{lead.first}} gets a booking link. If a lead is missing answers, it goes down the other branch and gets a short email with a few questions instead.",
+      "details": [
+        "Facebook lead forms can feed the same webhook",
+        "The CRM step uses your CRM's API; we map the fields together",
+        "The lead's email is checked first, so a repeat form fill updates the same record"
+      ],
+      "content": {
+        "name": "New lead follow-up",
+        "nodes": [
+          {
+            "id": "form",
+            "type": "webhook",
+            "label": "New form lead",
+            "detail": "Website or Facebook"
+          },
+          {
+            "id": "clean",
+            "type": "edit_fields",
+            "label": "Check and tidy the details",
+            "detail": "Name, email, phone and answers formatted"
+          },
+          {
+            "id": "score",
+            "type": "http_request",
+            "label": "AI checks the answers",
+            "detail": "Compares the answers to your qualifying questions"
+          },
+          {
+            "id": "crm",
+            "type": "http_request",
+            "label": "Save lead to your CRM",
+            "detail": "Matches by email, then creates or updates the lead"
+          },
+          {
+            "id": "decide",
+            "type": "if",
+            "label": "Worth a call?",
+            "detail": "Yes when every question has a usable answer"
+          },
+          {
+            "id": "alert",
+            "type": "slack",
+            "label": "Alert the team",
+            "detail": "Hot lead message to {{team.channel}}"
+          },
+          {
+            "id": "book",
+            "type": "gmail",
+            "label": "Send the booking link",
+            "detail": "Thanks {{lead.first}}, here's a link to pick a time"
+          },
+          {
+            "id": "ask",
+            "type": "gmail",
+            "label": "Ask a few quick questions",
+            "detail": "Sent when answers are missing"
+          }
+        ],
+        "edges": [
+          {
+            "from": "form",
+            "to": "clean"
+          },
+          {
+            "from": "clean",
+            "to": "score"
+          },
+          {
+            "from": "score",
+            "to": "crm"
+          },
+          {
+            "from": "crm",
+            "to": "decide"
+          },
+          {
+            "from": "decide",
+            "to": "alert",
+            "label": "true"
+          },
+          {
+            "from": "decide",
+            "to": "ask",
+            "label": "false"
+          },
+          {
+            "from": "alert",
+            "to": "book"
+          }
+        ],
+        "runOrder": [
+          "form",
+          "clean",
+          "score",
+          "crm",
+          "decide",
+          "alert",
+          "book"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{reference.id}} · {{lead.source}}",
+          "fields": [
+            {
+              "label": "Needs",
+              "value": "{{lead.need}}"
+            },
+            {
+              "label": "Wants to start",
+              "value": "{{lead.start}}"
+            },
+            {
+              "label": "Best way to reach",
+              "value": "{{lead.contact}}"
+            }
+          ],
+          "states": [
+            "Form received",
+            "Details checked",
+            "AI result: ready for a call",
+            "Saved in your CRM as {{reference.id}}",
+            "Worth a call: yes",
+            "Team alerted in {{team.channel}}",
+            "Booking link sent to {{lead.first}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Missing answers",
+            "detail": "Leads without enough answers get a short question email and stay in the CRM for follow-up."
+          },
+          {
+            "title": "If a step fails",
+            "detail": "The workflow retries, then posts the error to your team so no lead is lost."
+          }
+        ]
+      },
+      "statuses": [
+        "Form received",
+        "Details checked",
+        "AI result: ready for a call",
+        "Saved in your CRM",
+        "Worth a call: yes",
+        "Team alerted",
+        "Booking link sent"
+      ],
+      "optional": false
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Here's what your team and the lead each see.",
+      "caption": "Your team gets the summary and the lead gets a booking link, both within the same run.",
+      "beat": "Here's what {{lead.first}} sent in, then the alert your team gets with the AI summary, and the email {{lead.first}} gets with the booking link. {{team.owner}} can see the lead is worth a call without opening the CRM.",
+      "details": [
+        "Message wording is a draft we'd agree together",
+        "The booking link points to the calendar tool you already use"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}}",
+        "fields": [
+          {
+            "label": "Lead",
+            "value": "{{reference.id}}"
+          },
+          {
+            "label": "Came from",
+            "value": "{{lead.source}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "{{lead.source}}",
+            "time": "Form submitted",
+            "body": "Hi, I'd like a {{lead.needText}}. Hoping to start {{lead.startText}}. Afternoons are best for a call."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Team alert in {{team.channel}}",
+            "time": "Same run",
+            "body": "Hot lead: {{lead.name}} wants a {{lead.needText}}, starting {{lead.startText}}. Prefers a phone call on weekday afternoons. Booking link sent. Saved in the CRM as {{reference.id}}."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Your team",
+            "time": "Same run",
+            "subject": "Thanks {{lead.first}}, let's find a time to talk",
+            "body": "Hi {{lead.first}}, thanks for reaching out about your project. Here's a link to pick a time that works for you, and we'll call you then: Book a call with {{team.owner}}"
+          }
+        ],
+        "notice": "Illustrative sample messages. Nothing is sent from this demo."
+      },
+      "statuses": [
+        "Lead's form answers",
+        "Team alert with the AI summary",
+        "Booking link email to {{lead.first}}"
+      ],
+      "optional": false
+    },
+    {
+      "id": "result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "The lead is saved with everything your team needs to call.",
+      "caption": "One record holds the answers, the AI result and what's been sent, so nothing has to be copied over by hand.",
+      "beat": "This is the lead record. It has {{lead.first}}'s answers, the AI result, the alert and the booking link, all saved without anyone copying anything. When {{team.owner}} calls, everything is already here.",
+      "details": [
+        "Field names follow your CRM; these are examples",
+        "Sample data only"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{reference.id}} · saved in your CRM",
+        "fields": [
+          {
+            "label": "Needs",
+            "value": "{{lead.need}}"
+          },
+          {
+            "label": "Wants to start",
+            "value": "{{lead.start}}"
+          },
+          {
+            "label": "AI result",
+            "value": "Ready for a call"
+          },
+          {
+            "label": "Assigned to",
+            "value": "{{team.owner}}"
+          },
+          {
+            "label": "Next step",
+            "value": "Waiting for {{lead.first}} to pick a time"
+          }
+        ],
+        "stages": [
+          "New lead",
+          "Details checked",
+          "Qualified",
+          "Team alerted",
+          "Booking link sent"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Questions answered",
+            "value": "3 of 3",
+            "note": "From the sample form"
+          },
+          {
+            "label": "Manual steps",
+            "value": "0",
+            "note": "Sample run"
+          }
+        ],
+        "note": "Illustrative sample record shown in a custom workspace, not a live CRM screen."
+      },
+      "statuses": [
+        "New lead",
+        "Details checked",
+        "Qualified",
+        "Team alerted",
+        "Booking link sent"
+      ],
+      "optional": false
+    }
+  ]
+}

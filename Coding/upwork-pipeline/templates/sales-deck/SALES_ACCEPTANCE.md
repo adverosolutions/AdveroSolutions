@@ -33,6 +33,8 @@ motion. Compare actual native screens with sourced references. Exact duplicate
 native proof payloads are compiler errors; semantic repetition and unexplained
 workflow/result jumps require human/model review and cannot be proved by this lint.
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014. The review checklist itself still applies in full; Demo Builder performs it.
+
 Astra’s final review covers the entire sales walkthrough: original requirements,
 problem/solution sequence, differentiation grounded in what is shown, repetition,
 copy, sample continuity, workflow causality, readable result, CTA, interactions and
@@ -41,3 +43,7 @@ page hashes and any unverified behavior. A visual-only approval does not pass.
 Fix defects before handoff; use a narrow recheck of corrections. Never carry an
 old review receipt forward after page or spec changes. Unsupported native screens
 or missing current reference evidence stay unapproved for production.
+
+### Spoken clarity is required
+
+Read every heading, caption, metric and CTA aloud in presentation order, joining split title/accent text. Each line must have an obvious meaning without decoding developer shorthand. “Agree the product. Test one journey.” fails; “Let's map out your first feature” states the action. Talking points must explain the visible example in ordinary spoken sentences. Preserve exact native control labels and factual details; put their plain-language explanation alongside them. Clarity failures block recording approval even when the screen is attractive and technically correct.

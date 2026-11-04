@@ -159,6 +159,20 @@ class TestFinalizeLogsMeta(unittest.TestCase):
         self.assertEqual((row["platform"], row["build_slug"], row["node_count"]),
                          ("n8n", "your-lead-router", "2"))
 
+    def test_custom_architecture_metadata(self):
+        os.remove(os.path.join(self.job, "spec.json"))
+        self.write_deck({"scenes": [{"kind": "architecture", "platform": "workbench",
+            "content": {"nodes": [{"id": "receive"}, {"id": "review"}]}}]})
+        row, _ = self.run_main("url: https://www.upwork.com/jobs/~custom-architecture\nCustom app\n")
+        self.assertEqual((row["platform"], row["node_count"]), ("workbench", "2"))
+
+    def test_intelligence_workflow_has_no_native_node_count(self):
+        os.remove(os.path.join(self.job, "spec.json"))
+        self.write_deck({"scenes": [{"kind": "intelligence", "platform": "workbench",
+            "content": {"surface": "workflow"}}]})
+        row, _ = self.run_main("url: https://www.upwork.com/jobs/~intelligence-workflow\nNews briefing\n")
+        self.assertEqual((row["platform"], row["node_count"]), ("workbench", ""))
+
     def test_malformed_deck_refuses_before_proposal_log_or_clipboard_changes(self):
         os.remove(os.path.join(self.job, "spec.json"))
         with open(os.path.join(self.job, "jd.txt"), "w", encoding="utf-8") as fh:

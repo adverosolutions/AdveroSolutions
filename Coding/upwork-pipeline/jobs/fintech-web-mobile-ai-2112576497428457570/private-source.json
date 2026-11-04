@@ -1,0 +1,190 @@
+{
+  "applied": false,
+  "bid_stats_basis": {
+    "contract_type": "HOURLY",
+    "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+  },
+  "can_apply": true,
+  "client_feedback": {
+    "more_available": true,
+    "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nIt was a great experience once again. I look forward to working on more projects together.\n</untrusted_participant_content>",
+        "ended": "2026-01-20T15:21:10.310Z",
+        "score": 5,
+        "title": "MERN Stack Developer for AI-Driven Web Application"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nGreat working with Steve, as always.\n</untrusted_participant_content>",
+        "ended": "2026-01-15T11:53:14.103Z",
+        "score": 5,
+        "title": "Full-Stack Developer with AI Integration Expertise for Scalable Web Applications"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nIt was a great experience once again. I look forward to working on more projects together.\n</untrusted_participant_content>",
+        "ended": "2025-11-07T11:15:01.784Z",
+        "score": 5,
+        "title": "AI Automation & Full Stack Developer (n8n / Make.com / LangChain / OpenAI / Node.js / MERN)"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nIt is always a pleasure to work with Steve. Looking forward to working with him on his future projects.\n</untrusted_participant_content>",
+        "ended": "2025-07-31T10:08:22.531Z",
+        "score": 5,
+        "title": "FullStack MERN Developer Needed to Build Admin Dashboard React, Node.js, MongoDB"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nGreat to work with him. Offer good rates and set reasonable deadlines. Highly recommended.\n</untrusted_participant_content>",
+        "ended": "2024-12-02T23:57:00.216Z",
+        "score": 5,
+        "title": "Node and ReactJS Developer "
+      }
+    ],
+    "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+    "shown": 5
+  },
+  "client_record": {
+    "contracts_active": 0,
+    "contracts_total": 22,
+    "feedback_count": 18,
+    "feedback_score": 4.99,
+    "hire_rate_percent": 75,
+    "hours_total": 626.67,
+    "jobs_posted": 24,
+    "jobs_with_hires": 18,
+    "open_jobs": 1,
+    "spend_total": "$21,001.70"
+  },
+  "client_work_history": {
+    "closed": [
+      {
+        "ended": "2026-01-20T15:21:10.310Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2026-01-05T13:46:27.843Z",
+        "status": "CLOSED",
+        "title": "MERN Stack Developer for AI-Driven Web Application",
+        "type": "HOURLY"
+      },
+      {
+        "ended": "2026-01-15T11:53:14.103Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2026-01-05T11:59:05.485Z",
+        "status": "CLOSED",
+        "title": "Full-Stack Developer with AI Integration Expertise for Scalable Web Applications",
+        "type": "HOURLY"
+      },
+      {
+        "ended": "2025-11-07T11:15:01.784Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2025-10-30T13:35:37.143Z",
+        "status": "CLOSED",
+        "title": "AI Automation & Full Stack Developer (n8n / Make.com / LangChain / OpenAI / Node.js / MERN)",
+        "type": "HOURLY"
+      },
+      {
+        "ended": "2025-09-10T12:07:17.863Z",
+        "feedback_score": 5,
+        "started": "2025-07-31T11:36:42.464Z",
+        "status": "CLOSED",
+        "title": "AI Developer for Generative & Agentic AI Projects (LangChain, RAG, MCP)",
+        "type": "HOURLY"
+      },
+      {
+        "ended": "2025-07-31T10:08:22.531Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2025-07-09T16:16:21.404Z",
+        "status": "CLOSED",
+        "title": "FullStack MERN Developer Needed to Build Admin Dashboard React, Node.js, MongoDB",
+        "type": "HOURLY"
+      }
+    ],
+    "more_available": true,
+    "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+    "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+    "shown": 5
+  },
+  "connects_balance": 1798,
+  "connects_cost": 20,
+  "data": {
+    "marketplaceJobPosting": {
+      "activityStat": {
+        "applicationsBidStats": {
+          "avgRateBid": {
+            "currency": "USD",
+            "displayValue": "$34.37",
+            "rawValue": "34.372926829268295"
+          },
+          "maxRateBid": {
+            "currency": "USD",
+            "displayValue": "$100.00",
+            "rawValue": "100.0"
+          },
+          "minRateBid": {
+            "currency": "USD",
+            "displayValue": "$10.00",
+            "rawValue": "10.0"
+          }
+        },
+        "jobActivity": {
+          "invitesSent": 3,
+          "totalHired": 0,
+          "totalInvitedToInterview": 0,
+          "totalOffered": 0
+        }
+      },
+      "classification": {
+        "category": {
+          "id": "531770282580668418",
+          "preferredLabel": "Web, Mobile & Software Dev"
+        },
+        "subCategory": {
+          "id": "531770282584862733",
+          "preferredLabel": "Web Development"
+        }
+      },
+      "clientCompanyPublic": {
+        "country": {
+          "name": "United Kingdom"
+        },
+        "id": "8515109",
+        "timezone": "Africa/Casablanca"
+      },
+      "content": {
+        "description": "<untrusted_participant_content>\nProject Overview\nWe’re looking for an experienced Full-Stack AI Developer to help us design, develop, and launch an innovative fintech platform with web and mobile applications, powered by intelligent AI automations.\n \nThe ideal candidate combines strong full-stack engineering skills with hands-on experience building AI-powered applications, workflow automations, API integrations, and secure financial technology solutions. We need someone who can take ownership of the project from architecture and development through testing, deployment, and ongoing improvements.\n \nResponsibilities\nWeb & Mobile App Development: Build scalable, responsive web applications and mobile apps for iOS and Android.\nAI Integration: Develop and integrate AI-powered features using OpenAI, LLMs, AI agents, and other relevant AI technologies.\nAI Automation: Design intelligent workflows to automate repetitive tasks, business processes, data processing, notifications, and decision-support operations.\nFull-Stack Engineering: Develop robust frontend interfaces, backend services, APIs, databases, and third-party integrations.\nFintech Integrations: Implement financial APIs, payment gateways, transaction workflows, and other fintech-related services as required.\nSecurity & Reliability: Follow best practices for authentication, authorization, data protection, secure API design, and financial data handling.\nDeployment & Maintenance: Manage testing, bug fixing, cloud deployment, monitoring, and performance optimization.\nRequired Skills & Experience\nProven experience as a Full-Stack Developer building production-ready web and mobile applications.\nStrong expertise in AI integrations, LLMs, AI agents, and intelligent automation workflows.\nExperience with OpenAI APIs, prompt engineering, and AI-powered application development.\nProficiency in modern frontend and backend technologies such as React, Next.js, Node.js, Python, or equivalent.\nExperience developing mobile applications using Flutter, React Native, or native technologies.\nStrong knowledge of REST APIs, databases, authentication, cloud infrastructure, and third-party integrations.\nExperience with fintech, payments, financial applications, or other security-sensitive platforms.\nAbility to translate business requirements into a practical technical architecture and deliver production-ready solutions.\nNice to Have\nExperience with workflow automation platforms such as n8n, Make, or Zapier.\nExperience building AI agents, multi-step AI workflows, and tool/API-calling systems.\nKnowledge of financial data integrations, transaction reconciliation, fraud detection, or risk analytics.\nExperience with AWS, Google Cloud, Azure, Firebase, or Supabase.\nFamiliarity with financial compliance requirements relevant to the target market.\nWhat We’re Looking For\nWe want a proactive developer who can think beyond writing code. You should be comfortable understanding business requirements, recommending the right technology stack, identifying potential risks, and building a scalable solution.\nYou should be able to explain technical decisions clearly, work independently, communicate consistently, and prioritize security and reliability throughout development.\n \nTo Apply\nPlease include the following in your proposal:\nA brief introduction highlighting your full-stack, AI automation, and fintech experience.\nLinks to 2-3 relevant projects you have personally developed or contributed to, especially AI-powered applications or fintech platforms.\nThe technologies and architecture you would recommend for this project.\nYour experience building AI agents, workflow automations, and web/mobile applications.\nYour estimated availability, hourly rate or project-based pricing, and a realistic initial delivery timeline.\nA short explanation of how you would approach security and sensitive financial data.\nBonus: Share one example of an AI automation you built that solved a real business problem.\n \nWe’re looking for someone who can become a reliable technical partner and help us turn this fintech concept into a secure, intelligent, and scalable product.\n \nIf you’re the right fit, we look forward to hearing from you!\n</untrusted_participant_content>",
+        "title": "Full-Stack AI Developer - Fintech Mobile & Web App + AI Automation Expert"
+      },
+      "contractTerms": {
+        "contractType": "HOURLY",
+        "experienceLevel": "EXPERT",
+        "hourlyContractTerms": {
+          "engagementType": "PART_TIME",
+          "hourlyBudgetMax": 47,
+          "hourlyBudgetMin": 25,
+          "hourlyBudgetType": "DEFAULT"
+        },
+        "personsToHire": 1
+      },
+      "id": "2112576497428457570",
+      "url": "https://www.upwork.com/jobs/~022112576497428457570?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+      "workFlowState": {
+        "status": "ACTIVE"
+      }
+    }
+  },
+  "plan": "Freelancer Plus",
+  "preferred_qualifications": {
+    "english_proficiency": "Any",
+    "has_portfolio": false,
+    "min_hours_worked": 0,
+    "min_job_success_score": 0,
+    "rising_talent": false
+  },
+  "proposals_tier_unavailable": true,
+  "status": "ok",
+  "trace_id": "d93cb4dbecfc5ed28ac7488f33308c98",
+  "unanswered_invites_unavailable": true
+}

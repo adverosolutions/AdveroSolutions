@@ -1,0 +1,759 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture-booking-funnel",
+  "title": "GoHighLevel Expert for Med Spa",
+  "systemName": "Two-location booking and follow-up",
+  "account": {
+    "name": "your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:booking-funnel",
+    "facts": [
+      "Synthetic regression fixture; not a saved job or delivered client system."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Jamie Reed",
+      "email": "jamie.reed@example.com",
+      "phone": "+1 202-555-0148"
+    },
+    "appointment": {
+      "service": "Botox consultation",
+      "location": "Location 1",
+      "staff": "Riley"
+    },
+    "proof": {
+      "name": "Avery Ellis"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Two locations,",
+    "accent": "one booking flow.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Mindbody + Mailchimp migration",
+      "Location and staff calendars",
+      "Visit reminders and recovery"
+    ],
+    "previewSteps": [
+      {
+        "title": "The setup",
+        "detail": "Native appointment reminders, plus calendar and migration checks."
+      },
+      {
+        "title": "The booking",
+        "detail": "Landing page, available time and appointment confirmation."
+      }
+    ],
+    "footer": "Sample data \u00b7 Illustrative booking",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "appointment-reminders",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "Remind each client before the visit.",
+      "caption": "Confirmed appointments enter SMS and email reminders at 24 hours and 2 hours before the start.",
+      "beat": "The appointment confirmation starts this workflow. Each wait uses the appointment time. SMS and email go out a day before, then two hours before the visit.",
+      "details": [
+        "Both locations calendar group \u00b7 four location/service calendars",
+        "Open a Wait action to inspect appointment-relative timing."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Appointment reminders",
+        "subtitle": "Illustrative sample",
+        "surface": "builder",
+        "graph": {
+          "name": "Appointment reminders",
+          "nodes": [
+            {
+              "id": "appointment",
+              "type": "appointment_status",
+              "label": "Appointment confirmed",
+              "detail": "Contact only \u00b7 calendar group: Both locations"
+            },
+            {
+              "id": "wait-day",
+              "type": "wait",
+              "label": "Wait until 24 hours before",
+              "detail": "Appointment / Calendar Event \u00b7 Before 24 hours"
+            },
+            {
+              "id": "sms-day",
+              "type": "sms",
+              "label": "Send 24-hour SMS",
+              "detail": "Oct 21 \u00b7 2 PM CT \u00b7 {{lead.phone}}"
+            },
+            {
+              "id": "email-day",
+              "type": "email",
+              "label": "Send 24-hour email",
+              "detail": "Oct 21 \u00b7 2 PM CT \u00b7 {{lead.email}}"
+            },
+            {
+              "id": "wait-two",
+              "type": "wait",
+              "label": "Wait until 2 hours before",
+              "detail": "Appointment / Calendar Event \u00b7 Before 2 hours"
+            },
+            {
+              "id": "sms-two",
+              "type": "sms",
+              "label": "Send 2-hour SMS",
+              "detail": "Oct 22 \u00b7 noon CT \u00b7 {{lead.phone}}"
+            },
+            {
+              "id": "email-two",
+              "type": "email",
+              "label": "Send 2-hour email",
+              "detail": "Oct 22 \u00b7 noon CT \u00b7 {{lead.email}}"
+            }
+          ],
+          "edges": [
+            {
+              "from": "appointment",
+              "to": "wait-day"
+            },
+            {
+              "from": "wait-day",
+              "to": "sms-day"
+            },
+            {
+              "from": "sms-day",
+              "to": "email-day"
+            },
+            {
+              "from": "email-day",
+              "to": "wait-two"
+            },
+            {
+              "from": "wait-two",
+              "to": "sms-two"
+            },
+            {
+              "from": "sms-two",
+              "to": "email-two"
+            }
+          ],
+          "runOrder": [
+            "appointment",
+            "wait-day",
+            "sms-day",
+            "email-day",
+            "wait-two",
+            "sms-two",
+            "email-two"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Oct 22 \u00b7 2 PM CT \u00b7 Location 1",
+            "fields": [
+              {
+                "label": "Appointment",
+                "value": "Botox consultation \u00b7 30 minutes"
+              },
+              {
+                "label": "Staff",
+                "value": "Riley"
+              }
+            ],
+            "states": [
+              "Confirmed booking enters reminders",
+              "Wait to Oct 21 \u00b7 2 PM CT",
+              "24-hour SMS sample prepared",
+              "24-hour email sample prepared",
+              "Wait to Oct 22 \u00b7 noon CT",
+              "2-hour SMS sample prepared",
+              "2-hour email sample prepared"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "appointment",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Confirmed booking enters reminders"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Workflow Trigger",
+                "value": "Appointment Status"
+              },
+              {
+                "label": "Who should be enrolled",
+                "value": "Contact only"
+              },
+              {
+                "label": "Appointment Status",
+                "value": "Confirmed"
+              },
+              {
+                "label": "In Calendar Group",
+                "value": "Both locations"
+              }
+            ]
+          },
+          {
+            "node": "wait-day",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Wait to Oct 21 \u00b7 2 PM CT"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Wait For",
+                "value": "An upcoming appointment or booking"
+              },
+              {
+                "label": "Type",
+                "value": "Appointment / Calendar Event"
+              },
+              {
+                "label": "When should the Contact proceed",
+                "value": "Before"
+              },
+              {
+                "label": "Duration",
+                "value": "24 hours"
+              },
+              {
+                "label": "If this date has already passed",
+                "value": "Skip all outbound communication actions till next wait or event start date action"
+              }
+            ]
+          },
+          {
+            "node": "sms-day",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "24-hour SMS sample prepared"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Message",
+                "value": "Hi Jamie, a reminder for your Botox consultation tomorrow at 2 PM with Riley at Location 1."
+              }
+            ]
+          },
+          {
+            "node": "email-day",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "24-hour email sample prepared"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Subject",
+                "value": "Your appointment tomorrow"
+              },
+              {
+                "label": "Message",
+                "value": "Hi Jamie, your Botox consultation is Thursday, October 22 at 2 PM CT with Riley at Location 1. Please allow 30 minutes."
+              }
+            ]
+          },
+          {
+            "node": "wait-two",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Wait to Oct 22 \u00b7 noon CT"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Wait For",
+                "value": "An upcoming appointment or booking"
+              },
+              {
+                "label": "Type",
+                "value": "Appointment / Calendar Event"
+              },
+              {
+                "label": "When should the Contact proceed",
+                "value": "Before"
+              },
+              {
+                "label": "Duration",
+                "value": "2 hours"
+              },
+              {
+                "label": "If this date has already passed",
+                "value": "Skip all outbound communication actions till next wait or event start date action"
+              }
+            ]
+          },
+          {
+            "node": "sms-two",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "2-hour SMS sample prepared"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Message",
+                "value": "Hi Jamie, a reminder for your Botox consultation today at 2 PM with Riley at Location 1."
+              }
+            ]
+          },
+          {
+            "node": "email-two",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Appointment start",
+                "value": "2026-10-22 14:00 CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "2-hour email sample prepared"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Subject",
+                "value": "Your appointment today"
+              },
+              {
+                "label": "Message",
+                "value": "Hi Jamie, your Botox consultation is today at 2 PM CT with Riley at Location 1. Please allow 30 minutes."
+              }
+            ]
+          }
+        ],
+        "selectedNode": "wait-day"
+      },
+      "statuses": [
+        "Confirmed booking enters reminders",
+        "Wait to Oct 21 \u00b7 2 PM CT",
+        "24-hour SMS sample prepared",
+        "24-hour email sample prepared",
+        "Wait to Oct 22 \u00b7 noon CT",
+        "2-hour SMS sample prepared",
+        "2-hour email sample prepared"
+      ]
+    },
+    {
+      "id": "landing",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Start with the consultation offer.",
+      "caption": "Visitors choose their location and service before opening the calendar.",
+      "beat": "The landing page introduces the Botox and filler consultation. This selector opens the matching location and service calendar.",
+      "content": {
+        "surface": "landing",
+        "name": "Your booking funnel",
+        "subtitle": "Customer-facing page",
+        "brand": "your team",
+        "heading": "Book your Botox or filler consultation",
+        "body": "Choose a location, service and available time for your consultation.",
+        "cta": "Choose your location",
+        "booking": {
+          "service": "{{appointment.service}}",
+          "durationMinutes": 30,
+          "location": "{{appointment.location}}",
+          "staff": "{{appointment.staff}}",
+          "staffOptions": [
+            "Riley",
+            "Alex"
+          ],
+          "dateISO": "2026-10-22",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "CT",
+          "slots": [
+            "13:00",
+            "13:30",
+            "14:00",
+            "14:30",
+            "15:00"
+          ],
+          "selectedSlot": "14:00",
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          },
+          "smsConsent": true
+        },
+        "choices": [
+          {
+            "id": "calendar-1",
+            "service": "Botox consultation",
+            "durationMinutes": 30,
+            "location": "Location 1",
+            "staff": "Riley",
+            "staffOptions": [
+              "Riley",
+              "Alex"
+            ],
+            "slots": [
+              "13:00",
+              "13:30",
+              "14:00",
+              "14:30",
+              "15:00"
+            ]
+          },
+          {
+            "id": "calendar-2",
+            "service": "Filler consultation",
+            "durationMinutes": 60,
+            "location": "Location 1",
+            "staff": "Riley",
+            "staffOptions": [
+              "Riley",
+              "Alex"
+            ],
+            "slots": [
+              "13:00",
+              "13:30",
+              "14:00",
+              "14:30",
+              "15:00"
+            ]
+          },
+          {
+            "id": "calendar-3",
+            "service": "Botox consultation",
+            "durationMinutes": 30,
+            "location": "Location 2",
+            "staff": "Jordan",
+            "staffOptions": [
+              "Jordan",
+              "Cameron"
+            ],
+            "slots": [
+              "13:00",
+              "13:30",
+              "14:00",
+              "14:30",
+              "15:00"
+            ]
+          },
+          {
+            "id": "calendar-4",
+            "service": "Filler consultation",
+            "durationMinutes": 60,
+            "location": "Location 2",
+            "staff": "Jordan",
+            "staffOptions": [
+              "Jordan",
+              "Cameron"
+            ],
+            "slots": [
+              "13:00",
+              "13:30",
+              "14:00",
+              "14:30",
+              "15:00"
+            ]
+          }
+        ]
+      },
+      "statuses": [
+        "Page displayed",
+        "Sample view ready"
+      ],
+      "details": [
+        "Visitors choose their location and service before opening the calendar."
+      ],
+      "optional": false
+    },
+    {
+      "id": "booking",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Choose staff and an available time.",
+      "caption": "The selected calendar controls the appointment duration and eligible staff.",
+      "beat": "Jamie chooses Riley at Location 1. This slot is Thursday at 2 PM for thirty minutes. Select opens the details form.",
+      "content": {
+        "surface": "booking",
+        "name": "Your booking funnel",
+        "subtitle": "Customer-facing page",
+        "brand": "your team",
+        "heading": "Choose your appointment time.",
+        "body": "Select an available time, then enter your contact details.",
+        "cta": "Continue",
+        "booking": {
+          "service": "{{appointment.service}}",
+          "durationMinutes": 30,
+          "location": "{{appointment.location}}",
+          "staff": "{{appointment.staff}}",
+          "staffOptions": [
+            "Riley",
+            "Alex"
+          ],
+          "dateISO": "2026-10-22",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "CT",
+          "slots": [
+            "13:00",
+            "13:30",
+            "14:00",
+            "14:30",
+            "15:00"
+          ],
+          "selectedSlot": "14:00",
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          },
+          "smsConsent": true
+        }
+      },
+      "statuses": [
+        "Page displayed",
+        "Sample view ready"
+      ],
+      "details": [
+        "The selected calendar controls the appointment duration and eligible staff."
+      ],
+      "optional": false
+    },
+    {
+      "id": "confirmation",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Show the appointment that was booked.",
+      "caption": "The thank-you page keeps the selected service, staff, location and time.",
+      "beat": "This is the booking confirmation for Jamie. The appointment is at Location 1 with Riley, Thursday at 2 PM.",
+      "content": {
+        "surface": "confirmation",
+        "name": "Your booking funnel",
+        "subtitle": "Customer-facing page",
+        "brand": "your team",
+        "heading": "Your appointment is confirmed.",
+        "body": "Your selected location, staff member and appointment time are listed below.",
+        "cta": "Appointment confirmed",
+        "booking": {
+          "service": "{{appointment.service}}",
+          "durationMinutes": 30,
+          "location": "{{appointment.location}}",
+          "staff": "{{appointment.staff}}",
+          "staffOptions": [
+            "Riley",
+            "Alex"
+          ],
+          "dateISO": "2026-10-22",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "CT",
+          "slots": [
+            "13:00",
+            "13:30",
+            "14:00",
+            "14:30",
+            "15:00"
+          ],
+          "selectedSlot": "14:00",
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          },
+          "smsConsent": true
+        }
+      },
+      "statuses": [
+        "Page displayed",
+        "Sample view ready"
+      ],
+      "details": [
+        "The thank-you page keeps the selected service, staff, location and time."
+      ],
+      "optional": false
+    },
+    {
+      "id": "timing-and-optouts",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Check the timing and opt-out cases.",
+      "caption": "A completed appointment, a no-show and an imported opt-out follow different paths.",
+      "beat": "Avery is a separate consented test fixture. Both reminder channels use the appointment time. The showed visit ends at 2:30, so the review request is at 4:30. Taylor stays blocked from SMS.",
+      "content": {
+        "name": "{{proof.name}}",
+        "subtitle": "Separate consented test fixture, independent of visitor choices",
+        "sourceTitle": "Separate consented appointment fixture",
+        "sourceFields": [
+          {
+            "label": "Booking",
+            "value": "Oct 22 \u00b7 14:00\u201314:30 CT"
+          },
+          {
+            "label": "Staff / location",
+            "value": "Riley \u00b7 Location 1"
+          },
+          {
+            "label": "Pipeline",
+            "value": "New lead \u2192 Booked \u2192 Showed"
+          },
+          {
+            "label": "Permission",
+            "value": "SMS and email consent recorded for Avery"
+          }
+        ],
+        "fields": [
+          {
+            "label": "24h reminder",
+            "value": "Oct 21 14:00 \u00b7 SMS + email"
+          },
+          {
+            "label": "2h reminder",
+            "value": "Oct 22 12:00 \u00b7 SMS + email"
+          },
+          {
+            "label": "Review request",
+            "value": "Oct 22 16:30 \u00b7 end + 2h"
+          }
+        ],
+        "events": [
+          {
+            "title": "Appointment reminder \u00b7 Avery",
+            "detail": "SMS and email: \u201cA reminder for your Botox consultation at 2 PM with Riley at Location 1.\u201d"
+          },
+          {
+            "title": "Showed \u00b7 Avery",
+            "detail": "\u201cThanks for visiting today. Would you leave a review of your visit?\u201d Scheduled for 16:30."
+          },
+          {
+            "title": "No-show \u00b7 Morgan, separate appointment",
+            "detail": "No-show \u2192 rebook message: \u201cWe missed you today. Would you like to book another time?\u201d"
+          },
+          {
+            "title": "Missed call \u00b7 Casey, separate event",
+            "detail": "Eligible text-back: \u201cSorry we missed your call. Were you looking to book a consultation?\u201d"
+          },
+          {
+            "title": "Import opt-out \u00b7 Taylor, separate contact",
+            "detail": "Past-service tag retained. SMS DND enabled. SMS blocked; unknown permission stays held."
+          }
+        ],
+        "notice": "Separate fixed test fixtures. Avery has SMS/email consent; Taylor is SMS blocked. Visitor checkbox choices apply to their booking confirmation."
+      },
+      "statuses": [
+        "Appointment fixture loaded",
+        "Reminder times checked",
+        "Review end time checked",
+        "No-show path checked",
+        "Opt-out held"
+      ],
+      "details": [
+        "A completed appointment, a no-show and an imported opt-out follow different paths."
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track the booking",
+    "accent": "and what happens next.",
+    "caption": "Agree the starting baseline before comparing results.",
+    "metrics": [
+      {
+        "name": "Booking completion",
+        "direction": "up",
+        "aim": "Complete more bookings",
+        "definition": "Confirmed appointments divided by visitors who enter the booking step, for the same period."
+      },
+      {
+        "name": "Show rate",
+        "direction": "up",
+        "aim": "Increase attended visits",
+        "definition": "Appointments marked Showed divided by appointments due in the agreed period."
+      },
+      {
+        "name": "Suppression accuracy",
+        "direction": "up",
+        "aim": "Preserve contact preferences",
+        "definition": "Known opt-outs with no prohibited sends divided by known opt-outs tested."
+      }
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply on Upwork and I'll send three times.",
+    "beat": "Reply on Upwork and I'll send three times for a 15-minute call."
+  }
+}

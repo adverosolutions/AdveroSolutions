@@ -1,0 +1,19 @@
+# Current public HighLevel booking reference
+
+Captured 20 October 2026 with isolated headless Chrome, 1440x1050. No sign-in, private account access, contact entry or booking submission. Current availability was displayed. Screenshot is source evidence only, not a generated demo.
+
+Vendor ownership provenance: HighLevel product staff Anmol Rattan publicly posted the calendar alongside gohighlevel.com staff email addresses on the official HighLevel board: https://ideas.gohighlevel.com/prospecting-tool/p/local-business-directory-in-ghl . Capture source: https://api.leadconnectorhq.com/widget/bookings/speakwithanmol . Screenshot: official-research-live.png. The displayed name/title belong to that publicly published vendor research calendar; do not copy them into prospect demos.
+
+Observed current state: October 2026 date/time grid, live available date circles and time slots, 30-minute call, America/Chicago CDT. Current geometry: left event information; central date grid and timezone beneath; right outlined blue slots; dark typography; pale-blue available dates, solid-blue selected date, plain light-gray unavailable date labels. No staff selector on this particular public configuration, so this capture cannot establish current staff-selector pixels. No contact form or confirmation was submitted. Current capture supplements rather than replaces the qualified 2023 official staff-selector reference.
+
+Differences from the historical customization screenshot: lighter border treatment, left duration/date as simple rows rather than a boxed summary, different text contrast and typography, darker/brighter blue slots/date selection. The current bounded demo is not automatically pixel-parity-approved by acquiring this image; main/reviewer must compare it.
+
+Other attempted official link: https://api.leadconnectorhq.com/widget/bookings/user-research-collective-booking , published by Core Platform staff on https://ideas.gohighlevel.com/scheduling-calendar/p/collective-group-appointments . Current result was404 Page Not Found; screenshot retained as failed-source evidence, not UI reference.
+
+Full source URLs, capture timestamp and exact text are in live-capture-provenance.json. Image SHA256 values are in image-hashes.json. No shared catalog, template or job spec was changed in this research task.
+
+Additional current captures: official-research-selected-slot.png and official-research-mobile.png. Only the visible04:30 slot was selected locally, without clicking Select, entering contact data or submitting any form. Current selected-slot UI shows the time as a dark-gray half-width button with an adjacent blue Select button, rather than the historical bottom-right Continue footer. This is a significant current-configuration difference for review. Mobile capture uses390x950 viewport.
+
+Qualification: the current public calendar identifies a30-minute research appointment, but its authenticated calendar type/widget-style settings were not inspected. Do not automatically identify it as the exact staff-selection Neo configuration. It establishes a currently shipped ordinary-calendar surface and interaction variant.
+
+Current contact form captured read-only: official-research-contact-form.png (1440x1050) and official-research-contact-form-mobile.png (390x950). Interaction stopped after selected-slot Select; no contact input or final submission. Current form geometry: Back at top-left; left event summary; right Enter details heading; First name/Last name side-by-side, then Phone/Email; Additional information textarea; consent text/checkbox; Schedule meeting at bottom-right. The vendor form has configurable consent wording, including visible placeholder business text; that wording is not copied into prospect samples. Local demo uses configured appointment-SMS consent custom field and keeps its own explicit consent-held confirmation.

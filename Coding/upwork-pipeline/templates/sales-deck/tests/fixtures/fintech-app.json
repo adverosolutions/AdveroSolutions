@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture-fintech-app",
+  "title": "Fintech web, mobile and AI review workflow",
+  "systemName": "Transaction review concept",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:fintech-app",
+    "facts": [
+      "Synthetic regression fixture; not a saved job or delivered client system."
+    ]
+  },
+  "entities": {
+    "transaction": {
+      "id": "TX-042",
+      "event": "evt_demo_042",
+      "invoice": "INV-018",
+      "gross": "$128.00",
+      "expected": "$120.00",
+      "difference": "$8.00"
+    },
+    "reviewer": {
+      "name": "Jordan Lee",
+      "role": "Reviewer"
+    },
+    "tenant": {
+      "id": "DEMO"
+    }
+  },
+  "cover": {
+    "eyebrow": "Web, mobile and AI",
+    "title": "Start with one",
+    "accent": "transaction journey.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Shared backend",
+      "Restricted AI input",
+      "Human approval"
+    ],
+    "previewSteps": [
+      {
+        "title": "Receive",
+        "detail": "Validate and deduplicate a provider event."
+      },
+      {
+        "title": "Explain",
+        "detail": "Show the mismatch and supporting records."
+      },
+      {
+        "title": "Review",
+        "detail": "Approve the classification and retain the audit trail."
+      }
+    ],
+    "footer": "Illustrative product concept \u00b7 fictional transactions and users.",
+    "beat": "Steve, I would start by agreeing one transaction journey before defining the wider platform. This sample follows a reconciliation exception through a shared web and mobile backend."
+  },
+  "scenes": [
+    {
+      "id": "architecture",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "One backend for web and mobile",
+      "caption": "Recommended architecture for the first sandbox transaction journey.",
+      "beat": "Point to the shared backend. It validates provider events and checks user permissions before serving a record. The AI receives a redacted comparison; the reviewer approves a classification and the backend records it.",
+      "details": [
+        "Recommended clients: React/Next.js for web and React Native for iOS/Android. Shared Node.js API and Postgres; OpenAI behind the backend.",
+        "Proposed access: MFA-backed sessions, server-side tenant/role checks, signed provider events and unique event IDs.",
+        "Proposed operations: sandbox integration tests, deployment checks, monitored retries, trace IDs and audited releases."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Custom application architecture",
+        "subtitle": "Recommended stack \u00b7 first journey, not a full platform specification",
+        "nodes": [
+          {
+            "id": "event",
+            "label": "Validate provider event",
+            "detail": "Verify signature and schema. Enforce unique {{transaction.event}} before persisting."
+          },
+          {
+            "id": "record",
+            "label": "Serve authorized record",
+            "detail": "Check session, tenant and role. Compare {{transaction.gross}} with {{transaction.expected}}."
+          },
+          {
+            "id": "suggest",
+            "label": "Generate review suggestion",
+            "detail": "Send redacted amounts and description to OpenAI. Return reason, uncertainty and allowed next step."
+          },
+          {
+            "id": "approve",
+            "label": "Approve classification",
+            "detail": "Reviewer approves \u201cNeeds provider evidence\u201d. Persist classification and audit; keep reconciliation open."
+          }
+        ],
+        "edges": [
+          {
+            "from": "event",
+            "to": "record"
+          },
+          {
+            "from": "record",
+            "to": "suggest"
+          },
+          {
+            "from": "suggest",
+            "to": "approve"
+          }
+        ],
+        "runOrder": [
+          "event",
+          "record",
+          "suggest",
+          "approve"
+        ],
+        "context": {
+          "name": "Permission and data boundary",
+          "subtitle": "Proposed controls",
+          "fields": [
+            {
+              "label": "Session",
+              "value": "MFA and session validation before reviewer access"
+            },
+            {
+              "label": "Authorization",
+              "value": "Backend tenant {{tenant.id}} scope and Reviewer permission"
+            },
+            {
+              "label": "AI data",
+              "value": "Surrogate ID, amounts, redacted description only"
+            },
+            {
+              "label": "Secrets / storage",
+              "value": "Server-held provider keys; encrypted records; audited access"
+            }
+          ],
+          "states": [
+            "Unique event accepted",
+            "Tenant-scoped record available",
+            "Redacted suggestion prepared",
+            "Human decision saved"
+          ]
+        },
+        "related": [
+          {
+            "title": "API contract",
+            "detail": "Shared transaction ID and review state across web and mobile."
+          },
+          {
+            "title": "Failure handling",
+            "detail": "Invalid signatures rejected; provider retries deduplicated; failed analysis queued for review."
+          }
+        ]
+      },
+      "statuses": [
+        "Event validated",
+        "Record authorized",
+        "Suggestion prepared",
+        "Human review saved"
+      ]
+    },
+    {
+      "id": "transaction-app",
+      "kind": "product",
+      "platform": "workbench",
+      "title": "Review one exception, then approve its classification",
+      "caption": "A custom transaction app with evidence, an AI suggestion and a local approval action.",
+      "beat": "Point to TX-042 in the queue, then the 128-dollar provider record and 120-dollar invoice. Open the evidence. The eight-dollar difference is unexplained. Click Review again, then Approve classification. Jordan approves \u201cNeeds provider evidence\u201d; the audit appears and reconciliation stays open.",
+      "details": [
+        "The single transaction object supplies the queue, detail, derived difference and responsive mobile layout. No financial state is duplicated.",
+        "Use Show/Hide evidence for local inspection. Review again returns to the proposal; Approve classification records only local sample UI state.",
+        "The provider remains settled. Classification approval does not execute a transfer, adjust a ledger or resolve the reconciliation."
+      ],
+      "optional": false,
+      "statuses": [
+        "Exception loaded; classification awaits review",
+        "AI suggests Needs provider evidence",
+        "Jordan approved classification; reconciliation remains open"
+      ],
+      "content": {
+        "name": "Reconcile",
+        "subtitle": "One transaction requires a closer look.",
+        "reviewer": {
+          "name": "{{reviewer.name}}",
+          "role": "{{reviewer.role}}",
+          "tenant": "{{tenant.id}}"
+        },
+        "transaction": {
+          "id": "{{transaction.id}}",
+          "event": "{{transaction.event}}",
+          "invoice": "{{transaction.invoice}}",
+          "currency": "USD",
+          "grossMinor": 12800,
+          "expectedMinor": 12000,
+          "providerStatus": "Settled",
+          "description": "Provider receipt differs from the expected invoice amount."
+        },
+        "evidence": [
+          {
+            "id": "{{transaction.event}}",
+            "title": "Provider receipt",
+            "detail": "Settled receipt of $128.00. Signed sandbox event accepted; replay of this event creates no second record."
+          },
+          {
+            "id": "{{transaction.invoice}}",
+            "title": "Invoice record",
+            "detail": "Expected amount $120.00. No fee breakdown or adjustment evidence is attached."
+          }
+        ],
+        "analysis": {
+          "summary": "The $8.00 difference is unexplained. A fee is one possibility, but the available records do not establish the cause.",
+          "recommendation": "Request the provider fee breakdown before assigning a cause or posting an adjustment.",
+          "confidence": "Arithmetic confirmed \u00b7 cause unknown",
+          "dataBoundary": "Surrogate transaction ID, amounts and redacted description. Account details, identity and provider credentials excluded."
+        },
+        "decision": {
+          "classification": "Needs provider evidence",
+          "reason": "Approved the evidence-needed classification. Your team must collect supporting details before resolving this exception.",
+          "auditId": "AUD-042"
+        }
+      }
+    }
+  ],
+  "close": {
+    "eyebrow": "Define the first milestone",
+    "title": "Agree the product.",
+    "accent": "Test one journey.",
+    "caption": "Use a provider sandbox and representative exception cases before expanding the platform.",
+    "metrics": [
+      {
+        "name": "Exception handling time",
+        "direction": "down",
+        "aim": "Reduce manual investigation time",
+        "definition": "Median active reviewer minutes from opening an exception to recording a disposition. Compare the same sample cases against an agreed baseline."
+      },
+      {
+        "name": "Useful AI suggestions",
+        "direction": "up",
+        "aim": "Increase reviewer-accepted suggestions",
+        "definition": "Share of suggestions reviewers mark useful and supported by available evidence. Record rejection reasons and test a held-out case set."
+      },
+      {
+        "name": "Duplicate safety",
+        "direction": "up",
+        "aim": "Increase correctly handled event replays",
+        "definition": "Share of replay and retry test cases that preserve one transaction and one authorized state change. Check persisted IDs and audit events."
+      }
+    ],
+    "baselineNote": "Agree baseline cases and acceptance thresholds in discovery. These are directional goals, not measured improvements.",
+    "ctaTitle": "Reply here for a 15-minute call",
+    "ctaCopy": "Send me a message here on Upwork and we'll book a 15-minute call to choose the first user journey, provider sandbox and permission boundary.",
+    "beat": "The first call would pin down the first user, transaction flow and provider integration. Send me a message here and we can book that 15-minute call."
+  }
+}

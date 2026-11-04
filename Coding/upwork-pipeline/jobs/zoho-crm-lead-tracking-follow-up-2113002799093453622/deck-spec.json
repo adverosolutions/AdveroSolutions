@@ -1,0 +1,453 @@
+{
+  "schemaVersion": 1,
+  "id": "zoho-crm-lead-tracking-follow-up-2113002799093453622",
+  "title": "Zoho lead tracking, text follow-up and source reports",
+  "systemName": "Your client's Zoho lead tracking and follow-up",
+  "account": {
+    "name": "Sample client lead desk",
+    "initials": "LD",
+    "operatorInitials": "LV"
+  },
+  "personalization": {
+    "firstName": "Scott",
+    "source": "client_reviews",
+    "reviewCount": 2
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113002799093453622",
+    "facts": [
+      "Post: client switching to Zoho; leads from Facebook, Instagram, Google Ads and website forms with source tracking and automated email and text follow-up.",
+      "Post: RingCentral SMS extension; non-purchaser sequence; discount on agreed timing; stop on purchase, response or opt-out; duplicate prevention; assignment rules; reports on lead volume, close rates, sales, location and source.",
+      "Personalization: Scott named in two separate client reviews (Sept 2026). Contact only, not owner."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "first": "Dana",
+      "name": "Dana Whitfield",
+      "email": "dana.whitfield@example.com",
+      "phone": "(555) 010-4471",
+      "city": "Calgary, AB"
+    },
+    "ad": {
+      "source": "Instagram lead ad",
+      "campaign": "Fall consult offer",
+      "utm": "utm_source=instagram · utm_medium=paid_social · utm_campaign=fall_consult"
+    },
+    "owner": {
+      "name": "Priya Nand",
+      "team": "Calgary sales team"
+    },
+    "offer": {
+      "name": "Fall welcome discount"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your client's Zoho lead setup",
+    "title": "Every ad lead tracked",
+    "accent": "and followed up until they buy.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Source and campaign kept on every lead",
+      "Email and text follow-up",
+      "Stops on purchase, reply or opt-out"
+    ],
+    "previewSteps": [
+      {
+        "title": "Capture the lead",
+        "detail": "Keep the ad, campaign and location, and skip duplicates."
+      },
+      {
+        "title": "Follow up",
+        "detail": "Email and text, then a discount if they haven't bought."
+      },
+      {
+        "title": "Report on it",
+        "detail": "See which source and location turn into sales."
+      }
+    ],
+    "footer": "Illustrative sample · custom project workspace, not a live Zoho account",
+    "beat": "Your client's leads come in from Facebook, Instagram, Google Ads and the website. I'll follow one sample lead, {{lead.name}}, from the ad all the way to a sale."
+  },
+  "scenes": [
+    {
+      "id": "lead-flow",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "A new lead comes in with its source attached.",
+      "caption": "{{lead.name}} fills in the {{ad.source}}. Her campaign and city are saved, she's checked against existing leads, and she goes to the right salesperson.",
+      "beat": "Here's {{lead.first}} coming in from the {{ad.source}}. Before anything else, her campaign and city get saved on the lead. Then she's checked against existing leads by email and phone, so nobody gets a second record. She's new, so she goes to {{owner.name}} on the {{owner.team}}, and her follow-up starts.",
+      "details": [
+        "Google Ads and website questionnaire leads follow the same path with their own source values",
+        "If the email or phone already exists, the new form merges into that lead instead",
+        "Connector choice (native Zoho integration, Zoho Flow or Zapier) is confirmed in the setup review"
+      ],
+      "optional": false,
+      "content": {
+        "name": "New lead intake",
+        "subtitle": "How each ad or form lead enters the CRM",
+        "nodes": [
+          {
+            "id": "form",
+            "label": "Lead form submitted",
+            "detail": "{{ad.source}} · {{ad.campaign}}"
+          },
+          {
+            "id": "source",
+            "label": "Save source, campaign and city",
+            "detail": "{{ad.utm}}"
+          },
+          {
+            "id": "dedupe",
+            "label": "Check for an existing lead",
+            "detail": "Match on email and phone"
+          },
+          {
+            "id": "merge",
+            "label": "Merge into existing lead",
+            "detail": "Keeps the newest source as a touch"
+          },
+          {
+            "id": "assign",
+            "label": "Assign by location",
+            "detail": "{{lead.city}} goes to {{owner.name}}"
+          },
+          {
+            "id": "start",
+            "label": "Start new-lead follow-up",
+            "detail": "Email first, then a text"
+          }
+        ],
+        "edges": [
+          {
+            "from": "form",
+            "to": "source"
+          },
+          {
+            "from": "source",
+            "to": "dedupe"
+          },
+          {
+            "from": "dedupe",
+            "to": "assign",
+            "label": "New lead"
+          },
+          {
+            "from": "dedupe",
+            "to": "merge",
+            "label": "Already exists"
+          },
+          {
+            "from": "assign",
+            "to": "start"
+          }
+        ],
+        "runOrder": [
+          "form",
+          "source",
+          "dedupe",
+          "assign",
+          "start"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Sample lead from the {{ad.source}}",
+          "fields": [
+            {
+              "label": "Campaign",
+              "value": "{{ad.campaign}}"
+            },
+            {
+              "label": "City",
+              "value": "{{lead.city}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Form received from the {{ad.source}}",
+            "Source, campaign and city saved",
+            "No existing lead found",
+            "Assigned to {{owner.name}}",
+            "Follow-up started"
+          ]
+        },
+        "related": [
+          {
+            "title": "Assignment rules",
+            "detail": "Agreed with you before setup, by location or round robin"
+          },
+          {
+            "title": "Duplicate check",
+            "detail": "Email and phone, so a repeat form never makes a second lead"
+          }
+        ]
+      },
+      "statuses": [
+        "Form received from the {{ad.source}}",
+        "Source, campaign and city saved",
+        "No existing lead found",
+        "Assigned to {{owner.name}}",
+        "Follow-up started"
+      ]
+    },
+    {
+      "id": "lead-record",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "What the form sends and what the lead keeps.",
+      "caption": "Every field your reports need is saved on the lead the moment it arrives.",
+      "beat": "On the left is what the ad form sends. On the right is what's saved on {{lead.first}}'s lead: the source, campaign, city, owner, and the result of the duplicate check.",
+      "details": [
+        "Field names are agreed during setup",
+        "Sales outcome is filled in later when she buys"
+      ],
+      "optional": true,
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.email}} · {{lead.phone}}",
+        "sourceTitle": "Sent by the {{ad.source}}",
+        "sourceFields": [
+          {
+            "label": "Name",
+            "value": "{{lead.name}}"
+          },
+          {
+            "label": "Email",
+            "value": "{{lead.email}}"
+          },
+          {
+            "label": "Phone",
+            "value": "{{lead.phone}}"
+          },
+          {
+            "label": "Tracking link",
+            "value": "{{ad.utm}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Lead source",
+            "value": "{{ad.source}}"
+          },
+          {
+            "label": "Campaign",
+            "value": "{{ad.campaign}}"
+          },
+          {
+            "label": "City",
+            "value": "{{lead.city}}"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Duplicate check",
+            "value": "No match on email or phone"
+          },
+          {
+            "label": "Sales outcome",
+            "value": "Open"
+          }
+        ],
+        "events": [
+          {
+            "title": "Lead created",
+            "detail": "From the {{ad.source}}"
+          },
+          {
+            "title": "Assigned",
+            "detail": "{{owner.name}}, {{owner.team}}"
+          }
+        ],
+        "notice": "Illustrative sample lead in a custom project workspace."
+      },
+      "statuses": [
+        "Lead saved with source and owner"
+      ]
+    },
+    {
+      "id": "follow-up",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Follow-up runs until she replies, buys or opts out.",
+      "caption": "An email and a text go out first. When she hasn't bought by the agreed day, the discount goes out. Her reply stops the sequence and alerts {{owner.name}}.",
+      "beat": "{{lead.first}} gets a welcome email and a text through RingCentral. She doesn't buy right away, so on the agreed day she gets the {{offer.name}}. She texts back asking about Thursday. That reply stops every automated message, and {{owner.name}} gets a note to call her.",
+      "details": [
+        "Timing, wording and discount conditions are agreed with you before setup",
+        "Replying STOP opts her out and ends all texts",
+        "A purchase ends the sequence the same way a reply does"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}} · {{lead.email}}",
+        "fields": [
+          {
+            "label": "Sequence",
+            "value": "New lead, not yet purchased"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Status",
+            "value": "Illustrative sample"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{owner.name}}",
+            "time": "Sample: right away",
+            "subject": "Thanks for reaching out, {{lead.first}}",
+            "body": "Hi {{lead.first}}, thanks for your interest in the fall consult. Reply here or text this number and I'll find you a time."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{owner.name}} via RingCentral",
+            "time": "Sample: same day",
+            "body": "Hi {{lead.first}}, it's {{owner.name}}. Got your form. Want me to book your consult this week? Reply STOP to opt out."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{owner.name}}",
+            "time": "Sample: agreed day, no purchase",
+            "subject": "Your {{offer.name}}",
+            "body": "Hi {{lead.first}}, you haven't booked yet, so here's our {{offer.name}} if you start this month."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "Sample: reply",
+            "body": "Does Thursday afternoon work?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Follow-up rule",
+            "time": "Sample: on reply",
+            "body": "{{lead.first}} replied, so all automated follow-up stopped. {{owner.name}}, please call her back about Thursday."
+          }
+        ],
+        "notice": "Illustrative sample messages. Nothing is sent from this demo."
+      },
+      "statuses": [
+        "Welcome email",
+        "First text",
+        "Discount sent on the agreed day",
+        "Lead replied",
+        "Follow-up stopped, owner alerted"
+      ]
+    },
+    {
+      "id": "reports",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "See which ads and cities turn into sales.",
+      "caption": "{{lead.first}} buys, and the sale is credited back to the {{ad.source}} and the {{ad.campaign}} campaign.",
+      "beat": "{{lead.first}} books and buys, so her lead is marked won. That sale counts toward the {{ad.campaign}} campaign and toward Calgary. The same reports show lead volume, close rate and sales by source and city.",
+      "details": [
+        "Report numbers on this screen are illustrative",
+        "The live reports use your client's real leads after launch"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Won · credited to the {{ad.source}}",
+        "fields": [
+          {
+            "label": "Source",
+            "value": "{{ad.source}}"
+          },
+          {
+            "label": "Campaign",
+            "value": "{{ad.campaign}}"
+          },
+          {
+            "label": "City",
+            "value": "{{lead.city}}"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          }
+        ],
+        "stages": [
+          "New lead",
+          "Contacted",
+          "Replied",
+          "Won"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Leads by source",
+            "value": "4 sources",
+            "note": "Facebook, Instagram, Google Ads, website"
+          },
+          {
+            "label": "Close rate",
+            "value": "By source",
+            "note": "Won leads divided by all leads from that source"
+          },
+          {
+            "label": "Sales by city",
+            "value": "By location",
+            "note": "{{lead.city}} includes this sale"
+          }
+        ],
+        "note": "Illustrative sample report in a custom project workspace. No live Zoho account is connected."
+      },
+      "statuses": [
+        "New lead",
+        "Contacted",
+        "Replied",
+        "Won and credited to the ad"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I'd measure",
+    "title": "Know where every sale",
+    "accent": "came from.",
+    "caption": "We'd agree the starting numbers together before launch.",
+    "metrics": [
+      {
+        "name": "Leads with full source details",
+        "direction": "up",
+        "aim": "More leads arrive with source, campaign and city filled in",
+        "definition": "New leads with source, campaign and city saved, divided by all new leads."
+      },
+      {
+        "name": "Time to first follow-up",
+        "direction": "down",
+        "aim": "Reach new leads sooner",
+        "definition": "Time from the form being submitted to the first email or text going out."
+      },
+      {
+        "name": "Close rate by source",
+        "direction": "up",
+        "aim": "Turn more leads into sales",
+        "definition": "Leads marked won divided by all leads, shown for each ad source and city."
+      }
+    ],
+    "baselineNote": "We'd measure the current numbers first and agree the targets with you.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through the follow-up timing, the discount rules and the assignment rules with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

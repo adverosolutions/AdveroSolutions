@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "id": "ai-agent-automation-brokerage-brands-2113090759366215202",
+  "title": "AI agents with separate knowledge for each brokerage brand",
+  "systemName": "Your multi-brand AI agent system",
+  "account": {"name": "Your brokerage brands", "initials": "YB", "operatorInitials": "LV"},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113090759366215202",
+    "facts": [
+      "Post: AI Agent and Automation Developer for several Canadian business brokerage brands; OpenAI/ChatGPT, n8n, Make.com.",
+      "Post asks for separate knowledge bases and instructions per brand, Search Console, Analytics and Google Ads analysis, Gmail/Drive/Calendar, lead follow-up, and approval before important actions.",
+      "Post starts with a small paid pilot. No client name or contact name in the post; personalization omitted."
+    ]
+  },
+  "entities": {
+    "brand": {"name": "Maplecrest Business Brokers", "short": "Maplecrest", "region": "Ontario"},
+    "other": {"short": "Prairie Exit Partners"},
+    "owner": {"name": "Mireille Tremblay", "role": "Brand marketing lead"},
+    "report": {"id": "SEO-W43", "week": "43"},
+    "opp": {
+      "query": "how to value a small business ontario",
+      "page": "/sell/business-valuation",
+      "position": "11.4",
+      "change": "Add a valuation FAQ section and a link from the sellers guide"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your multi-brand AI agent system",
+    "title": "Each brokerage brand gets",
+    "accent": "its own AI marketing agent.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["Separate knowledge for each brand", "n8n SEO check with OpenAI", "Owner approval before any change"],
+    "previewSteps": [
+      {"title": "Route", "detail": "Send each request to the right brand's agent."},
+      {"title": "Analyze", "detail": "Pull Search Console and Analytics data, then rank the opportunities."},
+      {"title": "Approve", "detail": "Hold every change until the brand owner says yes."}
+    ],
+    "footer": "Invented sample brands · no live accounts connected",
+    "beat": "Here's one AI setup running marketing for each of your brokerage brands, with its own knowledge and an approval step before anything changes."
+  },
+  "scenes": [
+    {
+      "id": "brand-routing",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Every request goes to the right brand's agent.",
+      "caption": "The Maplecrest agent only reads Maplecrest's knowledge base and instructions.",
+      "beat": "A weekly SEO request comes in tagged for {{brand.short}}. The brand tag picks that brand's knowledge base and your existing ChatGPT instructions, so the agent never mixes one brand with another. Its suggestions then wait for {{owner.name}} to approve.",
+      "details": [
+        "{{other.short}} keeps its own knowledge base and is not read for this request",
+        "Adding a brand means adding its knowledge base and instructions, not a new system"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Brand routing for AI agents",
+        "subtitle": "Shared setup, separate brand knowledge",
+        "nodes": [
+          {"id": "request", "label": "Weekly SEO request", "detail": "Tagged for {{brand.name}}"},
+          {"id": "router", "label": "Pick the brand", "detail": "The brand tag selects one knowledge base"},
+          {"id": "knowledge", "label": "{{brand.short}} knowledge base", "detail": "Brand voice, service pages and your ChatGPT instructions"},
+          {"id": "other-brands", "label": "Other brand knowledge bases", "detail": "{{other.short}} and the rest stay separate"},
+          {"id": "agent", "label": "SEO agent", "detail": "OpenAI model working from {{brand.short}} instructions"},
+          {"id": "approval", "label": "Owner approval", "detail": "{{owner.name}} approves before anything changes"}
+        ],
+        "edges": [
+          {"from": "request", "to": "router"},
+          {"from": "router", "to": "knowledge", "label": "{{brand.short}}"},
+          {"from": "router", "to": "other-brands", "label": "Other brands"},
+          {"from": "knowledge", "to": "agent"},
+          {"from": "agent", "to": "approval"}
+        ],
+        "runOrder": ["request", "router", "knowledge", "agent", "approval"],
+        "context": {
+          "name": "{{brand.name}}",
+          "subtitle": "Illustrative brokerage brand",
+          "fields": [
+            {"label": "Region", "value": "{{brand.region}}"},
+            {"label": "Brand owner", "value": "{{owner.name}}"},
+            {"label": "Report", "value": "{{report.id}}"}
+          ],
+          "states": ["Request received", "{{brand.short}} selected", "Brand knowledge loaded", "Opportunities drafted", "Waiting for {{owner.name}}"]
+        },
+        "related": [
+          {"title": "Where the steps run", "detail": "n8n runs each step; OpenAI writes the analysis."},
+          {"title": "Same pattern for other tasks", "detail": "Lead follow-up and reporting agents can use the same brand routing."}
+        ]
+      },
+      "statuses": ["Request received", "{{brand.short}} selected", "Brand knowledge loaded", "Opportunities drafted", "Waiting for {{owner.name}}"]
+    },
+    {
+      "id": "seo-check",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "The SEO check runs as an n8n workflow.",
+      "caption": "It pulls Search Console and Analytics data, asks OpenAI for opportunities, then emails the owner to approve.",
+      "beat": "This is the n8n workflow behind that agent. It pulls the {{brand.short}} search queries and landing page numbers, matches them up, and sends them to OpenAI with the brand's instructions. When a change is suggested, {{owner.name}} gets an email to approve it.",
+      "details": [
+        "Started by hand here; a schedule can run it every week",
+        "HTTP Request steps are illustrative; account access and field mapping are agreed during the pilot"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{brand.short}} weekly SEO check",
+        "nodes": [
+          {"id": "start", "type": "manual_trigger", "label": "Start weekly check", "detail": "Run for {{brand.short}}, week {{report.week}}"},
+          {"id": "search-console", "type": "http_request", "label": "Pull Search Console queries", "detail": "Illustrative HTTP Request: queries and positions for {{brand.short}} pages"},
+          {"id": "analytics", "type": "http_request", "label": "Pull Analytics landing pages", "detail": "Illustrative HTTP Request: sessions and enquiries by landing page"},
+          {"id": "match", "type": "edit_fields", "label": "Match queries to pages", "detail": "Join on page address for the last 28 days"},
+          {"id": "openai", "type": "http_request", "label": "Ask OpenAI for opportunities", "detail": "Illustrative HTTP Request to OpenAI with {{brand.short}} instructions"},
+          {"id": "suggested", "type": "if", "label": "Change suggested?", "detail": "True when the agent proposes a page change"},
+          {"id": "approval-email", "type": "gmail", "label": "Email owner for approval", "detail": "To {{owner.name}}: approve or decline {{report.id}}"},
+          {"id": "log-week", "type": "google_sheets", "label": "Log a no-change week", "detail": "Adds the week to the report sheet only"}
+        ],
+        "edges": [
+          {"from": "start", "to": "search-console"},
+          {"from": "search-console", "to": "analytics"},
+          {"from": "analytics", "to": "match"},
+          {"from": "match", "to": "openai"},
+          {"from": "openai", "to": "suggested"},
+          {"from": "suggested", "to": "approval-email", "label": "true"},
+          {"from": "suggested", "to": "log-week", "label": "false"}
+        ],
+        "runOrder": ["start", "search-console", "analytics", "match", "openai", "suggested", "approval-email"],
+        "context": {
+          "name": "{{report.id}}",
+          "subtitle": "{{brand.name}} · illustrative run",
+          "fields": [
+            {"label": "Brand", "value": "{{brand.short}}"},
+            {"label": "Approver", "value": "{{owner.name}}"}
+          ],
+          "states": ["Weekly check started", "Search queries pulled", "Landing page numbers pulled", "Queries matched to pages", "Opportunities ranked", "Change suggested", "Approval email sent to {{owner.name}}"]
+        },
+        "related": [
+          {"title": "Google Ads next", "detail": "Campaign numbers can join the same check during the pilot."},
+          {"title": "No-change weeks", "detail": "Logged to the report sheet with nothing to approve."}
+        ]
+      },
+      "statuses": ["Weekly check started", "Search queries pulled", "Landing page numbers pulled", "Queries matched to pages", "Opportunities ranked", "Change suggested", "Approval email sent to {{owner.name}}"]
+    },
+    {
+      "id": "approval-request",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "The owner sees the reason before approving.",
+      "caption": "The agent explains the opportunity in plain language and asks for a yes or no.",
+      "beat": "Here's the note the agent writes and the approval email {{owner.name}} receives. It names the search, the page and the change, so the decision takes a minute.",
+      "details": ["Email shown as a draft; nothing is sent from this page"],
+      "optional": true,
+      "content": {
+        "name": "{{owner.name}}",
+        "subtitle": "{{owner.role}} · {{brand.short}}",
+        "fields": [
+          {"label": "Report", "value": "{{report.id}}"},
+          {"label": "Status", "value": "Illustrative draft"}
+        ],
+        "items": [
+          {"channel": "internal", "direction": "outgoing", "sender": "SEO agent", "time": "Sample step", "body": "People searching \"{{opp.query}}\" land on {{opp.page}}, which sits just off page one. Suggest: {{opp.change}}."},
+          {"channel": "email", "direction": "outgoing", "sender": "n8n workflow", "time": "Sample step", "subject": "Approve {{report.id}}: valuation page update?", "body": "Hi {{owner.name}}, the {{brand.short}} agent suggests one change this week: {{opp.change}}. Reply approve or decline."}
+        ],
+        "notice": "Custom project workspace showing drafts. Nothing is sent from this page."
+      },
+      "statuses": ["Agent note written", "Approval email drafted"]
+    },
+    {
+      "id": "held-result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "The week's top opportunity, held for approval.",
+      "caption": "Nothing on the website changes until the brand owner approves it.",
+      "beat": "This is the result for {{brand.short}} this week: the top search opportunity, the page it affects and the suggested change. It stays on hold until {{owner.name}} approves it.",
+      "details": ["Counts are illustrative", "Result for {{report.id}}"],
+      "optional": false,
+      "content": {
+        "name": "{{report.id}} · {{brand.short}}",
+        "subtitle": "Weekly SEO opportunities",
+        "fields": [
+          {"label": "Top search", "value": "{{opp.query}}"},
+          {"label": "Page", "value": "{{opp.page}}"},
+          {"label": "Average position", "value": "{{opp.position}} (illustrative)"},
+          {"label": "Suggested change", "value": "{{opp.change}}"},
+          {"label": "Status", "value": "Waiting for {{owner.name}}"}
+        ],
+        "stages": ["Data pulled", "Opportunities ranked", "Sent for approval", "Approved"],
+        "stageSequence": [0, 1, 2],
+        "metrics": [
+          {"label": "Opportunities found", "value": "3", "note": "Sample week, invented"},
+          {"label": "Changes made without approval", "value": "0", "note": "Every change waits for the owner"},
+          {"label": "Brands on this setup", "value": "2", "note": "Illustrative; each with its own knowledge base"}
+        ],
+        "note": "Illustrative result in a custom project workspace. No live Search Console, Analytics or website account is connected."
+      },
+      "statuses": ["Data pulled", "Opportunities ranked", "Sent to {{owner.name}} for approval"]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the agents",
+    "accent": "against how your team works today.",
+    "caption": "We'd set a baseline from your current weekly reporting and marketing work.",
+    "metrics": [
+      {"name": "Hours spent on weekly reports", "direction": "down", "aim": "Spend less time building reports", "definition": "Team hours each week spent pulling Search Console, Analytics and Ads numbers into reports."},
+      {"name": "Search opportunities acted on", "direction": "up", "aim": "Act on more search opportunities", "definition": "Approved page changes divided by the opportunities the agent flagged."},
+      {"name": "Brands on the shared setup", "direction": "up", "aim": "Bring more brands onto one setup", "definition": "Brokerage brands running on the shared agents, each with its own knowledge base and instructions."}
+    ],
+    "baselineNote": "We'd agree the baseline and targets together before the pilot starts.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd start with one brand as the paid pilot. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

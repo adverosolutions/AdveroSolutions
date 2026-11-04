@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-architect-real-estate-brokerage-2113394730633503851",
+  "title": "Architect and implement: Real Estate lead funnels, pipelines, workflows, SMS & email nurturing",
+  "systemName": "Your brokerage lead system",
+  "account": {"name": "Your brokerage", "initials": "YB", "operatorInitials": "LV"},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113394730633503851",
+    "facts": [
+      "California real estate brokerage, GoHighLevel architect, hourly. No client name stated.",
+      "Scope: seller and buyer funnels, opportunity pipelines, workflows, SMS and email nurture, calendars, webinar follow-up, AI lead qualification, agent recruiting funnel.",
+      "Proposal must start with 'Pipeline First'.",
+      "Content reused from the finished live tour at tour/tour.html (same sample people and path)."
+    ]
+  },
+  "entities": {
+    "lead": {"name": "Elena Marsh", "first": "Elena", "phone": "(555) 010 0142", "address": "Sample address, Orange County"},
+    "owner": {"name": "Dana R.", "first": "Dana"},
+    "consult": {"time": "Thursday at 4 PM", "calendar": "Listing consult calendar"}
+  },
+  "cover": {
+    "eyebrow": "Your brokerage lead system",
+    "title": "Pipeline first:",
+    "accent": "one seller lead, start to finish.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["Seller and buyer funnels", "Opportunity pipelines", "AI lead qualification", "SMS, email and calendars", "Webinars and agent recruiting"],
+    "previewSteps": [
+      {"title": "Score and route the lead", "detail": "The seller funnel feeds the pipeline and the AI step picks hot or nurture."},
+      {"title": "Text and book the consult", "detail": "The agent's text carries a booking link and reminders follow."},
+      {"title": "Track every stage", "detail": "The same pattern runs buyer webinars and agent recruiting."}
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works. We'll follow one seller lead from your home value funnel to a booked listing consult.",
+    "footer": "Illustrative sample · made-up names and data"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure how fast leads",
+    "accent": "reach an agent and a consult.",
+    "caption": "First we measure how your brokerage runs today, then we track the same numbers after launch.",
+    "metrics": [
+      {"name": "Time to first text", "direction": "down", "aim": "Reach new leads sooner", "definition": "Median time from a funnel submission to the first text sent to that lead, reported separately for seller, buyer and webinar funnels."},
+      {"name": "Consults booked per 100 leads", "direction": "up", "aim": "Book more consults", "definition": "Distinct leads with a booked listing or buyer consult divided by all new leads from the same funnels in the same period, multiplied by 100."},
+      {"name": "Leads with an assigned agent", "direction": "up", "aim": "Give every lead an owner", "definition": "Share of new leads that have an assigned agent within the agreed time after they come in, counted once per lead."}
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times. We'll map your stages and pick the first funnel.",
+    "beat": "I'd track time to first text, consults booked and leads with an agent, starting from how things run today. Worth a quick 15-minute call? Reply here and I'll send times, and we'll pick the first funnel together."
+  },
+  "scenes": [
+    {
+      "id": "seller-workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Route each seller lead in one workflow.",
+      "caption": "The home value funnel tags {{lead.first}}, opens her opportunity and checks the AI score.",
+      "beat": "Say {{lead.first}} fills out your home value funnel. She wants to sell within 60 days and has no agent. The workflow opens her opportunity in New lead, checks the tag from the AI scoring step, assigns {{owner.first}} and texts her a booking link. Leads that aren't ready go into a longer email nurture instead.",
+      "details": [
+        "Home value funnel → {{lead.name}} → {{owner.name}}",
+        "Not ready yet → longer email nurture, rescored on reply"
+      ],
+      "content": {
+        "name": "Seller lead routing",
+        "nodes": [
+          {"id": "s1", "type": "contact_tag", "label": "Seller funnel tag added", "detail": "Home value funnel submitted"},
+          {"id": "s2", "type": "opportunity", "label": "Seller pipeline: New lead", "detail": "Funnel answers saved on the record"},
+          {"id": "s3", "type": "condition", "label": "AI score says hot?", "detail": "Timeline, agent status and intent"},
+          {"id": "s4", "type": "assign_user", "label": "Assign {{owner.name}}", "detail": "Card moves to Hot"},
+          {"id": "s5", "type": "sms", "label": "Text with booking link", "detail": "Sent from {{owner.first}}"},
+          {"id": "s6", "type": "notification", "label": "Hot seller alert to {{owner.first}}", "detail": "Hot seller, also buying"},
+          {"id": "s7", "type": "email", "label": "Longer email nurture", "detail": "Market updates, rescored on reply"}
+        ],
+        "edges": [
+          {"from": "s1", "to": "s2"},
+          {"from": "s2", "to": "s3"},
+          {"from": "s3", "to": "s4", "label": "Hot"},
+          {"from": "s3", "to": "s7", "label": "Not ready"},
+          {"from": "s4", "to": "s5"},
+          {"from": "s5", "to": "s6"}
+        ],
+        "runOrder": ["s1", "s2", "s3", "s4", "s5", "s6"],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Home value funnel · {{lead.address}}",
+          "fields": [
+            {"label": "Status", "value": "Illustrative sample"},
+            {"label": "Timeline", "value": "Selling within 60 days"}
+          ],
+          "states": [
+            "Seller funnel tag added",
+            "New lead in seller pipeline",
+            "AI tags: hot seller, also buying",
+            "Assigned to {{owner.name}} · Hot",
+            "Booking link texted",
+            "{{owner.first}} alerted"
+          ]
+        },
+        "related": [
+          {"title": "Buyer webinar follow-up", "detail": "Reminders before, replay or consult link after."},
+          {"title": "Agent recruiting pipeline", "detail": "Same AI step sorts applicants against your criteria."}
+        ]
+      },
+      "statuses": [
+        "Seller funnel submitted",
+        "Opportunity in New lead",
+        "AI score: hot seller",
+        "Assigned to {{owner.name}}",
+        "Booking link texted",
+        "{{owner.first}} alerted"
+      ],
+      "optional": false
+    },
+    {
+      "id": "seller-record",
+      "kind": "record",
+      "platform": "ghl",
+      "title": "Her answers stay on the contact.",
+      "caption": "{{owner.first}} sees the funnel answers and the AI tags before the first call.",
+      "beat": "Here's {{lead.first}}'s contact. Her funnel answers are saved, so {{owner.first}} never has to ask twice. The AI step also tagged her as a buyer, because she plans to buy nearby.",
+      "details": [
+        "{{lead.name}} · {{lead.phone}}",
+        "Tags: hot seller, also buying · Owner: {{owner.name}}"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}}",
+        "sourceTitle": "Home value funnel",
+        "sourceFields": [
+          {"label": "Source", "value": "Seller funnel"},
+          {"label": "Property", "value": "{{lead.address}}"}
+        ],
+        "fields": [
+          {"label": "Owner", "value": "{{owner.name}}"},
+          {"label": "Timeline", "value": "Wants to sell within 60 days"},
+          {"label": "Agent status", "value": "Not working with another agent"},
+          {"label": "Also buying", "value": "Plans to buy nearby"}
+        ],
+        "events": [
+          {"title": "Funnel submitted", "detail": "Answers saved on the record"},
+          {"title": "AI score added", "detail": "Tagged hot seller and also buying"},
+          {"title": "Moved to Hot", "detail": "Assigned to {{owner.name}}"}
+        ],
+        "notice": "Sample contact with made-up details."
+      },
+      "statuses": ["Answers saved", "Tags added", "Owner assigned"],
+      "optional": true
+    },
+    {
+      "id": "consult-messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "A text in minutes, then a booked consult.",
+      "caption": "{{lead.first}} picks a time from {{owner.first}}'s link and reminders are set.",
+      "beat": "Within minutes, {{lead.first}} gets a text from {{owner.first}} with a booking link. She replies that Thursday afternoon works, books {{consult.time}} on the listing consult calendar, and gets a confirmation. Reminders go out the day before and an hour before.",
+      "details": [
+        "Text from {{owner.name}} → reply → {{consult.time}} booked",
+        "Reminders: email right away, text one hour before"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}}",
+        "fields": [
+          {"label": "Owner", "value": "{{owner.name}}"},
+          {"label": "Calendar", "value": "{{consult.calendar}}"}
+        ],
+        "items": [
+          {"channel": "sms", "direction": "outgoing", "sender": "{{owner.name}}", "time": "6:12 pm", "body": "Hi {{lead.first}}, {{owner.first}} here with your brokerage. Got your home value request. Want 15 minutes this week to walk through it? Pick a time: booking link"},
+          {"channel": "sms", "direction": "incoming", "sender": "{{lead.name}}", "time": "6:20 pm", "body": "Thursday afternoon works"},
+          {"channel": "sms", "direction": "outgoing", "sender": "{{owner.name}}", "time": "6:22 pm", "body": "You're set for {{consult.time}}. You'll get a reminder the day before."},
+          {"channel": "internal", "direction": "outgoing", "sender": "Workflow", "time": "6:22 pm", "body": "{{lead.name}} booked a listing consult for {{consult.time}}. Card moved to Consult booked."}
+        ],
+        "notice": "Sample texts with a made-up contact. Texting stops on STOP or a booking."
+      },
+      "statuses": ["Booking link texted", "{{lead.first}} replies", "{{consult.time}} booked", "{{owner.first}} notified"],
+      "optional": false
+    },
+    {
+      "id": "pipeline-outcome",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "Elena ends with a booked consult.",
+      "caption": "Illustrative: {{lead.first}} moves from New lead to Consult booked with {{owner.first}} as owner.",
+      "beat": "Here's where {{lead.first}} ends up: Consult booked, with {{owner.first}} as her agent and her source kept. The same pattern runs your buyer webinars and agent recruiting, each with its own pipeline.",
+      "details": [
+        "New lead → Hot → Consult booked",
+        "Buyer webinars and agent recruiting follow the same pattern"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Seller pipeline · source kept",
+        "fields": [
+          {"label": "Owner", "value": "{{owner.name}}"},
+          {"label": "Source", "value": "Home value funnel"},
+          {"label": "Consult", "value": "{{consult.time}}"}
+        ],
+        "stages": ["New lead", "Hot", "Consult booked", "Listing signed"],
+        "stageSequence": [0, 1, 2],
+        "metrics": [
+          {"label": "Funnels", "value": "4", "note": "Seller, buyer, webinar, recruiting"},
+          {"label": "Pipelines", "value": "3", "note": "Seller, buyer, recruiting · starting point"},
+          {"label": "Consult", "value": "Booked", "note": "Sample lead, not a result"}
+        ],
+        "note": "Stages and counts are a starting point we shape together. Sample data only.",
+        "proof": {
+          "label": "Relevant past project · roofing contractor",
+          "value": "$750M+ annual bid volume",
+          "description": "Runs through a routing and follow-up system I built.",
+          "sourceNote": "Past project, separate from this sample. Bid volume is not revenue."
+        }
+      },
+      "statuses": ["New lead", "Moved to Hot", "Consult booked · source kept"],
+      "optional": false
+    }
+  ]
+}

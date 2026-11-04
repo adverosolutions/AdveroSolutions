@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "id": "zoho-healthcare-enquiry-followup-deluge-2114752103025080559",
+  "title": "Urgent Zoho Healthcare CRM Automation & Deluge Fix",
+  "systemName": "Your patient enquiry follow-up",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114752103025080559",
+    "facts": [
+      "Post: small urgent healthcare automation inside an existing Zoho CRM setup; review the patient/lead workflow.",
+      "Post asks: task on new patient/enquiry record, status update on conditions, internal notification to the assigned user, a small Deluge function for field validation/update, a guard against running twice on the same record, testing with sample records and a short explanation of the logic.",
+      "No person or business name in the post; client reviews name no contact. Account shown as 'Your team'.",
+      "Every patient, coordinator and record in the deck is invented. No health details are used."
+    ]
+  },
+  "entities": {
+    "patient": {
+      "name": "Rosa Ellery",
+      "first": "Rosa",
+      "email": "rosa.ellery@example.com",
+      "phoneRaw": "718.555.0163",
+      "phone": "+1 718 555 0163"
+    },
+    "enquiry": {
+      "id": "ENQ-30917",
+      "visit": "new patient visit",
+      "status": "Callback scheduled",
+      "created": "9:40 AM",
+      "resaved": "9:52 AM"
+    },
+    "owner": {
+      "name": "Jordan Pike",
+      "first": "Jordan",
+      "role": "patient coordinator"
+    },
+    "task": {
+      "title": "Call back new patient",
+      "due": "11:40 AM"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your Zoho patient follow-up",
+    "title": "One new enquiry,",
+    "accent": "one task and one alert.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "A task on every new enquiry",
+      "Status set by clear rules",
+      "Runs once per record"
+    ],
+    "previewSteps": [
+      {
+        "title": "Check and clean",
+        "detail": "A run-once check, then Deluge tidies the contact details."
+      },
+      {
+        "title": "Assign the callback",
+        "detail": "A task, a status change and an alert for the right coordinator."
+      },
+      {
+        "title": "Save it twice",
+        "detail": "A second save on the same record adds nothing new."
+      }
+    ],
+    "footer": "Illustrative sample data · no live system connected",
+    "beat": "Here's how your patient enquiry follow-up would work in Zoho. A new enquiry comes in, gets checked and cleaned, the right coordinator gets a callback task and an alert, and saving the record again doesn't set it off a second time."
+  },
+  "scenes": [
+    {
+      "id": "enquiry-logic",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "What happens when a new enquiry is created",
+      "caption": "Rosa asks for a new patient visit on your website. The workflow checks it hasn't run on her record, cleans her details, then creates the task.",
+      "beat": "Follow Rosa through it. Her enquiry is created. First the workflow checks that it hasn't already run on this record and ticks a box so it can't run again. A small Deluge function cleans up her phone and email. Then Jordan gets a callback task, the status moves to callback scheduled, and Jordan gets an alert.",
+      "details": [
+        "The run-once check comes first, so nothing else fires on a record that has already been handled.",
+        "If the phone number doesn't pass the check, the status becomes Needs contact check instead, and no callback task is created.",
+        "Use Replay to play the steps in order, or Show result to jump to the end."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Patient enquiry follow-up",
+        "subtitle": "Logic for your existing Zoho workflow · illustrative sample",
+        "nodes": [
+          {
+            "id": "enquiry-created",
+            "label": "New enquiry is created",
+            "detail": "{{patient.name}} asks for a {{enquiry.visit}} on the website form. Record {{enquiry.id}} is created at {{enquiry.created}}."
+          },
+          {
+            "id": "run-once",
+            "label": "Check it hasn't run before",
+            "detail": "The Follow-up started box on {{enquiry.id}} is empty, so the workflow carries on and ticks it."
+          },
+          {
+            "id": "deluge-clean",
+            "label": "Deluge cleans the details",
+            "detail": "Phone {{patient.phoneRaw}} becomes {{patient.phone}}, the email is lowercased and the preferred contact is confirmed."
+          },
+          {
+            "id": "callback-task",
+            "label": "Create the callback task",
+            "detail": "{{task.title}}, assigned to {{owner.name}}, due {{task.due}}."
+          },
+          {
+            "id": "move-status",
+            "label": "Move the status",
+            "detail": "The phone is valid and Rosa prefers a call, so the status moves from New to {{enquiry.status}}."
+          },
+          {
+            "id": "alert-owner",
+            "label": "Alert the coordinator",
+            "detail": "{{owner.name}} gets an internal notification with the task and a link to {{enquiry.id}}."
+          }
+        ],
+        "edges": [
+          {
+            "from": "enquiry-created",
+            "to": "run-once"
+          },
+          {
+            "from": "run-once",
+            "to": "deluge-clean"
+          },
+          {
+            "from": "deluge-clean",
+            "to": "callback-task"
+          },
+          {
+            "from": "callback-task",
+            "to": "move-status"
+          },
+          {
+            "from": "move-status",
+            "to": "alert-owner"
+          }
+        ],
+        "runOrder": [
+          "enquiry-created",
+          "run-once",
+          "deluge-clean",
+          "callback-task",
+          "move-status",
+          "alert-owner"
+        ],
+        "context": {
+          "name": "How the rule is set up",
+          "subtitle": "Workflow rule on patient enquiries",
+          "fields": [
+            {
+              "label": "When it runs",
+              "value": "A patient enquiry is created or edited"
+            },
+            {
+              "label": "Run-once field",
+              "value": "Follow-up started, ticked with the time it ran"
+            },
+            {
+              "label": "Phone fails the check",
+              "value": "Status becomes Needs contact check"
+            },
+            {
+              "label": "Who gets the task",
+              "value": "The record owner"
+            }
+          ],
+          "states": [
+            "{{enquiry.id}} created for {{patient.name}}",
+            "Not run before, box ticked",
+            "Phone and email cleaned",
+            "Task assigned to {{owner.name}}",
+            "Status: {{enquiry.status}}",
+            "Alert sent to {{owner.name}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Why the run-once box",
+            "detail": "Edits, imports and the Deluge update itself can set a workflow off again. The box stops a second pass at the first step."
+          },
+          {
+            "title": "Short logic notes",
+            "detail": "You get a one-page explanation of each condition, so your team can debug it later."
+          }
+        ]
+      },
+      "statuses": [
+        "Enquiry created",
+        "Run-once check passed",
+        "Details cleaned",
+        "Callback task created",
+        "Status moved",
+        "Coordinator alerted"
+      ]
+    },
+    {
+      "id": "enquiry-record",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Rosa's enquiry after the workflow runs",
+      "caption": "On the left is what she typed. On the right is the cleaned record with its status, owner, task and alert.",
+      "beat": "This is Rosa's record after that one pass. On the left is the form as she typed it, with a messy phone number and capital letters in her email. On the right, Deluge has fixed both, the status says callback scheduled, Jordan owns it, and the timeline shows the task and the alert.",
+      "details": [
+        "The timeline lists each step the workflow took, which is where you'd look first when debugging.",
+        "Field names follow your existing Zoho layout once I've reviewed the current workflow."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{patient.name}}",
+        "subtitle": "Patient enquiry {{enquiry.id}} · {{enquiry.status}}",
+        "sourceTitle": "Website form as submitted",
+        "sourceFields": [
+          {
+            "label": "Name",
+            "value": "rosa ELLERY"
+          },
+          {
+            "label": "Phone",
+            "value": "{{patient.phoneRaw}}"
+          },
+          {
+            "label": "Email",
+            "value": "Rosa.Ellery@Example.com"
+          },
+          {
+            "label": "Preferred contact",
+            "value": "Phone call"
+          },
+          {
+            "label": "Request",
+            "value": "New patient visit"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Name",
+            "value": "{{patient.name}}"
+          },
+          {
+            "label": "Phone",
+            "value": "{{patient.phone}}"
+          },
+          {
+            "label": "Email",
+            "value": "{{patient.email}}"
+          },
+          {
+            "label": "Status",
+            "value": "{{enquiry.status}}"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}, {{owner.role}}"
+          },
+          {
+            "label": "Follow-up started",
+            "value": "Yes, {{enquiry.created}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Details validated",
+            "detail": "Deluge formatted the phone and email. Both passed."
+          },
+          {
+            "title": "Task created",
+            "detail": "{{task.title}} for {{owner.name}}, due {{task.due}}"
+          },
+          {
+            "title": "Status changed",
+            "detail": "New to {{enquiry.status}}"
+          },
+          {
+            "title": "Alert sent",
+            "detail": "Internal notification to {{owner.name}}"
+          }
+        ],
+        "notice": "Illustrative sample record. Rosa Ellery is an invented patient, and no health details are stored."
+      },
+      "statuses": [
+        "Form entry shown",
+        "Details cleaned",
+        "Task and alert logged"
+      ]
+    },
+    {
+      "id": "run-twice-test",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Saving it again doesn't send a second task",
+      "caption": "We edit Rosa's record and save it. The workflow stops at the run-once check, so Jordan still has one task and one alert.",
+      "beat": "Now the run-twice test. At 9:52 we edit Rosa's record and save it again. The workflow sees the box is already ticked and stops right there. Jordan still has one callback task and one alert, not two.",
+      "details": [
+        "I'd also test a record with a bad phone number to check the Needs contact check path.",
+        "Every test uses sample records, never real patients."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Run-twice test on {{enquiry.id}}",
+        "subtitle": "Two saves on the same sample record",
+        "fields": [
+          {
+            "label": "First save, {{enquiry.created}}",
+            "value": "Workflow ran: one task, one alert"
+          },
+          {
+            "label": "Second save, {{enquiry.resaved}}",
+            "value": "Stopped at the run-once check"
+          },
+          {
+            "label": "Status",
+            "value": "{{enquiry.status}}, unchanged"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          }
+        ],
+        "stages": [
+          "Created",
+          "Checked",
+          "Cleaned",
+          "Task created",
+          "Status moved",
+          "Alerted",
+          "Saved again, skipped"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "metrics": [
+          {
+            "label": "Callback tasks",
+            "value": "1",
+            "note": "The second save added none"
+          },
+          {
+            "label": "Alerts to {{owner.first}}",
+            "value": "1",
+            "note": "No repeat notification"
+          },
+          {
+            "label": "Workflow passes",
+            "value": "1",
+            "note": "Second save stopped at step one"
+          }
+        ],
+        "note": "Illustrative result on sample data. No live Zoho account is connected.",
+        "proof": {
+          "label": "Run-twice test",
+          "value": "Passed",
+          "description": "Editing and saving {{enquiry.id}} again left one task and one alert on the record.",
+          "sourceNote": "Sample test on invented records"
+        }
+      },
+      "statuses": [
+        "Enquiry created",
+        "Run-once check passed",
+        "Details cleaned",
+        "Task created",
+        "Status moved",
+        "Coordinator alerted",
+        "Second save skipped"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Every new enquiry,",
+    "accent": "followed up once.",
+    "caption": "We'd agree the starting numbers together once I've reviewed your current workflow.",
+    "metrics": [
+      {
+        "name": "Enquiries with no task",
+        "direction": "down",
+        "aim": "Fewer new enquiries left without a callback task",
+        "definition": "New patient enquiries with no follow-up task an hour after they are created, divided by all new enquiries."
+      },
+      {
+        "name": "Repeat tasks and alerts",
+        "direction": "down",
+        "aim": "Fewer records with a second task or alert",
+        "definition": "Enquiries that have more than one follow-up task or alert, counted over an agreed week."
+      },
+      {
+        "name": "Time to first callback",
+        "direction": "down",
+        "aim": "Faster first calls to new patients",
+        "definition": "Time from the enquiry being created to the coordinator's first logged call."
+      }
+    ],
+    "baselineNote": "We'd measure where you are today and set the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your current workflow and these rules with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

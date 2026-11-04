@@ -1,0 +1,38 @@
+{
+  "activityStat": {
+    "applicationsBidStats": {
+      "avgRateBid": {
+        "currency": "USD",
+        "displayValue": "661.6705882352941"
+      }
+    },
+    "jobActivity": {
+      "invitesSent": 2,
+      "totalHired": 0
+    }
+  },
+  "clientCompanyPublic": {
+    "country": {
+      "name": "Argentina"
+    }
+  },
+  "content": {
+    "description": "<untrusted_participant_content>\nProject Overview\n\nI’m looking for an experienced AI automation engineer to build a personalized intelligence system that collects, analyzes, and organizes information relevant to my personal interests and business.\n\nThe goal is not simply to aggregate news or summarize articles. I want to turn information from multiple sources into clear, actionable intelligence that helps me understand what matters, identify opportunities and risks, and make faster, better-informed decisions.\n\nThe system should continuously gather relevant information, evaluate its significance, connect related developments, and generate concise reports that I can understand at a glance.\n\nI want to minimize the time spent manually searching, reading, comparing, and analyzing information while ensuring that important developments do not go unnoticed.\n\n## Core Requirements\n\n### 1. Personalized Information Collection\n\nBuild an automated pipeline that gathers information from relevant sources based on configurable interests, business objectives, and priorities.\n\nPotential sources include:\n\n* News websites, RSS feeds, and online publications.\n* Industry-specific websites and market updates.\n* Competitor websites, company announcements, and product launches.\n* Relevant business trends, technologies, and emerging opportunities.\n* Other accessible sources, APIs, newsletters, or public information channels.\n\nThe system should allow me to add, remove, and prioritize topics and sources without requiring significant code changes.\n\nIt should also identify relevant information beyond predefined keywords where possible, so I don't miss important developments simply because an article uses different terminology.\n\n### 2. AI-Powered Analysis and Prioritization\n\nUse AI to turn raw information into meaningful insights rather than producing generic summaries.\n\nThe system should:\n\n* Summarize articles and developments in clear, concise language.\n* Identify the key facts, implications, and potential consequences.\n* Group related stories and remove duplicate or repetitive information.\n* Assess relevance to my interests and business objectives.\n* Highlight significant opportunities, emerging trends, threats, and risks.\n* Distinguish confirmed facts from speculation or uncertain information.\n* Include source links so I can verify important claims.\n\nI want the system to explain not only what happened, but also why it matters to me.\n\n### 3. At-a-Glance Intelligence Reports\n\nGenerate reports that make important information easy to understand quickly.\n\nA report should prioritize:\n\n* **Executive summary:** The most important developments at a glance.\n* **Top priorities:** What deserves my attention now and why.\n* **Opportunities:** Potential business, technical, or strategic advantages.\n* **Risks and threats:** Developments that may require preparation or action.\n* **Recommended actions:** Specific next steps based on the findings.\n* **Supporting sources:** Links and evidence behind the analysis.\n\nReports should be concise, structured, and easy to scan. More detailed analysis should be available when I want to investigate a particular topic.\n\nDelivery could be through a dashboard, email, messaging platform, or another suitable interface, depending on the existing environment and implementation effort.\n\n### 4. Actionable Recommendations and Decision Support\n\nThis is one of the most important parts of the project.\n\nI want the AI to translate relevant developments into practical recommendations. For example, it might identify a new market opportunity, suggest monitoring a competitor, recommend investigating a new technology, or flag a development that could affect an existing business strategy.\n\nWhere appropriate, recommendations should include:\n\n* The action to take.\n* Why it matters.\n* Expected benefit or potential risk.\n* Urgency and priority.\n* Supporting evidence and confidence level.\n* Suggested next steps.\n\nThe system should distinguish immediate actions from items that simply need monitoring. Recommendations must be evidence-based, transparent, and open to human review rather than presented as unquestionable decisions.\n\n### 5. Automation, Reliability, and Continuous Improvement\n\n* Schedule information collection and report generation automatically.\n* Provide configurable reporting frequency and topic priorities.\n* Monitor failed data collection, API errors, and processing failures.\n* Maintain a history of reports and analyzed developments.\n* Allow me to provide feedback on relevance and recommendation quality.\n* Use that feedback to improve future prioritization and personalization.\n* Design the system to support additional sources, topics, and analysis capabilities over time.\n\n## Technical Expectations\n\nI'm looking for an engineer with practical experience in:\n\n* AI agents, LLMs, and multi-step automation workflows.\n* Web research, APIs, RSS feeds, and data ingestion.\n* Information extraction, summarization, classification, and ranking.\n* RAG, embeddings, or knowledge graphs where appropriate.\n* Backend development, databases, scheduled jobs, and integrations.\n* Monitoring, evaluation, source attribution, and error handling.\n\nI’m open to your recommended technology stack. I care more about a reliable, maintainable solution than using a particular framework or adding unnecessary complexity.\n\n## Expected Deliverables\n\n1. A short discovery phase and proposed system architecture.\n2. Automated information collection from agreed sources.\n3. AI analysis, relevance ranking, deduplication, and summarization.\n4. An at-a-glance reporting interface and automated delivery.\n5. Evidence-based recommendations and prioritized action items.\n6. Testing with representative topics and real-world information.\n7. Documentation, deployment, and handover.\n\n## How to Apply\n\nPlease include:\n\n1. Examples of similar AI intelligence, research automation, or decision-support systems you have built.\n2. Your proposed architecture and preferred tools.\n3. How you would evaluate relevance, prevent duplicate stories, and maintain source reliability.\n4. How you would turn information into useful, personalized recommendations rather than generic AI summaries.\n5. Your estimated timeline, budget, and recommended first milestone.\n\nI’m looking for someone who can understand the objective, make sound engineering decisions, and build a practical system that delivers measurable value.\n\nThe ultimate goal is simple: **less time consuming information, better awareness of what matters, and faster, more confident decisions.**\n</untrusted_participant_content>",
+    "title": "AI Automation Engineer Needed — Personalized News Intelligence & Decision Support System"
+  },
+  "contractTerms": {
+    "contractType": "FIXED",
+    "experienceLevel": "EXPERT",
+    "fixedPriceContractTerms": {
+      "amount": {
+        "currency": "USD",
+        "displayValue": "600.0",
+        "rawValue": "600.0"
+      }
+    },
+    "personsToHire": 1
+  },
+  "id": "2112556179744982477",
+  "url": "https://www.upwork.com/jobs/~022112556179744982477?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+}
+

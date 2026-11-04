@@ -1,0 +1,114 @@
+{
+  "applied": false,
+  "bid_stats_basis": {
+    "contract_type": "FIXED",
+    "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+  },
+  "can_apply": true,
+  "client_open_jobs": {
+    "jobs": [
+      {
+        "id": "2112187821283899256",
+        "job_type": "fixed",
+        "title": "Gohighlevel CRM and Marketing Specialist",
+        "url": "https://www.upwork.com/jobs/~022112187821283899256?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt"
+      }
+    ],
+    "note": "A sample, never a count; client_record.open_jobs also counts private jobs and this one.",
+    "selection": "at most 5 of the client's other open jobs visible to freelancers; private jobs are never listed",
+    "shown": 1
+  },
+  "client_record": {
+    "contracts_active": 0,
+    "contracts_total": 0,
+    "feedback_count": 0,
+    "feedback_score": 0,
+    "hire_rate_percent": 0,
+    "hours_total": 0,
+    "jobs_posted": 1,
+    "jobs_with_hires": 0,
+    "open_jobs": 2
+  },
+  "connects_balance": 1798,
+  "connects_cost": 11,
+  "data": {
+    "marketplaceJobPosting": {
+      "activityStat": {
+        "applicationsBidStats": {
+          "avgRateBid": {
+            "currency": "USD",
+            "displayValue": "$296.36",
+            "rawValue": "296.3636363636364"
+          },
+          "maxRateBid": {
+            "currency": "USD",
+            "displayValue": "$300.00",
+            "rawValue": "300.0"
+          },
+          "minRateBid": {
+            "currency": "USD",
+            "displayValue": "$250.00",
+            "rawValue": "250.0"
+          }
+        },
+        "jobActivity": {
+          "invitesSent": 0,
+          "totalHired": 0,
+          "totalInvitedToInterview": 0,
+          "totalOffered": 0
+        }
+      },
+      "classification": {
+        "category": {
+          "id": "531770282580668418",
+          "preferredLabel": "Web, Mobile & Software Dev"
+        },
+        "subCategory": {
+          "id": "531770282589057029",
+          "preferredLabel": "Web & Mobile Design"
+        }
+      },
+      "clientCompanyPublic": {
+        "country": {
+          "name": "Australia"
+        },
+        "id": "1020357339",
+        "state": "",
+        "timezone": "America/New_York"
+      },
+      "content": {
+        "description": "<untrusted_participant_content>\nWe’re looking for a freelancer to design and build a high-converting landing page and sales funnel for our business. The project includes creating a clean, professional page layout, improving user flow, and setting up a smooth conversion process. You’ll also integrate a calendar system so visitors can book appointments directly from the funnel. Please share examples of similar work, your approach to conversion-focused design, and how you would handle the funnel setup and calendar integration.\n</untrusted_participant_content>",
+        "title": "GoHighLevel Landing Page Designer & Funnel Builder Needed | Calendar Integration"
+      },
+      "contractTerms": {
+        "contractType": "FIXED",
+        "experienceLevel": "INTERMEDIATE",
+        "fixedPriceContractTerms": {
+          "amount": {
+            "currency": "USD",
+            "displayValue": "300.0",
+            "rawValue": "300.0"
+          }
+        },
+        "personsToHire": 1
+      },
+      "id": "2112504919683362216",
+      "url": "https://www.upwork.com/jobs/~022112504919683362216?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+      "workFlowState": {
+        "status": "ACTIVE"
+      }
+    }
+  },
+  "plan": "Freelancer Plus",
+  "preferred_qualifications": {
+    "english_proficiency": "Any",
+    "has_portfolio": false,
+    "min_hours_worked": 0,
+    "min_job_success_score": 0,
+    "rising_talent": false
+  },
+  "proposals_tier_unavailable": true,
+  "status": "ok",
+  "trace_id": "9e559cdc927eae6afafcf9eda0af562e",
+  "unanswered_invites_unavailable": true
+}

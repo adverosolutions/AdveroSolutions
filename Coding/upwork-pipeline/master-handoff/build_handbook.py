@@ -29,7 +29,7 @@ NATIVE = {
          'Exact current account/settings and other GHL surfaces remain unverified.'),
  'n8n': ('Desktop sales candidate; bounded editor/node scope',
          'Editor canvas and returned-node output table',
-         'Literal sample requests; no executed API/dynamic-expression proof. Mobile whole-flow entry limited. Full execution chrome/AI subnodes not accepted.'),
+         'Literal sample requests; no executed API/dynamic-expression proof. Mobile whole-flow entry limited. Typed AI Agent/model/tool support and current 2026 references added on 20 October; approval remains exact-generation only.'),
  'zapier': ('Desktop sales candidate; current native evidence incomplete',
             'Visual Zap editor, row test and acknowledgement test',
             'Current full editor/test-panel reference gap. Paths/Next Gen not implemented.'),
@@ -106,6 +106,7 @@ def inline(s):
     s=re.sub(r'\*\*([^*]+)\*\*',r'<strong>\1</strong>',s)
     def link(m):
         target=html.unescape(m.group(2))
+        if target == '../DIRECTIVES.md': target='05-DIRECTIVES.html'
         if not (target.startswith(('https://','http://')) or not re.match(r'^[a-zA-Z][\w+.-]*:',target)):
             return m.group(1)
         if target.endswith('.md') and not target.startswith(('https://','http://')) and '/' not in target:
@@ -182,6 +183,7 @@ def main():
     stage=Path(tempfile.mkdtemp(prefix='.handbook-',dir=str(OUT.parent)))
     try:
         for name in DOCS:shutil.copy2(HERE/name,stage/name)
+        shutil.copy2(PIPELINE/'DIRECTIVES.md',stage/'05-DIRECTIVES.md')
         process=(PIPELINE/'UPWORK_PROCESS.md').read_text()
         locked='# Locked proposal and approved facts\n\nVerbatim snapshot from UPWORK_PROCESS.md, section 6 onward. Current user instructions and applicable factual constraints still apply.\n\n'+process[process.index('## 6. Proposal'):]
         (stage/'04-LOCKED-PROPOSAL-AND-FACTS.md').write_text(locked,encoding='utf-8')
@@ -192,7 +194,7 @@ def main():
             if src.is_symlink():raise SystemExit('Refusing source symlink: '+str(src))
             if not src.is_file() or src.suffix.lower() not in EXTENSIONS or src.name in EXCLUDED_NAMES or src.name.startswith('.env'):continue
             dest=target/rel;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(src,dest)
-        for name in ['UPWORK_PROCESS.md','AGENTS.md','recording-queue','templates/ps-case-studies.md']:
+        for name in ['UPWORK_PROCESS.md','AGENTS.md','DIRECTIVES.md','recording-queue','templates/ps-case-studies.md']:
             dest=stage/'sources/pipeline'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(PIPELINE/name,dest)
         voice=stage/'sources/voice';voice.mkdir(parents=True)
         for key in ('lorenzo-voice','claudeisms'):
@@ -206,9 +208,9 @@ def main():
         if packet['pages']!=checks['pageHashes']:raise SystemExit('Current QA and preview hashes disagree')
         for tool,expected in packet['pages'].items():
             if sha(stage/'previews'/tool/'page.html')!=expected:raise SystemExit('Stale candidate page: '+tool)
-        for name in DOCS[:4]+['04-LOCKED-PROPOSAL-AND-FACTS.md']:
+        for name in DOCS[:4]+['04-LOCKED-PROPOSAL-AND-FACTS.md','05-DIRECTIVES.md']:
             (stage/(Path(name).stem+'.html')).write_text(page(name, '<article>'+render_md((stage/name).read_text())+'</article>'),encoding='utf-8')
-        cards=[('00-MASTER.html','Read the master','Sales purpose, fixed visual identity, native rules, behavior and lessons.'),('01-OPERATIONS.html','Run and deliver','Intake, roles, queue, review, Loom and locked proposal finalization.'),('02-UI-REFERENCE-GUIDE.html','Find the exact UI','29 product plans, saved images, provenance and current readiness boundaries.'),('03-TEST-THE-NEXT-MODEL.html','Test another model','One small invented-job test and a concrete 100-point acceptance rubric.'),('04-LOCKED-PROPOSAL-AND-FACTS.html','Use the exact proposal','Verbatim current locked copy, P.S. facts and approved Lorenzo claims.'),('NEW_MODEL_PROMPT.txt','Start a fresh model','Paste-ready handoff; no reliance on the old chat.')]
+        cards=[('05-DIRECTIVES.html','Read active standing directives','Automatically maintained instructions and dated change history.'),('00-MASTER.html','Read the master','Sales purpose, fixed visual identity, native rules, behavior and lessons.'),('01-OPERATIONS.html','Run and deliver','Intake, roles, queue, review, Loom and locked proposal finalization.'),('02-UI-REFERENCE-GUIDE.html','Find the exact UI','29 product plans, saved images, provenance and current readiness boundaries.'),('03-TEST-THE-NEXT-MODEL.html','Test another model','One small invented-job test and a concrete 100-point acceptance rubric.'),('04-LOCKED-PROPOSAL-AND-FACTS.html','Use the exact proposal','Verbatim current locked copy, P.S. facts and approved Lorenzo claims.'),('NEW_MODEL_PROMPT.txt','Start a fresh model','Paste-ready handoff; no reliance on the old chat.')]
         content='<span class="label">Lorenzo’s reusable handoff</span><h1>Upwork demos, UI and delivery.</h1><p class="intro">The consolidated instructions, saved native references, reusable compiler and four exact reviewed candidate walkthroughs. Read the master once, then give a worker only the relevant job, template and references.</p><div class="notice">Four desktop sales candidates have bounded review. The 29-product library is research coverage; remaining native-reference gaps are documented. This is not blanket production approval.</div><div class="cards">'
         for href,title,desc in cards:content+='<section class="card"><h2><a href="'+href+'">'+title+'</a></h2><p>'+desc+'</p></section>'
         content+='</div><h2>Inspect the saved examples</h2><p>These are illustrative samples, not client deliveries or live account tests. No queue actions are performed by this handbook.</p><div class="gallery">'

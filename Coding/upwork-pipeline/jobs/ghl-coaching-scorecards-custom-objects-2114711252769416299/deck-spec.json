@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-coaching-scorecards-custom-objects-2114711252769416299",
+  "title": "GoHighLevel Systems Architect: Coaching Scorecards, Custom Objects & Automation",
+  "systemName": "Your weekly scorecard system",
+  "account": {
+    "name": "Pursley Business Wealth",
+    "initials": "PB",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114711252769416299",
+    "facts": [
+      "Post: build a weekly business performance and accountability system inside our existing GoHighLevel account.",
+      "Post: preserve every weekly submission as a separate historical record; use custom objects and associations where appropriate.",
+      "Post: weekly submission reminders, follow-up for missing submissions, confirmation and internal notifications, reliable handling of repeat submissions and duplicate triggers.",
+      "Post: coach-facing view, track historical performance and targets, identify missing data and clients who need attention, connect performance gaps to training resources and action plans.",
+      "Post asks for a redacted demo, screenshots or a walkthrough of a comparable project.",
+      "Personalization: business name stated in post. Greg appears in only one freelancer review, so no first name is used (U-006)."
+    ]
+  },
+  "entities": {
+    "client": {
+      "name": "Dr. Dana Ellis",
+      "first": "Dana"
+    },
+    "practice": {
+      "name": "Ellis Family Practice"
+    },
+    "coach": {
+      "name": "Priya Shah",
+      "first": "Priya"
+    },
+    "week": {
+      "id": "Week 44",
+      "range": "Oct 26 to Nov 1",
+      "due": "Friday 5:00 PM",
+      "submitted": "Thursday Oct 29, 3:12 PM"
+    },
+    "nums": {
+      "revenue": "$48,200",
+      "collections": "$39,500",
+      "rate": "82%",
+      "target": "90%"
+    },
+    "training": {
+      "name": "Collections follow-up module"
+    }
+  },
+  "cover": {
+    "eyebrow": "Pursley Business Wealth weekly scorecards",
+    "title": "From weekly numbers",
+    "accent": "to the next coaching call.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Weekly Scorecard custom object",
+      "Reminders for missing weeks",
+      "Coach view with flagged gaps"
+    ],
+    "previewSteps": [
+      {
+        "title": "Remind and follow up",
+        "detail": "Each client gets the week's scorecard link, then a follow-up if it's missing."
+      },
+      {
+        "title": "Keep every week",
+        "detail": "Each submission is saved as its own record, linked to the client and practice."
+      },
+      {
+        "title": "Act on the gaps",
+        "detail": "The coach sees who's behind target and which training to assign."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample · sample clients and figures"
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure the scorecards",
+    "accent": "and what coaches do with them.",
+    "caption": "Start from your current numbers, then track on-time scorecards, coach prep time, and gaps that get an action plan.",
+    "metrics": [
+      {
+        "name": "On-time scorecards",
+        "direction": "up",
+        "aim": "More scorecards in by the deadline",
+        "definition": "Weekly scorecards submitted by the Friday deadline, divided by all active coaching clients expected to submit that week, reported per week and per coach."
+      },
+      {
+        "name": "Coach prep time per client",
+        "direction": "down",
+        "aim": "Less time gathering numbers before calls",
+        "definition": "Minutes a coach spends collecting and checking a client's numbers before a coaching call, measured with a short weekly time log during an agreed observation period."
+      },
+      {
+        "name": "Flagged gaps with an action plan",
+        "direction": "up",
+        "aim": "More gaps turned into a next step",
+        "definition": "Scorecard metrics flagged below target that have a training resource and action plan assigned before the next coaching call, divided by all flagged metrics in the same period."
+      }
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd measure on-time scorecards, coach prep time, and how many flagged gaps get an action plan, all against your current starting point. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "reminders",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Remind {{client.first}}, then follow up if {{week.id}} is missing.",
+      "caption": "The reminder goes out Monday. On Wednesday the workflow checks for this week's scorecard before anyone gets a second message.",
+      "beat": "Every Monday the scorecard week opens and {{client.first}} gets a text with the {{week.id}} link. On Wednesday the workflow checks whether her {{week.id}} scorecard is on file. It isn't, so she gets one follow-up text and her coach, {{coach.first}}, gets an alert. If she had already submitted, she'd get a thank-you and nothing else.",
+      "details": [
+        "{{client.name}} · {{practice.name}} · coach {{coach.name}}",
+        "{{week.id}} · {{week.range}} · due {{week.due}}"
+      ],
+      "content": {
+        "name": "Weekly scorecard reminders",
+        "nodes": [
+          {
+            "id": "week-opens",
+            "type": "contact_tag",
+            "label": "Scorecard week opens",
+            "detail": "Tag scorecard-due added Monday 8:00 AM"
+          },
+          {
+            "id": "link-text",
+            "type": "sms",
+            "label": "Scorecard link texted to {{client.first}}",
+            "detail": "{{week.id}} form, due {{week.due}}"
+          },
+          {
+            "id": "wait-wed",
+            "type": "wait",
+            "label": "Wait until Wednesday 9:00 AM",
+            "detail": "Two days to submit before any follow-up"
+          },
+          {
+            "id": "on-file",
+            "type": "condition",
+            "label": "{{week.id}} scorecard on file?",
+            "detail": "Looks for {{client.first}}'s {{week.id}} Weekly Scorecard record"
+          },
+          {
+            "id": "thanks",
+            "type": "email",
+            "label": "Thank-you email",
+            "detail": "Ends this week's reminders"
+          },
+          {
+            "id": "follow-up",
+            "type": "sms",
+            "label": "Follow-up text to {{client.first}}",
+            "detail": "Same {{week.id}} link, one follow-up only"
+          },
+          {
+            "id": "coach-alert",
+            "type": "notification",
+            "label": "Coach {{coach.first}} alerted",
+            "detail": "{{client.first}} hasn't sent {{week.id}} yet"
+          }
+        ],
+        "edges": [
+          {
+            "from": "week-opens",
+            "to": "link-text"
+          },
+          {
+            "from": "link-text",
+            "to": "wait-wed"
+          },
+          {
+            "from": "wait-wed",
+            "to": "on-file"
+          },
+          {
+            "from": "on-file",
+            "to": "thanks",
+            "label": "Submitted"
+          },
+          {
+            "from": "on-file",
+            "to": "follow-up",
+            "label": "Not yet"
+          },
+          {
+            "from": "follow-up",
+            "to": "coach-alert"
+          }
+        ],
+        "runOrder": [
+          "week-opens",
+          "link-text",
+          "wait-wed",
+          "on-file",
+          "follow-up",
+          "coach-alert"
+        ],
+        "context": {
+          "name": "{{client.name}}",
+          "subtitle": "{{practice.name}} · coach {{coach.name}}",
+          "fields": [
+            {
+              "label": "Program",
+              "value": "1:1 coaching"
+            },
+            {
+              "label": "Week",
+              "value": "{{week.id}} · {{week.range}}"
+            },
+            {
+              "label": "Data",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "{{week.id}} opened",
+            "Reminder text sent",
+            "Waiting until Wednesday",
+            "No {{week.id}} scorecard yet",
+            "Follow-up text sent",
+            "{{coach.first}} notified"
+          ]
+        },
+        "related": [
+          {
+            "title": "One run per client per week",
+            "detail": "The tag is removed when the scorecard arrives, so a second trigger doesn't send a second reminder"
+          },
+          {
+            "title": "Weekly Scorecards",
+            "detail": "Custom object holding one record per client per week"
+          }
+        ]
+      },
+      "statuses": [
+        "Monday: {{week.id}} opens for {{client.first}}",
+        "Scorecard link texted",
+        "Waiting until Wednesday morning",
+        "Checking for the {{week.id}} scorecard",
+        "Not on file, so one follow-up text goes out",
+        "{{coach.first}} gets an alert to check in"
+      ],
+      "optional": false
+    },
+    {
+      "id": "scorecard-record",
+      "kind": "record",
+      "platform": "ghl",
+      "title": "Every week is saved as its own scorecard.",
+      "caption": "{{client.first}}'s {{week.id}} form creates a new Weekly Scorecard record, linked to her contact and her practice. Weeks 41 to 43 stay as they were.",
+      "beat": "{{client.first}} submits on Thursday afternoon. That creates a new record in the Weekly Scorecards custom object, linked to her contact and to {{practice.name}}. Here are her numbers for the week: revenue, collections, leads, appointments and the rest. Her last three weeks are still there as separate records, so nothing gets overwritten.",
+      "details": [
+        "Submitted {{week.submitted}}, after the follow-up text",
+        "Linked to {{client.name}} and {{practice.name}}"
+      ],
+      "content": {
+        "name": "{{week.id}} scorecard · {{client.name}}",
+        "subtitle": "Weekly Scorecards custom object · {{week.range}}",
+        "sourceTitle": "Linked records",
+        "sourceFields": [
+          {
+            "label": "Client contact",
+            "value": "{{client.name}}"
+          },
+          {
+            "label": "Practice",
+            "value": "{{practice.name}}"
+          },
+          {
+            "label": "Coach",
+            "value": "{{coach.name}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Revenue · collections",
+            "value": "{{nums.revenue}} · {{nums.collections}}"
+          },
+          {
+            "label": "Leads · appointments · new patients",
+            "value": "37 · 24 · 15"
+          },
+          {
+            "label": "Marketing spend · payroll",
+            "value": "$3,100 · $14,800"
+          },
+          {
+            "label": "Biggest challenge",
+            "value": "Insurance claims are slow to collect"
+          },
+          {
+            "label": "Commitment for next week",
+            "value": "Call back every claim older than 30 days"
+          }
+        ],
+        "events": [
+          {
+            "title": "Week 41 scorecard",
+            "detail": "Separate record · submitted Oct 9"
+          },
+          {
+            "title": "Week 42 scorecard",
+            "detail": "Separate record · submitted Oct 16"
+          },
+          {
+            "title": "Week 43 scorecard",
+            "detail": "Separate record · submitted Oct 23"
+          },
+          {
+            "title": "{{week.id}} scorecard",
+            "detail": "New record · submitted {{week.submitted}}"
+          }
+        ],
+        "notice": "Each form submission creates a new Weekly Scorecard record, so earlier weeks are never overwritten."
+      },
+      "statuses": [
+        "{{week.id}} form submitted",
+        "Saved as a new Weekly Scorecard record",
+        "Linked to {{client.first}} and {{practice.name}}"
+      ],
+      "optional": false
+    },
+    {
+      "id": "coach-view",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "{{coach.first}} sees who needs attention this week.",
+      "caption": "{{client.first}}'s collections are under target for the third week running, so the coach view flags it and suggests the matching training.",
+      "beat": "This is {{coach.first}}'s view for {{week.id}}. Seven of nine clients have submitted, and the two who haven't already got a follow-up. {{client.first}}'s collections came in at {{nums.rate}} of revenue against a {{nums.target}} target, down from 91% in Week 41. So it's flagged, and the {{training.name}} is attached to her action plan before their next call.",
+      "details": [
+        "Collections {{nums.collections}} of {{nums.revenue}} revenue = {{nums.rate}}",
+        "Action plan: {{training.name}}"
+      ],
+      "content": {
+        "name": "{{coach.name}}",
+        "subtitle": "Coach view · 1:1 clients · {{week.id}} · {{week.range}}",
+        "fields": [
+          {
+            "label": "Submitted",
+            "value": "7 of 9 clients"
+          },
+          {
+            "label": "Still missing",
+            "value": "2 clients, follow-up sent"
+          },
+          {
+            "label": "Flagged",
+            "value": "{{client.name}} · collections under target"
+          }
+        ],
+        "stages": [
+          "Scorecard in",
+          "Checked against targets",
+          "Gap flagged",
+          "Training assigned"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "{{client.first}}'s collections rate",
+            "value": "{{nums.rate}}",
+            "note": "Target {{nums.target}} · 91% in Week 41"
+          },
+          {
+            "label": "Weeks on file",
+            "value": "4",
+            "note": "Weeks 41 to 44, each its own record"
+          },
+          {
+            "label": "Missing this week",
+            "value": "2",
+            "note": "Follow-up text already sent"
+          }
+        ],
+        "note": "Action plan for {{client.first}}: {{training.name}} from the training library, to review before the Week 45 call."
+      },
+      "statuses": [
+        "{{client.first}}'s {{week.id}} scorecard is in",
+        "Compared with her targets",
+        "Collections flagged under target",
+        "{{training.name}} added to her action plan"
+      ],
+      "optional": false
+    }
+  ]
+}

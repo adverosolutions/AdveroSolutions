@@ -1,0 +1,449 @@
+{
+  "schemaVersion": 1,
+  "id": "insurance-inspection-audit-ai-agents-2112945435312121954",
+  "title": "Insurance Operations Automation - Agent AI Developer",
+  "systemName": "Your inspection and premium audit agents",
+  "account": {
+    "name": "Your operations team",
+    "initials": "OT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112945435312121954",
+    "facts": [
+      "Post: AI agents that receive, interpret, process and execute operational transactions, with human intervention for exceptions and underwriting authority.",
+      "Focus 1: inspection ordering (identify by business rules, submit to vendors, track, retrieve reports, update systems, escalate exceptions).",
+      "Focus 2: premium audit ordering (identify, timelines, initiate with vendors, track outstanding requirements, reminders, follow-up, routine exceptions).",
+      "Success measures: less manual processing, higher straight-through processing, better accuracy and turnaround, visibility into activity and exceptions.",
+      "No client name, company or stack named; sample data invented."
+    ]
+  },
+  "entities": {
+    "insured": {
+      "name": "Harbor Point Millwork LLC",
+      "contact": "Dana Ruiz",
+      "email": "dana.ruiz@example.com",
+      "address": "1450 Sample Mill Rd"
+    },
+    "policy": {
+      "number": "CPP-204817",
+      "gl": "GL-204818"
+    },
+    "inspection": {
+      "order": "INS-55031",
+      "due": "Nov 4",
+      "received": "Oct 27"
+    },
+    "vendor": {
+      "inspection": "Sample Inspection Co.",
+      "audit": "Sample Audit Co."
+    },
+    "underwriter": {
+      "name": "Priya Natarajan",
+      "first": "Priya"
+    },
+    "audit": {
+      "order": "PA-11942",
+      "expiration": "Dec 1",
+      "reminder": "Dec 8",
+      "followup": "Dec 15"
+    }
+  },
+  "cover": {
+    "eyebrow": "Insurance operations agents",
+    "title": "Inspection and premium audit orders,",
+    "accent": "handled from start to finish.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Inspection ordering",
+      "Premium audit ordering",
+      "Underwriter exceptions"
+    ],
+    "previewSteps": [
+      {
+        "title": "Order the inspection",
+        "detail": "Your rules flag the policy and the agent places, tracks and reads the order."
+      },
+      {
+        "title": "Stop for the underwriter",
+        "detail": "Anything that needs underwriting authority goes to a person with the reason."
+      },
+      {
+        "title": "Order the premium audit",
+        "detail": "The same insured's audit is ordered on time, with reminders and follow-up."
+      }
+    ],
+    "footer": "Illustrative sample · your systems and vendors are connected during setup",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "inspection-agent",
+      "kind": "architecture",
+      "platform": "workbench",
+      "optional": false,
+      "title": "The inspection agent runs one order from start to finish.",
+      "caption": "It finds the policy, places the order, reads the report and stops for the underwriter only when a decision needs her authority.",
+      "beat": "Here's a sample insured, Harbor Point Millwork. Your inspection rules flag their property policy, the agent sends the order to the vendor, tracks it, and reads the report when it comes back. The report recommends a roof repair, so the agent holds the file and sends it to Priya, the underwriter. Once she decides, it updates the policy file.",
+      "details": [
+        "Your business rules decide which policies need inspections; the AI reads reports and drafts notes.",
+        "Clean reports skip the underwriter and go straight to the policy file.",
+        "Click Show result to light up the whole path."
+      ],
+      "content": {
+        "name": "Inspection ordering agent",
+        "subtitle": "One commercial property inspection, start to finish",
+        "nodes": [
+          {
+            "id": "flag",
+            "label": "Flag the policy by your rules",
+            "detail": "{{policy.number}} is a new commercial property policy that meets your inspection rule."
+          },
+          {
+            "id": "order",
+            "label": "Send the order to the vendor",
+            "detail": "Order {{inspection.order}} goes to {{vendor.inspection}}, due {{inspection.due}}."
+          },
+          {
+            "id": "track",
+            "label": "Track it and pull the report",
+            "detail": "Status is checked daily. The report arrives {{inspection.received}}."
+          },
+          {
+            "id": "read",
+            "label": "Read the report",
+            "detail": "The agent pulls the findings from the PDF. One recommendation: replace a damaged roof section."
+          },
+          {
+            "id": "underwriter",
+            "label": "Ask the underwriter to decide",
+            "detail": "{{underwriter.name}} gets the finding, the page it came from and her options."
+          },
+          {
+            "id": "file",
+            "label": "Update the policy file",
+            "detail": "Report, decision and every step are saved to {{policy.number}} with a time stamp."
+          }
+        ],
+        "edges": [
+          {
+            "from": "flag",
+            "to": "order"
+          },
+          {
+            "from": "order",
+            "to": "track"
+          },
+          {
+            "from": "track",
+            "to": "read"
+          },
+          {
+            "from": "read",
+            "to": "underwriter",
+            "label": "Needs a decision"
+          },
+          {
+            "from": "read",
+            "to": "file",
+            "label": "No issues found"
+          },
+          {
+            "from": "underwriter",
+            "to": "file",
+            "label": "Decision recorded"
+          }
+        ],
+        "runOrder": [
+          "flag",
+          "order",
+          "track",
+          "read",
+          "underwriter",
+          "file"
+        ],
+        "context": {
+          "name": "{{insured.name}}",
+          "subtitle": "Policy {{policy.number}} · Commercial property",
+          "fields": [
+            {
+              "label": "Inspection vendor",
+              "value": "{{vendor.inspection}}"
+            },
+            {
+              "label": "Underwriter",
+              "value": "{{underwriter.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Policy flagged for inspection",
+            "Order {{inspection.order}} sent",
+            "Report received {{inspection.received}}",
+            "Roof recommendation found",
+            "Waiting on {{underwriter.first}}",
+            "Policy file updated"
+          ]
+        },
+        "related": [
+          {
+            "title": "Activity log",
+            "detail": "Each step is saved with the time, the source document and who decided."
+          },
+          {
+            "title": "Fixed rules, AI reading",
+            "detail": "Which policies get inspected is your rule. The AI only reads reports and writes notes."
+          }
+        ]
+      },
+      "statuses": [
+        "Policy flagged for inspection",
+        "Order sent to the vendor",
+        "Report received",
+        "Roof recommendation found",
+        "Sent to the underwriter",
+        "Policy file updated"
+      ]
+    },
+    {
+      "id": "inspection-thread",
+      "kind": "messages",
+      "platform": "workbench",
+      "optional": false,
+      "title": "The vendor gets a clean order, and Priya gets a clear decision.",
+      "caption": "Every email and note for this one inspection, in the order they happened.",
+      "beat": "This is what the people on each end see. The vendor gets a complete order. When the report comes back, the agent tells Priya what it found, where it is in the report, and her two options. She picks one, and that's the only step a person had to touch.",
+      "details": [
+        "Order {{inspection.order}} · {{vendor.inspection}}",
+        "Underwriter decision: recommendation letter, 60-day response"
+      ],
+      "content": {
+        "name": "Inspection {{inspection.order}}",
+        "subtitle": "{{insured.name}} · {{policy.number}}",
+        "fields": [
+          {
+            "label": "Vendor",
+            "value": "{{vendor.inspection}}"
+          },
+          {
+            "label": "Underwriter",
+            "value": "{{underwriter.name}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Operations agent",
+            "time": "Oct 21, 9:02 am",
+            "subject": "Inspection order {{inspection.order}}",
+            "body": "Please schedule a commercial property inspection for {{insured.name}}, policy {{policy.number}}, at {{insured.address}}. Site contact: {{insured.contact}}, {{insured.email}}. Needed by {{inspection.due}}."
+          },
+          {
+            "channel": "email",
+            "direction": "incoming",
+            "sender": "{{vendor.inspection}}",
+            "time": "Oct 27, 3:40 pm",
+            "subject": "Report ready: {{inspection.order}}",
+            "body": "The inspection is complete and the report is attached. One recommendation: replace the damaged roof section over the finishing shop."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Operations agent",
+            "time": "Oct 27, 3:46 pm",
+            "body": "{{underwriter.first}}, the report for {{policy.number}} recommends replacing the roof section over the finishing shop (page 4). That needs your decision, so the file is on hold. Options: send the insured a recommendation letter, or refer it for further review."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "{{underwriter.name}}",
+            "time": "Oct 28, 8:15 am",
+            "body": "Send the recommendation letter with a 60-day response date."
+          }
+        ],
+        "notice": "Sample thread. Nothing is sent from this demo; the agent's messages are shown as drafts it would send."
+      },
+      "statuses": [
+        "Order sent to the vendor",
+        "Report comes back",
+        "Agent asks the underwriter",
+        "Underwriter decides"
+      ]
+    },
+    {
+      "id": "premium-audit",
+      "kind": "record",
+      "platform": "workbench",
+      "optional": false,
+      "title": "The same insured's premium audit gets ordered on time.",
+      "caption": "Their general liability policy expires {{audit.expiration}}, so the audit agent orders the audit and sets the reminders.",
+      "beat": "Here's the second area from your post. Harbor Point's general liability policy expires December 1, so the audit agent orders the audit from your vendor, asks the insured for payroll and sales records, and follows up if they're still missing. A person only steps in if the follow-up doesn't work.",
+      "details": [
+        "Audit {{audit.order}} · {{vendor.audit}}",
+        "Reminder {{audit.reminder}} · follow-up {{audit.followup}} if records are missing"
+      ],
+      "content": {
+        "name": "Premium audit {{audit.order}}",
+        "subtitle": "{{insured.name}} · {{policy.gl}}",
+        "sourceTitle": "Why this policy needs an audit",
+        "sourceFields": [
+          {
+            "label": "Policy",
+            "value": "{{policy.gl}} · General liability"
+          },
+          {
+            "label": "Expires",
+            "value": "{{audit.expiration}}"
+          },
+          {
+            "label": "Rule",
+            "value": "Auditable policy at expiration"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Audit vendor",
+            "value": "{{vendor.audit}}"
+          },
+          {
+            "label": "Records requested",
+            "value": "Payroll and sales records"
+          },
+          {
+            "label": "Insured contact",
+            "value": "{{insured.contact}}"
+          },
+          {
+            "label": "Status",
+            "value": "Ordered, waiting on records"
+          }
+        ],
+        "events": [
+          {
+            "title": "Order sent to {{vendor.audit}}",
+            "detail": "Placed on the date your timeline rule sets"
+          },
+          {
+            "title": "Records request sent to {{insured.contact}}",
+            "detail": "Lists exactly which records the auditor needs"
+          },
+          {
+            "title": "Reminder set for {{audit.reminder}}",
+            "detail": "Sent only if the records haven't arrived"
+          },
+          {
+            "title": "Follow-up on {{audit.followup}}",
+            "detail": "Still missing? It goes to your audit team with the history"
+          }
+        ],
+        "notice": "Sample order. Dates and records are illustrative."
+      },
+      "statuses": [
+        "Audit ordered",
+        "Records requested from the insured",
+        "Reminder set",
+        "Follow-up scheduled"
+      ]
+    },
+    {
+      "id": "activity",
+      "kind": "outcome",
+      "platform": "workbench",
+      "optional": false,
+      "title": "See every order, exception and result in one place.",
+      "caption": "Illustrative: Harbor Point's inspection is filed with Priya's decision, and the premium audit is on track.",
+      "beat": "This is the view your operations team would check. The inspection is filed with Priya's decision, the audit is ordered and waiting on records, and the one exception shows who handled it. These counts are from this sample only.",
+      "details": [
+        "Illustrative counts from one sample insured",
+        "Inspection filed · audit waiting on records · one exception decided"
+      ],
+      "content": {
+        "name": "{{insured.name}}",
+        "subtitle": "Agent activity for this insured",
+        "fields": [
+          {
+            "label": "Inspection",
+            "value": "{{inspection.order}} · filed"
+          },
+          {
+            "label": "Premium audit",
+            "value": "{{audit.order}} · waiting on records"
+          },
+          {
+            "label": "Exception",
+            "value": "Roof recommendation · decided by {{underwriter.first}}"
+          }
+        ],
+        "stages": [
+          "Policy flagged",
+          "Order sent",
+          "Report received",
+          "Underwriter decided",
+          "Policy file updated"
+        ],
+        "stageSequence": [
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Orders placed",
+            "value": "2",
+            "note": "Illustrative: one inspection, one premium audit"
+          },
+          {
+            "label": "Steps done by the agents",
+            "value": "9",
+            "note": "Illustrative, from this sample"
+          },
+          {
+            "label": "Sent to a person",
+            "value": "1",
+            "note": "The roof recommendation"
+          }
+        ],
+        "note": "Counts are illustrative, from one sample insured. This is a demonstration, not a live system."
+      },
+      "statuses": [
+        "Report received",
+        "Underwriter decided",
+        "Policy file updated · audit on track"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure how many orders finish",
+    "accent": "without anyone touching them.",
+    "caption": "Set the starting point together, then track straight-through orders, turnaround and accuracy.",
+    "metrics": [
+      {
+        "name": "Straight-through processing rate",
+        "direction": "up",
+        "aim": "Finish more orders with no manual step",
+        "definition": "Inspection and premium audit orders completed from flag to filed result with no manual step, divided by all orders started in the same period."
+      },
+      {
+        "name": "Order turnaround time",
+        "direction": "down",
+        "aim": "Get results on file sooner",
+        "definition": "Median days from a policy being flagged to the completed report or audit being saved to the policy file, reported separately for inspections and premium audits."
+      },
+      {
+        "name": "Transaction accuracy",
+        "direction": "up",
+        "aim": "Get more orders right the first time",
+        "definition": "Orders with no correction to vendor, policy, dates or extracted findings after a person's review, divided by all orders reviewed in the same period."
+      }
+    ],
+    "baselineNote": "We'll measure where things stand today and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd track straight-through orders, turnaround time and accuracy against the starting point we agree on. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "id": "personalized-news-intelligence-2112556179744982477",
+  "title": "Personalized news intelligence and decision support",
+  "systemName": "Your intelligence workbench",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112556179744982477",
+    "facts": [
+      "Post leaves technology stack and delivery interface open.",
+      "No verified client first name or relevant past-project example supplied.",
+      "All developments and source excerpts are fictional illustrative fixtures. No external source links are presented.",
+      "Custom intelligence workflow and briefing; no vendor stack is specified by the post."
+    ]
+  },
+  "entities": {
+    "report": {
+      "id": "INT-014",
+      "time": "07:00",
+      "owner": "your team"
+    },
+    "story": {
+      "id": "DEV-01",
+      "title": "Sample supplier sunsets its old export API"
+    }
+  },
+  "cover": {
+    "eyebrow": "Personalized intelligence",
+    "title": "Know what deserves",
+    "accent": "your attention.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Your priorities",
+      "Ranked briefing",
+      "Evidence and review"
+    ],
+    "previewSteps": [
+      {
+        "title": "Collect",
+        "detail": "Read sources against your priorities."
+      },
+      {
+        "title": "Analyze",
+        "detail": "Group repeats and explain relevance."
+      },
+      {
+        "title": "Decide",
+        "detail": "Review the evidence and next step."
+      }
+    ],
+    "footer": "Illustrative sample \u00b7 fictional sources, developments and counts.",
+    "beat": "Your post calls for more than article summaries. I would start with the decisions you want to support, then rank the developments against those priorities."
+  },
+  "scenes": [
+    {
+      "id": "architecture",
+      "kind": "intelligence",
+      "platform": "workbench",
+      "title": "From your priorities to a briefing",
+      "caption": "Follow the sources through collection, analysis and human review.",
+      "beat": "You choose the topics and sources. The daily run collects four items and groups the repeated API notice, leaving three developments. It ranks them against your objective and keeps the failed feed visible. The briefing keeps the evidence attached so you can review the proposed next step.",
+      "details": [
+        "Sources, topic priorities and reporting frequency belong in configuration.",
+        "Grouping checks canonical URLs, content fingerprints and event meaning. A repost is not independent evidence.",
+        "Each archived briefing retains source excerpts, ranking reasons and missing-source status."
+      ],
+      "optional": false,
+      "content": {
+        "surface": "workflow",
+        "name": "Intelligence studio",
+        "reportId": "INT-014",
+        "edition": "Daily edition \u00b7 07:00",
+        "schedule": "Daily at 07:00 \u00b7 configurable",
+        "objective": "Protect business data access",
+        "summary": "Check export API exposure first. Investigate the data-service pilot. Keep the unverified competitor claim on watch.",
+        "topics": [
+          {
+            "id": "api",
+            "label": "API continuity",
+            "priority": "high"
+          },
+          {
+            "id": "data",
+            "label": "Data services",
+            "priority": "medium"
+          },
+          {
+            "id": "competitor",
+            "label": "Competitor signals",
+            "priority": "low"
+          }
+        ],
+        "stories": [
+          {
+            "id": "DEV-01",
+            "title": "Supplier retires its old export API",
+            "category": "risk",
+            "topicId": "api",
+            "priority": "High priority",
+            "summary": "The primary notice gives a 60-day window. Your actual dependency is still unknown.",
+            "why": "Data continuity is your highest priority. A dependent export could stop working after retirement.",
+            "action": "Inventory export jobs for v1 dependencies.",
+            "urgency": "Check this week",
+            "confidence": "Notice: high \u00b7 business impact: provisional",
+            "uncertainty": "Confirm current API usage, the supplier deadline and replacement compatibility before planning a migration.",
+            "evidence": [
+              {
+                "id": "A",
+                "title": "Primary supplier notice",
+                "kind": "primary",
+                "excerpt": "Export API v1 will retire in 60 days."
+              },
+              {
+                "id": "B",
+                "title": "Repeated supplier notice",
+                "kind": "repost",
+                "excerpt": "The supplier says v1 retires in 60 days. This repost refers back to source A."
+              }
+            ]
+          },
+          {
+            "id": "DEV-02",
+            "title": "A data-service pilot opens for testing",
+            "category": "opportunity",
+            "topicId": "data",
+            "priority": "Medium priority",
+            "summary": "A limited pilot may fit a current research task. The benefit has not been tested.",
+            "why": "The pilot could improve one existing research task if its coverage matches your needs.",
+            "action": "Compare pilot coverage with one research task.",
+            "urgency": "Investigate next",
+            "confidence": "Announcement: supported \u00b7 benefit: untested",
+            "uncertainty": "Check eligibility, coverage quality and terms before investing time in a trial.",
+            "evidence": [
+              {
+                "id": "C",
+                "title": "Limited pilot announcement",
+                "kind": "primary",
+                "excerpt": "Applications are open for a limited data-service pilot."
+              }
+            ]
+          },
+          {
+            "id": "DEV-03",
+            "title": "A competitor claim needs a primary source",
+            "category": "watch",
+            "topicId": "competitor",
+            "priority": "Low priority",
+            "summary": "One market anecdote offers no confirmed launch details. Keep it below the verified updates.",
+            "why": "A verified competitor launch could affect your plans. This anecdote does not yet establish a launch.",
+            "action": "Find a primary announcement before changing plans.",
+            "urgency": "Monitor only",
+            "confidence": "Unverified \u00b7 no independent support",
+            "uncertainty": "The claim may be incomplete or incorrect. Seek an official announcement and product details.",
+            "evidence": [
+              {
+                "id": "D",
+                "title": "Unverified market anecdote",
+                "kind": "unverified",
+                "excerpt": "A market comment claims a competitor may be preparing a launch. No announcement is cited."
+              }
+            ]
+          }
+        ],
+        "health": {
+          "fetched": 4,
+          "developments": 3,
+          "failedSource": "Feed F",
+          "failure": "Collection timed out at 07:00. No items from this source are included in INT-014.",
+          "retry": "Retry scheduled for 07:15; alert your team if it fails again."
+        },
+        "history": [
+          {
+            "id": "INT-014 \u00b7 v1",
+            "time": "Today \u00b7 07:02",
+            "status": "Saved with partial coverage, source excerpts and ranking reasons."
+          },
+          {
+            "id": "INT-013 \u00b7 v1",
+            "time": "Previous edition",
+            "status": "Archived briefing and original priority profile retained."
+          }
+        ]
+      },
+      "statuses": [
+        "Four items collected; one source unavailable",
+        "Repeated notice grouped; three developments ranked",
+        "Briefing prepared for human review"
+      ]
+    },
+    {
+      "id": "briefing",
+      "kind": "intelligence",
+      "platform": "workbench",
+      "title": "Here's what needs your attention.",
+      "caption": "See the ranked priorities, check the evidence and review the next step.",
+      "beat": "The API notice comes first because data continuity is your top priority. Its two sources describe one event. The pilot is worth investigating, while the unconfirmed competitor claim stays on watch. Open the evidence to see what is known, what still needs checking, and approve a next step. The coverage warning also shows the failed source.",
+      "details": [
+        "Click View evidence on the first item to inspect the source excerpts and review the recommendation.",
+        "Approve next step, request more evidence or mark relevance. These controls change only the local sample.",
+        "Click Feed F unavailable or Report history to inspect missing coverage and saved report versions. Edit proposes topic weights for review."
+      ],
+      "optional": false,
+      "content": {
+        "surface": "briefing",
+        "name": "Intelligence studio",
+        "reportId": "INT-014",
+        "edition": "Daily edition \u00b7 07:00",
+        "schedule": "Daily at 07:00 \u00b7 configurable",
+        "objective": "Protect business data access",
+        "summary": "Check export API exposure first. Investigate the data-service pilot. Keep the unverified competitor claim on watch.",
+        "topics": [
+          {
+            "id": "api",
+            "label": "API continuity",
+            "priority": "high"
+          },
+          {
+            "id": "data",
+            "label": "Data services",
+            "priority": "medium"
+          },
+          {
+            "id": "competitor",
+            "label": "Competitor signals",
+            "priority": "low"
+          }
+        ],
+        "stories": [
+          {
+            "id": "DEV-01",
+            "title": "Supplier retires its old export API",
+            "category": "risk",
+            "topicId": "api",
+            "priority": "High priority",
+            "summary": "The primary notice gives a 60-day window. Your actual dependency is still unknown.",
+            "why": "Data continuity is your highest priority. A dependent export could stop working after retirement.",
+            "action": "Inventory export jobs for v1 dependencies.",
+            "urgency": "Check this week",
+            "confidence": "Notice: high \u00b7 business impact: provisional",
+            "uncertainty": "Confirm current API usage, the supplier deadline and replacement compatibility before planning a migration.",
+            "evidence": [
+              {
+                "id": "A",
+                "title": "Primary supplier notice",
+                "kind": "primary",
+                "excerpt": "Export API v1 will retire in 60 days."
+              },
+              {
+                "id": "B",
+                "title": "Repeated supplier notice",
+                "kind": "repost",
+                "excerpt": "The supplier says v1 retires in 60 days. This repost refers back to source A."
+              }
+            ]
+          },
+          {
+            "id": "DEV-02",
+            "title": "A data-service pilot opens for testing",
+            "category": "opportunity",
+            "topicId": "data",
+            "priority": "Medium priority",
+            "summary": "A limited pilot may fit a current research task. The benefit has not been tested.",
+            "why": "The pilot could improve one existing research task if its coverage matches your needs.",
+            "action": "Compare pilot coverage with one research task.",
+            "urgency": "Investigate next",
+            "confidence": "Announcement: supported \u00b7 benefit: untested",
+            "uncertainty": "Check eligibility, coverage quality and terms before investing time in a trial.",
+            "evidence": [
+              {
+                "id": "C",
+                "title": "Limited pilot announcement",
+                "kind": "primary",
+                "excerpt": "Applications are open for a limited data-service pilot."
+              }
+            ]
+          },
+          {
+            "id": "DEV-03",
+            "title": "A competitor claim needs a primary source",
+            "category": "watch",
+            "topicId": "competitor",
+            "priority": "Low priority",
+            "summary": "One market anecdote offers no confirmed launch details. Keep it below the verified updates.",
+            "why": "A verified competitor launch could affect your plans. This anecdote does not yet establish a launch.",
+            "action": "Find a primary announcement before changing plans.",
+            "urgency": "Monitor only",
+            "confidence": "Unverified \u00b7 no independent support",
+            "uncertainty": "The claim may be incomplete or incorrect. Seek an official announcement and product details.",
+            "evidence": [
+              {
+                "id": "D",
+                "title": "Unverified market anecdote",
+                "kind": "unverified",
+                "excerpt": "A market comment claims a competitor may be preparing a launch. No announcement is cited."
+              }
+            ]
+          }
+        ],
+        "health": {
+          "fetched": 4,
+          "developments": 3,
+          "failedSource": "Feed F",
+          "failure": "Collection timed out at 07:00. No items from this source are included in INT-014.",
+          "retry": "Retry scheduled for 07:15; alert your team if it fails again."
+        },
+        "history": [
+          {
+            "id": "INT-014 \u00b7 v1",
+            "time": "Today \u00b7 07:02",
+            "status": "Saved with partial coverage, source excerpts and ranking reasons."
+          },
+          {
+            "id": "INT-013 \u00b7 v1",
+            "time": "Previous edition",
+            "status": "Archived briefing and original priority profile retained."
+          }
+        ]
+      },
+      "statuses": [
+        "Three developments ranked against your priorities",
+        "Source facts distinguished from business implications",
+        "Recommendations remain open to your review"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "Measure the pilot",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "We\u2019ll test the briefing with your topics and compare it with how you review information today.",
+    "metrics": [
+      {
+        "name": "Manual review time",
+        "direction": "down",
+        "aim": "Spend less time searching and comparing",
+        "definition": "Minutes your team spends finding, reading and comparing information for each briefing, measured before and during the pilot."
+      },
+      {
+        "name": "Useful updates",
+        "direction": "up",
+        "aim": "Show more updates that matter to you",
+        "definition": "Share of top-ranked developments that your team labels relevant to an agreed objective. Keep a labeled holdout set to check changes."
+      },
+      {
+        "name": "Recommendations with evidence",
+        "direction": "up",
+        "aim": "Keep the supporting sources attached",
+        "definition": "Share of recommendations whose material claims have accessible source evidence, stated uncertainty and a human review disposition."
+      }
+    ],
+    "baselineNote": "We\u2019ll measure the current process first, then compare results after launch.",
+    "ctaTitle": "Reply here for a 15-minute call",
+    "ctaCopy": "Send me a message on Upwork. We'll book a 15-minute call to choose the first topics and sources to include.",
+    "beat": "Send me a message on Upwork and we'll book a 15-minute call to choose the first topics and sources to include."
+  }
+}

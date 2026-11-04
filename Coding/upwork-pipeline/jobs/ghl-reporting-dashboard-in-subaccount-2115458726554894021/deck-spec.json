@@ -1,0 +1,439 @@
+{
+ "schemaVersion": 1,
+ "id": "ghl-reporting-dashboard-in-subaccount-2115458726554894021",
+ "title": "GoHighLevel Reporting Specialist",
+ "systemName": "Your in-account reporting dashboard",
+ "account": {
+  "name": "Your team",
+  "initials": "YT",
+  "operatorInitials": "LV"
+ },
+ "source": {
+  "jobUrl": "https://www.upwork.com/jobs/~022115458726554894021",
+  "facts": [
+   "Post: dashboard must be built into, or embedded and viewable within, each client's own GoHighLevel sub-account; no separate website or login; a link to a separate platform does not qualify.",
+   "Post: one table with one row per email campaign: name, send date, recipients, delivered, open rate, click rate, unsubscribes where available.",
+   "Post: reporting for email marketing, paid Meta ads, organic posting, Google Analytics and sales pipelines; Meta reports mirror GHL's Meta Ads report layout (screenshots to come).",
+   "Post: replicable by their team across sub-accounts without code, documented setup, automatic updates, client data separation, date filters, validation against source reports.",
+   "No client name evidenced in two reviews (Darren appears in one review only), so no personalization."
+  ]
+ },
+ "entities": {
+  "client": {
+   "name": "Larkfield Physio",
+   "short": "Larkfield"
+  },
+  "client2": {
+   "name": "Northgate Fitness Studio"
+  },
+  "team": {
+   "member": "Priya"
+  },
+  "period": {
+   "label": "1 to 28 Oct 2026",
+   "compare": "1 to 28 Sep 2026"
+  },
+  "refresh": {
+   "time": "06:00 UK time"
+  }
+ },
+ "cover": {
+  "eyebrow": "Your GoHighLevel reporting dashboard",
+  "title": "Every client's marketing report,",
+  "accent": "inside their own sub-account.",
+  "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "anchors": [
+   "Opens inside GoHighLevel",
+   "One row per email campaign",
+   "Your team sets up the next client"
+  ],
+  "previewSteps": [
+   {
+    "title": "Refresh every morning",
+    "detail": "Email, Meta Ads, organic, Google Analytics and pipeline data."
+   },
+   {
+    "title": "Email campaign table",
+    "detail": "Every campaign's results on one row."
+   },
+   {
+    "title": "Marketing summary",
+    "detail": "Ads, organic, website and pipeline in one view."
+   },
+   {
+    "title": "Set up the next client",
+    "detail": "Snapshot plus a written guide, no code."
+   }
+  ],
+  "footer": "Illustrative sample · sample client and numbers",
+  "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+ },
+ "scenes": [
+  {
+   "id": "morning-refresh",
+   "kind": "architecture",
+   "platform": "workbench",
+   "title": "Fresh numbers in every sub-account each morning.",
+   "caption": "Shown with a sample client, Larkfield Physio. One sync collects each client's data and files it under their own sub-account.",
+   "beat": "Here's what runs behind the scenes, shown with a sample client, Larkfield Physio. Every morning it pulls the email and pipeline numbers from GoHighLevel, then Meta Ads, organic posts and Google Analytics. Everything is filed under that client's sub-account, so Larkfield only ever sees Larkfield's numbers.",
+   "details": [
+    "0:10 to 0:35. Custom workflow plan; the processing can run outside GoHighLevel, the viewing happens inside it.",
+    "Sample client: {{client.name}}, refreshed at {{refresh.time}}."
+   ],
+   "optional": false,
+   "content": {
+    "name": "Morning reporting sync",
+    "subtitle": "Custom workflow plan",
+    "nodes": [
+     {
+      "id": "refresh",
+      "label": "Morning refresh",
+      "detail": "Starts at {{refresh.time}} for every connected sub-account."
+     },
+     {
+      "id": "ghl-data",
+      "label": "Pull GoHighLevel data",
+      "detail": "Email campaign results and pipeline opportunities for {{client.name}}."
+     },
+     {
+      "id": "channels",
+      "label": "Pull Meta Ads, organic and Google Analytics",
+      "detail": "The ad account, social pages and analytics property linked during setup."
+     },
+     {
+      "id": "file",
+      "label": "File it under the sub-account",
+      "detail": "Each client's numbers are stored apart from every other client."
+     },
+     {
+      "id": "reports",
+      "label": "Show it on the Reports page",
+      "detail": "Opens from the menu inside {{client.name}}'s sub-account."
+     }
+    ],
+    "edges": [
+     {
+      "from": "refresh",
+      "to": "ghl-data"
+     },
+     {
+      "from": "ghl-data",
+      "to": "channels"
+     },
+     {
+      "from": "channels",
+      "to": "file"
+     },
+     {
+      "from": "file",
+      "to": "reports"
+     }
+    ],
+    "runOrder": [
+     "refresh",
+     "ghl-data",
+     "channels",
+     "file",
+     "reports"
+    ],
+    "context": {
+     "name": "{{client.name}}",
+     "subtitle": "Illustrative sample",
+     "fields": [
+      {
+       "label": "Sub-account",
+       "value": "{{client.name}}"
+      },
+      {
+       "label": "Refresh",
+       "value": "Daily at {{refresh.time}}"
+      }
+     ],
+     "states": [
+      "Refresh started for {{client.name}}",
+      "4 email campaigns and the pipeline collected",
+      "Meta Ads, organic posts and website visits collected",
+      "Stored under {{client.name}} only",
+      "Reports page updated"
+     ]
+    },
+    "related": []
+   },
+   "statuses": [
+    "Refresh started",
+    "GoHighLevel data collected",
+    "Channel data collected",
+    "Filed under the sub-account",
+    "Reports page updated"
+   ]
+  },
+  {
+   "id": "email-table",
+   "kind": "outcome",
+   "platform": "ghl",
+   "title": "Every email campaign on one row.",
+   "caption": "Delivered, opens, clicks and unsubscribes side by side for every send, with no clicking into each email.",
+   "beat": "This is the email report inside Larkfield's sub-account. Each campaign gets one row, with delivered, open rate, click rate and unsubscribes in the same columns. You can compare all three sends at a glance, and the six-month check-in stands out straight away.",
+   "details": [
+    "0:35 to 1:05. Read the column names under the campaign heading, run down the three rows, then the top campaign card.",
+    "Reporting period: {{period.label}}. All figures are sample data."
+   ],
+   "optional": false,
+   "content": {
+    "name": "Email campaigns · {{period.label}}",
+    "subtitle": "{{client.name}} · columns: delivered · open · click · unsubs",
+    "fields": [
+     {
+      "label": "Posture check offer · 3 Oct",
+      "value": "1,452 · 38.6% · 4.1% · 6"
+     },
+     {
+      "label": "Autumn clinic news · 10 Oct",
+      "value": "1,449 · 35.2% · 2.7% · 3"
+     },
+     {
+      "label": "Six-month check-in · 17 Oct",
+      "value": "405 · 44.9% · 7.4% · 2"
+     }
+    ],
+    "stages": [
+     "Results collected",
+     "Matched to each campaign",
+     "Checked against GoHighLevel",
+     "Shown to the client"
+    ],
+    "stageSequence": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "metrics": [
+     {
+      "label": "Campaigns sent",
+      "value": "3",
+      "note": "{{period.label}}"
+     },
+     {
+      "label": "Emails delivered",
+      "value": "3,306",
+      "note": "Across all three campaigns"
+     },
+     {
+      "label": "Unsubscribes",
+      "value": "11",
+      "note": "Shown where the send reports them"
+     }
+    ],
+    "note": "Date filter: {{period.label}}. Each row matches the campaign's own GoHighLevel statistics.",
+    "proof": {
+     "label": "Top campaign this month",
+     "value": "44.9% open",
+     "description": "Six-month check-in had the best open and click rates of the three sends, so it is the one to repeat.",
+     "sourceNote": "Sample client and figures, for illustration only."
+    }
+   },
+   "statuses": [
+    "Campaign results collected",
+    "Rows matched to campaigns",
+    "Totals checked against GoHighLevel",
+    "Table live in the sub-account"
+   ]
+  },
+  {
+   "id": "marketing-summary",
+   "kind": "outcome",
+   "platform": "ghl",
+   "title": "Ads, organic, website and pipeline in one view.",
+   "caption": "Larkfield sees their Meta Ads, social posts, website visits and new opportunities for the same reporting period.",
+   "beat": "Same sub-account, the marketing summary. Meta Ads spend, leads and cost per lead at the top, then organic posts, website sessions from Google Analytics, and the new and won opportunities from their pipeline. It's all the same reporting period, so the numbers line up.",
+   "details": [
+    "1:05 to 1:30. The Meta Ads section follows the layout of your GoHighLevel Meta Ads report screenshots.",
+    "Compared with {{period.compare}}; sample figures."
+   ],
+   "optional": false,
+   "content": {
+    "name": "Marketing summary · {{period.label}}",
+    "subtitle": "{{client.name}} · all channels",
+    "fields": [
+     {
+      "label": "Sub-account",
+      "value": "{{client.name}}"
+     },
+     {
+      "label": "Reporting period",
+      "value": "{{period.label}}, compared with {{period.compare}}"
+     },
+     {
+      "label": "Last refreshed",
+      "value": "Today at {{refresh.time}}"
+     },
+     {
+      "label": "Who can see this",
+      "value": "{{client.name}} users only"
+     }
+    ],
+    "stages": [
+     "Meta Ads",
+     "Organic posts",
+     "Google Analytics",
+     "Pipeline"
+    ],
+    "stageSequence": [
+     0,
+     0,
+     1,
+     2,
+     3,
+     3
+    ],
+    "metrics": [
+     {
+      "label": "Meta Ads amount spent",
+      "value": "£1,240",
+      "note": "3 active campaigns"
+     },
+     {
+      "label": "Meta leads",
+      "value": "86",
+      "note": "£14.42 per lead"
+     },
+     {
+      "label": "Organic posts",
+      "value": "18",
+      "note": "2,930 engagements on Facebook and Instagram"
+     },
+     {
+      "label": "Website sessions",
+      "value": "3,412",
+      "note": "From Google Analytics"
+     },
+     {
+      "label": "New opportunities",
+      "value": "52",
+      "note": "New patient enquiries pipeline"
+     },
+     {
+      "label": "Won opportunities",
+      "value": "14",
+      "note": "£6,180 won value"
+     }
+    ],
+    "note": "Opened from the Reports link in {{client.name}}'s own GoHighLevel menu. No separate website or login."
+   },
+   "statuses": [
+    "Meta Ads spend loaded",
+    "Meta leads and cost per lead added",
+    "Organic posts added",
+    "Website sessions added",
+    "New opportunities added",
+    "Won opportunities added"
+   ]
+  },
+  {
+   "id": "next-client",
+   "kind": "record",
+   "platform": "workbench",
+   "title": "Your team sets up the next client.",
+   "caption": "{{team.member}} follows the written guide for {{client2.name}}. No developer and no code.",
+   "beat": "Here's how your team adds the next client. Priya sets up Northgate Fitness by loading the snapshot, switching on the Reports link, and picking their ad account and analytics property from a form. The first refresh gets checked against the source reports, and Northgate only sees Northgate's numbers.",
+   "details": [
+    "1:30 to 1:50. This is the setup checklist your team follows.",
+    "Pilot in one sub-account first, then this second-sub-account test."
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{client2.name}}",
+    "subtitle": "Second sub-account · set up by {{team.member}}",
+    "sourceTitle": "Setup guide, step by step",
+    "sourceFields": [
+     {
+      "label": "Snapshot",
+      "value": "Reporting snapshot loaded"
+     },
+     {
+      "label": "Reports menu link",
+      "value": "Switched on for this sub-account"
+     },
+     {
+      "label": "Meta ad account",
+      "value": "Picked from the setup form"
+     },
+     {
+      "label": "Google Analytics property",
+      "value": "Picked from the setup form"
+     }
+    ],
+    "fields": [
+     {
+      "label": "Code written",
+      "value": "None"
+     },
+     {
+      "label": "Checked against",
+      "value": "GoHighLevel email statistics and Meta Ads Manager"
+     },
+     {
+      "label": "Data visible to",
+      "value": "{{client2.name}} users only"
+     }
+    ],
+    "events": [
+     {
+      "title": "Snapshot loaded",
+      "detail": "Report pages and settings copied into {{client2.name}}."
+     },
+     {
+      "title": "Accounts connected",
+      "detail": "{{team.member}} picks the ad account and analytics property; no code."
+     },
+     {
+      "title": "First refresh checked",
+      "detail": "Sends, opens, clicks, spend and leads match the source reports."
+     },
+     {
+      "title": "Client can log in",
+      "detail": "{{client2.name}} sees its own report, not {{client.name}}'s."
+     }
+    ],
+    "notice": "Your team follows the written guide and recorded handover for every new sub-account."
+   },
+   "statuses": [
+    "Snapshot loaded",
+    "Accounts connected",
+    "First refresh checked",
+    "Ready for the client"
+   ]
+  }
+ ],
+ "close": {
+  "eyebrow": "What I would measure",
+  "title": "Reports your clients",
+  "accent": "open for themselves.",
+  "caption": "We'd measure where you are now during the pilot, then track these three.",
+  "metrics": [
+   {
+    "name": "Setup time for each new client",
+    "direction": "down",
+    "aim": "Get each new sub-account reporting sooner",
+    "definition": "Time from loading the snapshot in a new sub-account to the client seeing checked data, logged by your team for each setup."
+   },
+   {
+    "name": "Figures that match the source",
+    "direction": "up",
+    "aim": "Match the source reports on every check",
+    "definition": "Share of checked figures (sends, opens, clicks, spend, leads) that equal the GoHighLevel and Meta reports for the same reporting period."
+   },
+   {
+    "name": "Time spent on client reports",
+    "direction": "down",
+    "aim": "Spend less time pulling numbers by hand",
+    "definition": "Hours your team spends each month gathering numbers for client reports, logged before and after rollout."
+   }
+  ],
+  "baselineNote": "We'll measure your starting point in the pilot and agree the targets together.",
+  "ctaTitle": "Worth a quick 15-minute call?",
+  "ctaCopy": "Reply here and I'll send over three times.",
+  "beat": "I'd measure setup time for each new client, how closely the figures match the source reports, and the time your team spends on reports by hand, against the starting point we agree in the pilot. Worth a quick 15-minute call? Reply here and I'll send over three times."
+ }
+}

@@ -1,0 +1,926 @@
+{
+  "schemaVersion": 1,
+  "id": "ai-intake-agent-crm-update-2114748238229606708",
+  "title": "An n8n and OpenAI agent that turns a new client intake into an updated CRM record",
+  "systemName": "Your n8n client intake agent",
+  "account": {
+    "name": "Your agency",
+    "initials": "YA",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114748238229606708",
+    "facts": [
+      "Post: growing agency hiring a long-term AI & Automation Developer (AI agents, API integrations, workflow automation; Python, n8n, Make, Zapier, OpenAI APIs). Asks for a short Loom, relevant AI/automation projects and US business hours availability.",
+      "No CRM is named in the post, so the CRM record is shown on the custom project workspace and the CRM calls use a placeholder example.com URL.",
+      "Personalization omitted: one review names a contact once; U-006 needs two separate reviews. No business name in the post.",
+      "All people, companies, IDs and records are invented sample data."
+    ]
+  },
+  "entities": {
+    "client": {
+      "name": "Marisol Vega",
+      "company": "Copperleaf Home Services",
+      "email": "marisol@copperleaf.example",
+      "domain": "copperleaf.example",
+      "ask": "New website and automatic follow-up for quote requests",
+      "timeline": "Hoping to launch next quarter"
+    },
+    "ref": {
+      "id": "INT-2041"
+    },
+    "owner": {
+      "name": "Jordan Ellis"
+    },
+    "crm": {
+      "id": "CO-5583"
+    },
+    "agent": {
+      "summary": "Wants a new website and automatic quote follow-up, launching next quarter. Already in the CRM.",
+      "fit": "Strong fit: web build plus automation",
+      "next": "Book a discovery call with Jordan Ellis"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your n8n client intake agent",
+    "title": "From a new client intake",
+    "accent": "to an updated CRM record.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n AI Agent with OpenAI",
+      "CRM checked before it writes",
+      "Sample run and finished record"
+    ],
+    "previewSteps": [
+      {
+        "title": "Intake",
+        "detail": "A new client fills in the intake form."
+      },
+      {
+        "title": "Agent",
+        "detail": "OpenAI summarizes it and checks the CRM."
+      },
+      {
+        "title": "CRM",
+        "detail": "The company record is updated with an owner and next step."
+      }
+    ],
+    "footer": "Illustrative sample · no live system connected",
+    "beat": "Here's an n8n agent that reads a new client intake, writes the summary with OpenAI and updates the CRM."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track every intake",
+    "accent": "from form to CRM.",
+    "caption": "We'd agree a starting baseline for speed, completeness and duplicates.",
+    "metrics": [
+      {
+        "name": "Time from intake to CRM",
+        "direction": "down",
+        "aim": "Get new clients into the CRM sooner",
+        "definition": "Time between the intake form being submitted and the CRM record showing the summary and owner."
+      },
+      {
+        "name": "Complete CRM records",
+        "direction": "up",
+        "aim": "More records with a summary, owner and next step",
+        "definition": "Intakes whose CRM record has a summary, owner and next step, divided by all intakes."
+      },
+      {
+        "name": "Duplicate companies",
+        "direction": "down",
+        "aim": "Fewer duplicate company records",
+        "definition": "New company records created for a company that already existed in the CRM."
+      }
+    ],
+    "baselineNote": "We'd measure where things stand today and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd walk through your CRM and intake form with you and adjust the agent to fit. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "agent-setup",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "The agent reads each new intake and checks your CRM.",
+      "caption": "OpenAI writes the summary. The CRM lookup tool stops duplicate companies.",
+      "beat": "When a new client fills in the intake form, n8n tidies the answers and hands them to the AI Agent. The agent uses OpenAI to write a short summary and checks the CRM for the company first, so it updates the existing record instead of creating a second one.",
+      "details": [
+        "Selected node: AI Agent, with its prompt and system message",
+        "Sample intake {{ref.id}} from {{client.name}} at {{client.company}}",
+        "CRM login and field names are agreed during setup"
+      ],
+      "optional": false,
+      "statuses": [
+        "Intake received",
+        "Answers tidied",
+        "Summary and fit written",
+        "CRM record updated"
+      ],
+      "content": {
+        "name": "Client intake to CRM",
+        "subtitle": "n8n workflow · illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "Client intake to CRM",
+          "nodes": [
+            {
+              "id": "intake",
+              "type": "webhook",
+              "label": "New client intake form",
+              "detail": "Intake form submitted on the agency website"
+            },
+            {
+              "id": "clean",
+              "type": "edit_fields",
+              "label": "Tidy the intake answers",
+              "detail": "Name, company, email, goals and timeline"
+            },
+            {
+              "id": "agent",
+              "type": "ai_agent",
+              "label": "Summarize and qualify the intake",
+              "detail": "Writes the summary, service fit and next step"
+            },
+            {
+              "id": "crm",
+              "type": "http_request",
+              "label": "Update the CRM company record",
+              "detail": "Writes the summary and owner to {{crm.id}}"
+            }
+          ],
+          "edges": [
+            {
+              "from": "intake",
+              "to": "clean"
+            },
+            {
+              "from": "clean",
+              "to": "agent"
+            },
+            {
+              "from": "agent",
+              "to": "crm"
+            }
+          ],
+          "runOrder": [
+            "intake",
+            "clean",
+            "agent",
+            "crm"
+          ],
+          "context": {
+            "name": "{{client.company}}",
+            "subtitle": "Illustrative sample intake",
+            "fields": [
+              {
+                "label": "Contact",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "Intake",
+                "value": "{{ref.id}}"
+              },
+              {
+                "label": "Asked for",
+                "value": "{{client.ask}}"
+              }
+            ],
+            "states": [
+              "Intake received from {{client.name}}",
+              "Answers tidied into fields",
+              "Summary and fit written",
+              "CRM record {{crm.id}} updated"
+            ]
+          },
+          "related": [
+            {
+              "title": "CRM lookup tool",
+              "detail": "The agent checks for an existing company before anything is written."
+            },
+            {
+              "title": "Account owner",
+              "detail": "{{owner.name}} is set as the owner on the CRM record."
+            }
+          ]
+        },
+        "inspectors": [
+          {
+            "node": "intake",
+            "input": [
+              {
+                "label": "Form",
+                "value": "Agency new client intake"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "email",
+                "value": "{{client.email}}"
+              },
+              {
+                "label": "goal",
+                "value": "{{client.ask}}"
+              },
+              {
+                "label": "timeline",
+                "value": "{{client.timeline}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "client-intake"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "clean",
+            "input": [
+              {
+                "label": "body.goal",
+                "value": "{{client.ask}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "email_domain",
+                "value": "{{client.domain}}"
+              },
+              {
+                "label": "timeline",
+                "value": "{{client.timeline}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Mode",
+                "value": "Manual Mapping"
+              },
+              {
+                "label": "Fields to Set",
+                "value": "company, email_domain, goal, timeline"
+              }
+            ]
+          },
+          {
+            "node": "agent",
+            "input": [
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "goal",
+                "value": "{{client.ask}}"
+              },
+              {
+                "label": "timeline",
+                "value": "{{client.timeline}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "summary",
+                "value": "{{agent.summary}}"
+              },
+              {
+                "label": "service_fit",
+                "value": "{{agent.fit}}"
+              },
+              {
+                "label": "next_step",
+                "value": "{{agent.next}}"
+              },
+              {
+                "label": "existing_record",
+                "value": "{{crm.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "Summarize this new client intake, judge the service fit and suggest the next step."
+              },
+              {
+                "label": "System Message",
+                "value": "You work for the agency's onboarding team. Use only the intake answers. Look up the company in the CRM before suggesting an update. Never invent dates or details."
+              },
+              {
+                "label": "Require Specific Output Format",
+                "value": "On"
+              }
+            ]
+          },
+          {
+            "node": "crm",
+            "input": [
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "existing_record",
+                "value": "{{crm.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "status",
+                "value": "Updated (sample response)"
+              },
+              {
+                "label": "record",
+                "value": "{{crm.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/companies/{{crm.id}}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"owner\": \"{{owner.name}}\", \"summary\": \"{{agent.summary}}\", \"next_step\": \"{{agent.next}}\"}"
+              }
+            ]
+          },
+          {
+            "node": "model",
+            "input": [
+              {
+                "label": "From",
+                "value": "Summarize and qualify the intake"
+              }
+            ],
+            "output": [
+              {
+                "label": "Tokens",
+                "value": "Sample run"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Sampling Temperature",
+                "value": "0.2"
+              }
+            ]
+          },
+          {
+            "node": "lookup",
+            "input": [
+              {
+                "label": "email_domain",
+                "value": "{{client.domain}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "match",
+                "value": "{{crm.id}}"
+              },
+              {
+                "label": "name",
+                "value": "{{client.company}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/companies?domain={{client.domain}}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Description",
+                "value": "Find an existing company by email domain"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "agent",
+        "aiNodes": [
+          {
+            "id": "model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Writes the summary from the intake answers"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request_tool",
+            "label": "Find the company in the CRM",
+            "detail": "Checks for an existing record by email domain"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "model",
+            "to": "agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "lookup",
+            "to": "agent",
+            "type": "ai_tool"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sample-run",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "See what the agent wrote to the CRM.",
+      "caption": "This sample run updates record {{crm.id}} with the summary, owner and next step.",
+      "beat": "Here's the sample run for {{client.name}}. The last step writes the summary and the next step to the existing CRM record, and sets {{owner.name}} as the owner.",
+      "details": [
+        "Selected node: Update the CRM company record",
+        "Request body shows exactly what is written",
+        "Sample response, no live CRM connected"
+      ],
+      "optional": false,
+      "statuses": [
+        "Intake received",
+        "Answers tidied",
+        "Summary and fit written",
+        "CRM record updated"
+      ],
+      "content": {
+        "name": "Client intake to CRM",
+        "subtitle": "n8n workflow · illustrative sample",
+        "surface": "execution",
+        "graph": {
+          "name": "Client intake to CRM",
+          "nodes": [
+            {
+              "id": "intake",
+              "type": "webhook",
+              "label": "New client intake form",
+              "detail": "Intake form submitted on the agency website"
+            },
+            {
+              "id": "clean",
+              "type": "edit_fields",
+              "label": "Tidy the intake answers",
+              "detail": "Name, company, email, goals and timeline"
+            },
+            {
+              "id": "agent",
+              "type": "ai_agent",
+              "label": "Summarize and qualify the intake",
+              "detail": "Writes the summary, service fit and next step"
+            },
+            {
+              "id": "crm",
+              "type": "http_request",
+              "label": "Update the CRM company record",
+              "detail": "Writes the summary and owner to {{crm.id}}"
+            }
+          ],
+          "edges": [
+            {
+              "from": "intake",
+              "to": "clean"
+            },
+            {
+              "from": "clean",
+              "to": "agent"
+            },
+            {
+              "from": "agent",
+              "to": "crm"
+            }
+          ],
+          "runOrder": [
+            "intake",
+            "clean",
+            "agent",
+            "crm"
+          ],
+          "context": {
+            "name": "{{client.company}}",
+            "subtitle": "Illustrative sample intake",
+            "fields": [
+              {
+                "label": "Contact",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "Intake",
+                "value": "{{ref.id}}"
+              },
+              {
+                "label": "Asked for",
+                "value": "{{client.ask}}"
+              }
+            ],
+            "states": [
+              "Intake received from {{client.name}}",
+              "Answers tidied into fields",
+              "Summary and fit written",
+              "CRM record {{crm.id}} updated"
+            ]
+          },
+          "related": [
+            {
+              "title": "CRM lookup tool",
+              "detail": "The agent checks for an existing company before anything is written."
+            },
+            {
+              "title": "Account owner",
+              "detail": "{{owner.name}} is set as the owner on the CRM record."
+            }
+          ]
+        },
+        "inspectors": [
+          {
+            "node": "intake",
+            "input": [
+              {
+                "label": "Form",
+                "value": "Agency new client intake"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "email",
+                "value": "{{client.email}}"
+              },
+              {
+                "label": "goal",
+                "value": "{{client.ask}}"
+              },
+              {
+                "label": "timeline",
+                "value": "{{client.timeline}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "client-intake"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "clean",
+            "input": [
+              {
+                "label": "body.goal",
+                "value": "{{client.ask}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "email_domain",
+                "value": "{{client.domain}}"
+              },
+              {
+                "label": "timeline",
+                "value": "{{client.timeline}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Mode",
+                "value": "Manual Mapping"
+              },
+              {
+                "label": "Fields to Set",
+                "value": "company, email_domain, goal, timeline"
+              }
+            ]
+          },
+          {
+            "node": "agent",
+            "input": [
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "goal",
+                "value": "{{client.ask}}"
+              },
+              {
+                "label": "timeline",
+                "value": "{{client.timeline}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "summary",
+                "value": "{{agent.summary}}"
+              },
+              {
+                "label": "service_fit",
+                "value": "{{agent.fit}}"
+              },
+              {
+                "label": "next_step",
+                "value": "{{agent.next}}"
+              },
+              {
+                "label": "existing_record",
+                "value": "{{crm.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "Summarize this new client intake, judge the service fit and suggest the next step."
+              },
+              {
+                "label": "System Message",
+                "value": "You work for the agency's onboarding team. Use only the intake answers. Look up the company in the CRM before suggesting an update. Never invent dates or details."
+              },
+              {
+                "label": "Require Specific Output Format",
+                "value": "On"
+              }
+            ]
+          },
+          {
+            "node": "crm",
+            "input": [
+              {
+                "label": "company",
+                "value": "{{client.company}}"
+              },
+              {
+                "label": "existing_record",
+                "value": "{{crm.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "status",
+                "value": "Updated (sample response)"
+              },
+              {
+                "label": "record",
+                "value": "{{crm.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/companies/{{crm.id}}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"owner\": \"{{owner.name}}\", \"summary\": \"{{agent.summary}}\", \"next_step\": \"{{agent.next}}\"}"
+              }
+            ]
+          },
+          {
+            "node": "model",
+            "input": [
+              {
+                "label": "From",
+                "value": "Summarize and qualify the intake"
+              }
+            ],
+            "output": [
+              {
+                "label": "Tokens",
+                "value": "Sample run"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Sampling Temperature",
+                "value": "0.2"
+              }
+            ]
+          },
+          {
+            "node": "lookup",
+            "input": [
+              {
+                "label": "email_domain",
+                "value": "{{client.domain}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "match",
+                "value": "{{crm.id}}"
+              },
+              {
+                "label": "name",
+                "value": "{{client.company}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/companies?domain={{client.domain}}"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Description",
+                "value": "Find an existing company by email domain"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "crm",
+        "aiNodes": [
+          {
+            "id": "model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Writes the summary from the intake answers"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request_tool",
+            "label": "Find the company in the CRM",
+            "detail": "Checks for an existing record by email domain"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "model",
+            "to": "agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "lookup",
+            "to": "agent",
+            "type": "ai_tool"
+          }
+        ],
+        "execution": {
+          "id": "Sample run",
+          "started": "Sample time",
+          "duration": "Illustrative"
+        }
+      }
+    },
+    {
+      "id": "crm-record",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Your team opens a CRM record that's ready to act on.",
+      "caption": "{{owner.name}} sees the summary and the next step without rereading the form.",
+      "beat": "This is what your team sees afterwards. {{client.company}} has its summary and next step on the record, and {{owner.name}} can book the discovery call straight away.",
+      "details": [
+        "Record {{crm.id}} for {{client.company}}",
+        "Counts are illustrative"
+      ],
+      "optional": false,
+      "statuses": [
+        "Intake received",
+        "Summary added",
+        "Owner and next step set"
+      ],
+      "content": {
+        "name": "{{client.company}}",
+        "subtitle": "CRM company record {{crm.id}}",
+        "fields": [
+          {
+            "label": "Contact",
+            "value": "{{client.name}} · {{client.email}}"
+          },
+          {
+            "label": "Asked for",
+            "value": "{{client.ask}}"
+          },
+          {
+            "label": "Summary",
+            "value": "{{agent.summary}}"
+          },
+          {
+            "label": "Owner",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Next step",
+            "value": "{{agent.next}}"
+          }
+        ],
+        "stages": [
+          "Intake received",
+          "Summarized",
+          "Owner assigned",
+          "Discovery call"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Duplicate records created",
+            "value": "0",
+            "note": "Existing company found first"
+          },
+          {
+            "label": "CRM fields updated",
+            "value": "3",
+            "note": "Summary, owner and next step"
+          }
+        ],
+        "note": "Illustrative CRM record on a custom project workspace. The CRM you use is connected during setup. No live system is connected."
+      }
+    }
+  ]
+}

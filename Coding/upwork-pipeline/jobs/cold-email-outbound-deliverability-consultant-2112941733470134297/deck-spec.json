@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "id": "cold-email-outbound-deliverability-consultant-2112941733470134297",
+  "title": "Cold Email Outbound Expert Consultant (deliverability & infrastructure)",
+  "systemName": "Your outbound audit and deliverability plan",
+  "account": {"name": "Your outbound team", "initials": "OT", "operatorInitials": "LV"},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112941733470134297",
+    "facts": [
+      "Post asks for an audit of domains, mailboxes, SPF/DKIM/DMARC, warm-up, volumes, rotation; an infrastructure and deliverability plan; a sequence/testing playbook and KPI dashboard definition; ongoing advisory calls.",
+      "Post names Instantly, Smartlead, lemlist, Apollo, Clay, custom SMTP and n8n. No native sending-tool adapter exists, so the mechanism is shown in n8n and the audit/plan on the custom workbench.",
+      "The post's 10M+ emails requirement is not an approved fact about Lorenzo and is not claimed anywhere."
+    ]
+  },
+  "entities": {
+    "domain": {"name": "northpeak.example", "inboxes": 3},
+    "stats": {"bounce": "4.1%", "spam": "3", "limit": "2%", "perInbox": 60},
+    "issue": {"id": "AUD-07"},
+    "plan": {"domains": 4, "inboxes": 12, "start": 20}
+  },
+  "cover": {
+    "eyebrow": "Your outbound audit and deliverability plan",
+    "title": "From scattered sending stats",
+    "accent": "to a clear fix plan.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["n8n morning inbox check", "Audit finding with its fix", "Sending plan and KPI dashboard"],
+    "previewSteps": [
+      {"title": "Check", "detail": "Pull every inbox's numbers each morning."},
+      {"title": "Find", "detail": "Turn a struggling domain into a priority fix."},
+      {"title": "Plan", "detail": "Lay out domains, daily volumes and the KPI dashboard."}
+    ],
+    "footer": "Illustrative sample · no live accounts connected",
+    "beat": "Here's how I'd audit your outbound setup and keep it healthy once the fixes are in."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track deliverability",
+    "accent": "all the way to replies.",
+    "caption": "We'd agree a starting point for inbox placement, bounces and positive replies.",
+    "metrics": [
+      {"name": "Inbox placement", "direction": "up", "aim": "Land more emails in the main inbox", "definition": "Seed test emails that land in the inbox, divided by all seed test emails sent."},
+      {"name": "Bounces and spam complaints", "direction": "down", "aim": "Keep bounces and complaints low on every domain", "definition": "Bounced emails plus spam complaints, divided by emails sent, tracked per domain."},
+      {"name": "Positive reply rate", "direction": "up", "aim": "Get more interested replies", "definition": "Replies marked interested, divided by contacts emailed."}
+    ],
+    "baselineNote": "We take the starting numbers from your current setup during the audit, then agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your domains and sending numbers with you first. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "inbox-check",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "Check every sending inbox each morning.",
+      "caption": "One domain goes over the bounce limit, so it comes out of rotation before it does more damage.",
+      "beat": "Every morning this n8n workflow pulls yesterday's numbers for each inbox and works out the bounce and spam rates per domain. Here {{domain.name}} hit {{stats.bounce}} bounces, over the {{stats.limit}} limit, so the team gets a Slack alert and the domain is held. Healthy domains go straight to the KPI sheet.",
+      "details": [
+        "{{domain.name}}: {{domain.inboxes}} inboxes, {{stats.perInbox}} sends a day each",
+        "Healthy domains take the other branch and only get logged",
+        "The HTTP Request stands in for your sending tool's API; the exact fields get agreed during the audit."
+      ],
+      "content": {
+        "name": "Morning inbox health check",
+        "nodes": [
+          {"id": "run-check", "type": "manual_trigger", "label": "Run the morning inbox check", "detail": "Execute Workflow starts the check across every sending inbox."},
+          {"id": "pull-stats", "type": "http_request", "label": "Pull yesterday's numbers per inbox", "detail": "Illustrative request to the sending tool's API: sends, bounces, spam flags and replies for {{domain.name}}."},
+          {"id": "score-domain", "type": "edit_fields", "label": "Work out bounce and spam rates", "detail": "{{domain.name}}: {{stats.bounce}} bounced, {{stats.spam}} spam flags across {{domain.inboxes}} inboxes."},
+          {"id": "over-limit", "type": "if", "label": "Over the agreed bounce limit?", "detail": "Limit set in the audit: {{stats.limit}} bounces per domain."},
+          {"id": "alert-team", "type": "slack", "label": "Alert the team and hold the domain", "detail": "{{domain.name}} paused from rotation, issue {{issue.id}} opened."},
+          {"id": "log-healthy", "type": "google_sheets", "label": "Log the day to the KPI sheet", "detail": "Healthy domains append their numbers to the dashboard sheet."}
+        ],
+        "edges": [
+          {"from": "run-check", "to": "pull-stats"},
+          {"from": "pull-stats", "to": "score-domain"},
+          {"from": "score-domain", "to": "over-limit"},
+          {"from": "over-limit", "to": "alert-team", "label": "true"},
+          {"from": "over-limit", "to": "log-healthy", "label": "false"}
+        ],
+        "runOrder": ["run-check", "pull-stats", "score-domain", "over-limit", "alert-team"],
+        "context": {
+          "name": "{{domain.name}}",
+          "subtitle": "Sample sending domain",
+          "fields": [
+            {"label": "Inboxes", "value": "{{domain.inboxes}}"},
+            {"label": "Sends per inbox per day", "value": "{{stats.perInbox}}"},
+            {"label": "Status", "value": "Illustrative sample"}
+          ],
+          "states": ["Check started", "Numbers pulled for each inbox", "Bounce rate {{stats.bounce}}", "Over the {{stats.limit}} limit", "Domain held, team alerted"]
+        },
+        "related": [
+          {"title": "Issue {{issue.id}}", "detail": "Opens in the audit with the cause and the fix."},
+          {"title": "KPI sheet", "detail": "Feeds the dashboard defined in the plan."}
+        ]
+      },
+      "statuses": ["Check started", "Numbers pulled for each inbox", "Bounce rate {{stats.bounce}}", "Over the {{stats.limit}} limit", "Domain held, team alerted"],
+      "optional": false
+    },
+    {
+      "id": "audit-finding",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Turn the alert into a clear fix.",
+      "caption": "The audit shows why the domain struggled and what to change first.",
+      "beat": "This is how each finding reads in the written audit. On {{domain.name}}, DMARC was only monitoring, warm-up stopped after nine days, the list wasn't verified and each inbox sent {{stats.perInbox}} a day. So the fix is to verify the list, restart warm-up, turn on DMARC reports and drop to {{plan.start}} a day before ramping back up.",
+      "details": [
+        "Priority 1 of 6 findings in the sample audit",
+        "Each finding has a cause, a fix and an owner"
+      ],
+      "content": {
+        "name": "Audit finding {{issue.id}}",
+        "subtitle": "{{domain.name}} · priority 1",
+        "sourceTitle": "What the audit found",
+        "sourceFields": [
+          {"label": "SPF", "value": "Passing"},
+          {"label": "DKIM", "value": "Passing"},
+          {"label": "DMARC", "value": "p=none, no reports collected"},
+          {"label": "Warm-up", "value": "Stopped after 9 days"},
+          {"label": "List check", "value": "Not verified before upload"},
+          {"label": "Sends per inbox per day", "value": "{{stats.perInbox}}"}
+        ],
+        "fields": [
+          {"label": "Priority", "value": "1 of 6"},
+          {"label": "Fix", "value": "Verify the list, restart warm-up, move DMARC to quarantine with reports on"},
+          {"label": "Volume", "value": "Start at {{plan.start}} a day per inbox, then ramp weekly"},
+          {"label": "Owner", "value": "Your ops lead, with written steps"}
+        ],
+        "events": [
+          {"title": "Alert raised", "detail": "Bounce rate {{stats.bounce}} against a {{stats.limit}} limit"},
+          {"title": "Cause found", "detail": "Unverified list sent at full volume with warm-up stopped"},
+          {"title": "Fix agreed", "detail": "Domain stays out of rotation until bounces are back under the limit"}
+        ],
+        "notice": "Illustrative audit finding. The domain and numbers are sample data."
+      },
+      "statuses": ["Finding opened", "Cause found", "Fix agreed"],
+      "optional": false
+    },
+    {
+      "id": "sending-plan",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "See the sending plan and the KPI dashboard.",
+      "caption": "Domains, inboxes, daily volume and what gets tracked, in one plan.",
+      "beat": "And this is the plan you'd get. {{plan.domains}} sending domains with {{plan.inboxes}} inboxes across Google and Microsoft, {{plan.start}} sends a day per inbox to start, ramping weekly. The dashboard tracks inbox placement, opens, replies, positive replies, bounces and meetings booked.",
+      "details": [
+        "{{domain.name}} rejoins rotation once it's back under {{stats.limit}}",
+        "All counts are illustrative"
+      ],
+      "content": {
+        "name": "Outbound sending plan",
+        "subtitle": "Sample plan for your team",
+        "fields": [
+          {"label": "Domains", "value": "{{plan.domains}} sending domains, kept apart from your main site"},
+          {"label": "Inboxes", "value": "{{plan.inboxes}} inboxes, 3 per domain, Google and Microsoft mix"},
+          {"label": "Ramp", "value": "{{plan.start}} a day per inbox, raised weekly while bounces stay under {{stats.limit}}"},
+          {"label": "Monitoring", "value": "Morning n8n check plus a weekly inbox placement test"}
+        ],
+        "stages": ["Audit", "Fix", "Warm-up", "Ramp", "Monitor"],
+        "stageSequence": [0, 1, 2, 3, 4],
+        "metrics": [
+          {"label": "Domains in rotation", "value": "{{plan.domains}} of {{plan.domains}}", "note": "Illustrative plan"},
+          {"label": "Starting sends per inbox", "value": "{{plan.start}} a day", "note": "Raised weekly, illustrative"},
+          {"label": "Dashboard KPIs", "value": "6", "note": "Placement, opens, replies, positive replies, bounces, meetings"}
+        ],
+        "note": "Illustrative sample plan. No live accounts are connected."
+      },
+      "statuses": ["Audit done", "Fixes in", "Warm-up running", "Volume ramping", "Monitoring daily"],
+      "optional": false
+    }
+  ]
+}

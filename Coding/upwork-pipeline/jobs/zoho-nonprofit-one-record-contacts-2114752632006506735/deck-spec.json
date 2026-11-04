@@ -1,0 +1,387 @@
+{
+  "schemaVersion": 1,
+  "id": "zoho-nonprofit-one-record-contacts-2114752632006506735",
+  "title": "Zoho One / CRM Specialist for Nonprofit Contact Management",
+  "systemName": "Your one-record contact system",
+  "account": {
+    "name": "NAMI Broward County",
+    "initials": "NB",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114752632006506735",
+    "facts": [
+      "Post: mental health nonprofit on Zoho One, Google Workspace for Nonprofits and AppSheet; Office Manager is internal project lead.",
+      "Post asks for one contact record per person holding multiple roles (participants, volunteers, facilitators, employees, sponsors, donors, network contacts, board members), organization records linked to people, and permissions for view, edit, export and administer.",
+      "Post asks to recommend the master source per record type, duplicate rules and consistent identifiers, and to train an internal lead and a backup administrator.",
+      "Business name stated in the post; no person's name used. All people, organizations and records in the deck are invented."
+    ]
+  },
+  "entities": {
+    "person": {
+      "name": "Maya Castillo",
+      "first": "Maya",
+      "email": "maya.castillo@example.org",
+      "phone": "(954) 555-0142",
+      "id": "CT-10482"
+    },
+    "volunteer": {
+      "since": "March 2025",
+      "assignment": "Family support night greeter"
+    },
+    "board": {
+      "position": "Board treasurer",
+      "term": "2025 to 2027"
+    },
+    "donation": {
+      "id": "GIFT-2048",
+      "kind": "one-time gift",
+      "purpose": "Fall Awareness Walk"
+    },
+    "org": {
+      "name": "Seagrape Community Credit Union",
+      "type": "Business partner"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your Zoho contact setup",
+    "title": "One person,",
+    "accent": "one connected record.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "One record per person",
+      "Roles stacked on the contact",
+      "Access set by role"
+    ],
+    "previewSteps": [
+      {
+        "title": "Match the person",
+        "detail": "A new form entry finds the contact you already have."
+      },
+      {
+        "title": "Stack the roles",
+        "detail": "Volunteer, donor and board member live on one record."
+      },
+      {
+        "title": "Control access",
+        "detail": "Each team sees and changes only its own information."
+      }
+    ],
+    "footer": "Illustrative sample data · no live system connected",
+    "beat": "Here's how your contacts would work. Someone who volunteers, gives and sits on the board stays one contact, with everything about them linked to that record."
+  },
+  "scenes": [
+    {
+      "id": "intake-flow",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "A new gift finds the person you already know",
+      "caption": "Maya already volunteers with you. When she gives at the walk, the form updates her contact instead of creating a second one.",
+      "beat": "Follow Maya through it. She fills in the gift form at the walk. The system matches her email and phone to the contact she already has as a volunteer, adds the donor role, links the gift and her credit union, and applies the right access.",
+      "details": [
+        "Matching order: email first, then phone plus last name. Close matches go to a review list for your lead.",
+        "The contact ID {{person.id}} is shared with AppSheet so both systems point at the same person.",
+        "Press Replay to watch Maya's gift move through each step, or Show result to see where it lands."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Contact intake design",
+        "subtitle": "Recommended setup for your review · illustrative sample",
+        "nodes": [
+          {
+            "id": "gift-form",
+            "label": "Walk gift form comes in",
+            "detail": "{{person.name}} gives a {{donation.kind}} for the {{donation.purpose}} using {{person.email}}."
+          },
+          {
+            "id": "match-person",
+            "label": "Find Maya's volunteer record",
+            "detail": "Email and phone match {{person.id}}, a volunteer since {{volunteer.since}}. No new contact is created."
+          },
+          {
+            "id": "add-role",
+            "label": "Add the donor role",
+            "detail": "Donor is added next to Volunteer and Board member on the same record."
+          },
+          {
+            "id": "link-records",
+            "label": "Link the gift and organization",
+            "detail": "{{donation.id}} is linked to {{person.name}}, and her affiliation with {{org.name}} is kept on the record."
+          },
+          {
+            "id": "apply-access",
+            "label": "Apply access by role",
+            "detail": "Development staff see the gift. Program staff see volunteer shifts. Only the two admins can export."
+          }
+        ],
+        "edges": [
+          {
+            "from": "gift-form",
+            "to": "match-person"
+          },
+          {
+            "from": "match-person",
+            "to": "add-role"
+          },
+          {
+            "from": "add-role",
+            "to": "link-records"
+          },
+          {
+            "from": "link-records",
+            "to": "apply-access"
+          }
+        ],
+        "runOrder": [
+          "gift-form",
+          "match-person",
+          "add-role",
+          "link-records",
+          "apply-access"
+        ],
+        "context": {
+          "name": "Where each record lives",
+          "subtitle": "Recommended master source",
+          "fields": [
+            {
+              "label": "People, roles and organizations",
+              "value": "Zoho CRM, one contact per person"
+            },
+            {
+              "label": "Gifts and sponsorships",
+              "value": "Zoho CRM, linked to the person or organization"
+            },
+            {
+              "label": "Enrollment and attendance",
+              "value": "AppSheet, sending the contact ID back to the CRM"
+            },
+            {
+              "label": "Shared reports",
+              "value": "Google Sheets, read from the CRM instead of typed in"
+            }
+          ],
+          "states": [
+            "Gift entry received for {{person.email}}",
+            "Matched to {{person.id}}, no duplicate",
+            "Roles: Volunteer, Board member, Donor",
+            "{{donation.id}} and {{org.name}} linked",
+            "Access rules applied"
+          ]
+        },
+        "related": [
+          {
+            "title": "Duplicate rule",
+            "detail": "Email first, then phone plus last name. Anything unclear waits for your lead to confirm."
+          },
+          {
+            "title": "Shared ID",
+            "detail": "AppSheet apps store {{person.id}} so attendance stays tied to the same person."
+          }
+        ]
+      },
+      "statuses": [
+        "Gift form received",
+        "Existing contact matched",
+        "Donor role added",
+        "Gift and organization linked",
+        "Access applied"
+      ]
+    },
+    {
+      "id": "contact-record",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Maya's record shows every way she's connected to you",
+      "caption": "Staff open one contact and see her volunteer shifts, her board term, her gift and her organization together.",
+      "beat": "This is Maya's record after the gift. On the left is what she typed into the form. On the right is the one contact: three roles, her volunteer assignment, her board term, the gift linked to the walk, and her credit union as a linked organization.",
+      "details": [
+        "Each role has its own section, so a participant's program details or an employee's job type sit on the same contact when they apply.",
+        "Field names and sections are agreed with your internal lead during the assessment."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{person.name}}",
+        "subtitle": "Contact {{person.id}} · Volunteer · Board member · Donor",
+        "sourceTitle": "Gift form entry",
+        "sourceFields": [
+          {
+            "label": "Name",
+            "value": "{{person.name}}"
+          },
+          {
+            "label": "Email",
+            "value": "{{person.email}}"
+          },
+          {
+            "label": "Phone",
+            "value": "{{person.phone}}"
+          },
+          {
+            "label": "Gift type",
+            "value": "One-time"
+          },
+          {
+            "label": "Event",
+            "value": "{{donation.purpose}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Roles",
+            "value": "Volunteer, Board member, Donor"
+          },
+          {
+            "label": "Volunteer assignment",
+            "value": "{{volunteer.assignment}}, since {{volunteer.since}}"
+          },
+          {
+            "label": "Board position",
+            "value": "{{board.position}}, term {{board.term}}"
+          },
+          {
+            "label": "Gifts",
+            "value": "{{donation.id}}, {{donation.kind}} for the {{donation.purpose}}"
+          },
+          {
+            "label": "Organization",
+            "value": "{{org.name}} ({{org.type}})"
+          }
+        ],
+        "events": [
+          {
+            "title": "Volunteer since {{volunteer.since}}",
+            "detail": "{{volunteer.assignment}} shifts logged on this contact"
+          },
+          {
+            "title": "Board term recorded",
+            "detail": "{{board.position}}, {{board.term}}"
+          },
+          {
+            "title": "Gift linked",
+            "detail": "{{donation.id}} attached to the {{donation.purpose}}"
+          },
+          {
+            "title": "Organization linked",
+            "detail": "{{org.name}} now lists {{person.first}} as a contact"
+          }
+        ],
+        "notice": "Illustrative sample record with invented people and organizations."
+      },
+      "statuses": [
+        "Form entry matched",
+        "Roles combined",
+        "Gift and organization linked"
+      ]
+    },
+    {
+      "id": "access-check",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Each team sees only what it needs",
+      "caption": "The same record, checked against who can view, edit, export and change settings.",
+      "beat": "Here's the result. Maya is still one contact with three roles. Development staff can work with her gift, program staff can work with her volunteer shifts, and only your lead and backup admin can export or change settings. The second form test updated her record instead of making a copy.",
+      "details": [
+        "Access levels are a starting proposal; your lead decides the final ones.",
+        "Your lead and backup admin get hands-on training and recorded walkthroughs for these settings."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{person.name}}",
+        "subtitle": "Access check on contact {{person.id}}",
+        "fields": [
+          {
+            "label": "Program staff",
+            "value": "View and edit volunteer and program activity"
+          },
+          {
+            "label": "Development staff",
+            "value": "View and edit gifts and sponsors"
+          },
+          {
+            "label": "Lead admin",
+            "value": "Full access, export and settings"
+          },
+          {
+            "label": "Backup admin",
+            "value": "Full access, export and settings"
+          }
+        ],
+        "stages": [
+          "Walk gift in",
+          "Maya found",
+          "Role added",
+          "Records linked",
+          "Access checked"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Contacts for {{person.first}}",
+            "value": "1",
+            "note": "No duplicate created"
+          },
+          {
+            "label": "Roles on her record",
+            "value": "3",
+            "note": "Volunteer, board member, donor"
+          },
+          {
+            "label": "People who can export",
+            "value": "2",
+            "note": "Lead and backup admin"
+          }
+        ],
+        "note": "Illustrative result on sample data. Nothing here is connected to a real Zoho account.",
+        "proof": {
+          "label": "Duplicate test",
+          "value": "Passed",
+          "description": "A second gift entry with the same email updated {{person.id}} instead of creating a new contact.",
+          "sourceNote": "Sample test on invented data"
+        }
+      },
+      "statuses": [
+        "Walk gift in",
+        "Maya found",
+        "Donor role added",
+        "Gift and organization linked",
+        "Access checked"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "One person, one record,",
+    "accent": "run by your own team.",
+    "caption": "We'd agree the starting numbers together during the assessment.",
+    "metrics": [
+      {
+        "name": "People with two records",
+        "direction": "down",
+        "aim": "Fewer people with more than one record",
+        "definition": "People who have more than one contact record, divided by all people in the CRM."
+      },
+      {
+        "name": "Entries typed twice",
+        "direction": "down",
+        "aim": "Less retyping between systems",
+        "definition": "Form or AppSheet entries that staff type again into another system, counted over an agreed week."
+      },
+      {
+        "name": "Changes made in-house",
+        "direction": "up",
+        "aim": "More routine changes made by your own admins",
+        "definition": "Routine setup changes your lead or backup admin complete, divided by all routine changes requested."
+      }
+    ],
+    "baselineNote": "We'd count your current duplicates first, then agree the targets with you.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your current setup and these access levels with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

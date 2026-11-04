@@ -1,0 +1,351 @@
+{
+ "schemaVersion": 1,
+ "id": "ghl-project-manager-delivery-2114711181315197013",
+ "title": "GoHighLevel Project Manager",
+ "systemName": "One client project, from handover to delivery",
+ "account": {
+  "name": "Your team",
+  "initials": "YT",
+  "operatorInitials": "LV"
+ },
+ "source": {
+  "jobUrl": "https://www.upwork.com/jobs/~022114711181315197013",
+  "facts": [
+   "UK GoHighLevel consultancy wants a technical project manager or small delivery team to own client projects from handover to completion.",
+   "Responsibilities: end-to-end GHL implementations, coordinating developers, designers and automation specialists, CRM, workflows, funnels, integrations, client Zoom and email, timelines, testing, revisions, quality control.",
+   "Asks for GHL project examples, independent vs team, client management experience, a short Loom intro and typical pricing (pricing left out).",
+   "No client or contact name in the post or reviews; personalization omitted."
+  ]
+ },
+ "entities": {
+  "client": {
+   "name": "Northbank Physio",
+   "contact": "Priya Shah",
+   "contactFirst": "Priya",
+   "desk": "Front desk team",
+   "project": "NB-1104"
+  },
+  "test": {
+   "name": "Sam Ellis",
+   "first": "Sam",
+   "email": "sam.ellis@example.com"
+  },
+  "pm": {
+   "name": "Lorenzo"
+  },
+  "call": {
+   "handover": "Thu 12 Nov, 3 pm GMT"
+  }
+ },
+ "cover": {
+  "eyebrow": "Your GoHighLevel client projects",
+  "title": "One client build,",
+  "accent": "from handover to delivery.",
+  "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "anchors": [
+   "Handover through to completion",
+   "Client updates on Zoom and email",
+   "Testing, revisions and quality control"
+  ],
+  "previewSteps": [
+   {
+    "title": "Build the client's workflow",
+    "detail": "A new enquiry workflow for a sample physio clinic."
+   },
+   {
+    "title": "Test it and update the client",
+    "detail": "A test contact runs every step, then the client asks for one change."
+   },
+   {
+    "title": "Track it to handover",
+    "detail": "Revisions and the handover video close out the project."
+   }
+  ],
+  "footer": "Illustrative sample · Northbank Physio is a made-up client",
+  "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+ },
+ "scenes": [
+  {
+   "id": "build",
+   "kind": "workflow",
+   "platform": "ghl",
+   "title": "Here's the client build I'd own.",
+   "caption": "A sample clinic's new enquiry workflow in GoHighLevel, run with a test contact.",
+   "beat": "Say you hand me a physio clinic. This is their new enquiry workflow. I run it with a test contact, Sam, and every step fires in order: assigned to the front desk, added to the pipeline, the booking text goes out, and the clinic manager gets an alert.",
+   "details": [
+    "Test contact {{test.name}} · project {{client.project}}",
+    "Form → assign → pipeline → booking text → manager alert"
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{client.name}} · New enquiry",
+    "nodes": [
+     {
+      "id": "enquiry",
+      "type": "facebook_lead",
+      "label": "Free assessment form submitted",
+      "detail": "{{test.name}} fills in the clinic's ad form"
+     },
+     {
+      "id": "assign",
+      "type": "assign_user",
+      "label": "Assign to the front desk",
+      "detail": "Owner: {{client.desk}}"
+     },
+     {
+      "id": "pipeline",
+      "type": "opportunity",
+      "label": "Add to New enquiry",
+      "detail": "Pipeline: Patient enquiries"
+     },
+     {
+      "id": "text",
+      "type": "sms",
+      "label": "Send the booking text",
+      "detail": "Asks {{test.first}} which day suits"
+     },
+     {
+      "id": "alert",
+      "type": "notification",
+      "label": "Alert the clinic manager",
+      "detail": "{{client.contact}} gets the enquiry details"
+     }
+    ],
+    "edges": [
+     {
+      "from": "enquiry",
+      "to": "assign"
+     },
+     {
+      "from": "assign",
+      "to": "pipeline"
+     },
+     {
+      "from": "pipeline",
+      "to": "text"
+     },
+     {
+      "from": "text",
+      "to": "alert"
+     }
+    ],
+    "runOrder": [
+     "enquiry",
+     "assign",
+     "pipeline",
+     "text",
+     "alert"
+    ],
+    "context": {
+     "name": "{{test.name}}",
+     "subtitle": "Test contact · {{client.project}}",
+     "fields": [
+      {
+       "label": "Status",
+       "value": "Illustrative sample"
+      },
+      {
+       "label": "Project stage",
+       "value": "Build"
+      }
+     ],
+     "states": [
+      "Test enquiry received",
+      "Assigned to {{client.desk}}",
+      "Opportunity in New enquiry",
+      "Booking text sent to {{test.first}}",
+      "{{client.contactFirst}} alerted"
+     ]
+    },
+    "related": [
+     {
+      "title": "No reply follow-up",
+      "detail": "Next on the build checklist, tested with the same contact."
+     },
+     {
+      "title": "Appointment reminders",
+      "detail": "Built after this one and checked before the client review."
+     }
+    ]
+   },
+   "statuses": [
+    "Test enquiry received",
+    "Assigned to {{client.desk}}",
+    "Opportunity in New enquiry",
+    "Booking text sent to {{test.first}}",
+    "{{client.contactFirst}} alerted"
+   ]
+  },
+  {
+   "id": "client-and-team",
+   "kind": "messages",
+   "platform": "workbench",
+   "title": "Keep the client and the build team in step.",
+   "caption": "The test result goes to Priya, her change comes back, and the builder gets the fix.",
+   "beat": "Here's the project thread. I log the test result, then email Priya that it passed and ask for her changes. She asks for one thing: mention free parking in the booking text. That goes straight to the workflow builder with the test to rerun.",
+   "details": [
+    "Test run on {{client.project}} before the client review",
+    "One change requested by {{client.contactFirst}}, passed to the builder"
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{client.name}} · project thread",
+    "subtitle": "{{client.project}} · client and build team",
+    "fields": [
+     {
+      "label": "Project lead",
+      "value": "{{pm.name}}"
+     },
+     {
+      "label": "Client contact",
+      "value": "{{client.contact}}"
+     },
+     {
+      "label": "Test contact",
+      "value": "{{test.name}}"
+     }
+    ],
+    "items": [
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "{{pm.name}}",
+      "time": "Tue 10 Nov · 2:20 pm GMT",
+      "body": "Test run passed for {{test.name}}: booking text received at 2:14 pm and {{client.contactFirst}}'s alert logged."
+     },
+     {
+      "channel": "email",
+      "direction": "outgoing",
+      "sender": "{{pm.name}}",
+      "time": "Tue 10 Nov · 3:02 pm GMT",
+      "subject": "Test run passed, ready for your review",
+      "body": "Hi {{client.contactFirst}}, a test enquiry went through every step: assignment, pipeline, booking text and your alert. Send me any changes and I'll get them into this round."
+     },
+     {
+      "channel": "email",
+      "direction": "incoming",
+      "sender": "{{client.contact}}",
+      "time": "Wed 11 Nov · 9:40 am GMT",
+      "subject": "Re: Test run passed, ready for your review",
+      "body": "Looks good. Can the booking text mention free parking at the clinic?"
+     },
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "{{pm.name}}",
+      "time": "Wed 11 Nov · 9:52 am GMT",
+      "body": "For the workflow builder: add free parking to the booking text, then rerun the test with {{test.name}}."
+     }
+    ],
+    "notice": "Sample project messages. Nothing is sent to the client or to patients."
+   },
+   "statuses": [
+    "Test result logged",
+    "Client update sent",
+    "Change requested by {{client.contactFirst}}",
+    "Fix passed to the builder"
+   ]
+  },
+  {
+   "id": "tracker",
+   "kind": "outcome",
+   "platform": "workbench",
+   "title": "Track it through revisions to handover.",
+   "caption": "The parking line goes in, the test is rerun, and Priya gets a handover video.",
+   "beat": "Everything for the project sits on one tracker. The builder adds the parking line, I rerun the test, and the project moves to handover. Priya gets a short video showing how her workflow runs, and we review it together on a call.",
+   "details": [
+    "{{client.project}}: test run → revisions → handover video",
+    "Handover review call {{call.handover}}"
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{client.name}} · GoHighLevel implementation",
+    "subtitle": "Delivery tracker · {{client.project}}",
+    "fields": [
+     {
+      "label": "Project lead",
+      "value": "{{pm.name}}"
+     },
+     {
+      "label": "Client contact",
+      "value": "{{client.contact}}"
+     },
+     {
+      "label": "Build team",
+      "value": "Workflow builder, funnel designer"
+     },
+     {
+      "label": "Handover review",
+      "value": "{{call.handover}}"
+     }
+    ],
+    "stages": [
+     "Handover received",
+     "Kickoff call",
+     "Build",
+     "Test contact run",
+     "Revisions",
+     "Handover video"
+    ],
+    "stageSequence": [
+     3,
+     4,
+     5
+    ],
+    "metrics": [
+     {
+      "label": "Checklist items done",
+      "value": "18 of 18",
+      "note": "Illustrative sample"
+     },
+     {
+      "label": "Revision rounds",
+      "value": "1",
+      "note": "Parking line added to the booking text"
+     },
+     {
+      "label": "Client calls",
+      "value": "2",
+      "note": "Kickoff and handover review"
+     }
+    ],
+    "note": "Illustrative sample project. Each step, test and revision is logged here before handover."
+   },
+   "statuses": [
+    "Test contact run passed",
+    "Parking line added and test rerun",
+    "Handover video sent to {{client.contactFirst}}"
+   ]
+  }
+ ],
+ "close": {
+  "eyebrow": "What I would measure",
+  "title": "Measure every delivery",
+  "accent": "against the plan we agree.",
+  "caption": "I'd track on-time delivery, revision rounds, and how quickly each project starts after handover.",
+  "metrics": [
+   {
+    "name": "On-time delivery",
+    "direction": "up",
+    "aim": "Deliver more projects by the agreed date",
+    "definition": "Projects handed over to the client on or before the date agreed at kickoff, divided by all projects handed over in the period."
+   },
+   {
+    "name": "Revision rounds per project",
+    "direction": "down",
+    "aim": "Need fewer rounds of changes",
+    "definition": "Rounds of client changes requested after the first client review, counted per project and averaged across projects in the period."
+   },
+   {
+    "name": "Days from handover to kickoff",
+    "direction": "down",
+    "aim": "Start client projects sooner",
+    "definition": "Calendar days between your team handing a project to me and the client kickoff call, averaged across projects in the period."
+   }
+  ],
+  "baselineNote": "We'll set the baseline from your current projects and agree the targets.",
+  "ctaTitle": "Worth a quick 15-minute call?",
+  "ctaCopy": "Reply here and I'll send over three times.",
+  "beat": "I'd track on-time delivery, revision rounds, and how quickly each project gets going after handover. Worth a quick 15-minute call? Reply here and I'll send over three times."
+ }
+}

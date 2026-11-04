@@ -1,0 +1,222 @@
+Title: Python Developer – Real-Time Stock News Scanner, Catalyst Analysis & AI Alerts
+URL: https://www.upwork.com/jobs/~022112963417529708038
+Budget: Fixed, USD 300.0 | Experience level: Expert | Category: Web, Mobile & Software Dev / Scripts & Utilities
+Client: United States (CA), timezone America/Sao_Paulo | 908 jobs posted, 555 contracts, 59% hire rate, feedback 4.62 (271), spend $210,917.86
+Fetched read-only via Upwork find_jobs get, 2026-10-21 ~15:41 CT.
+
+Screening questions:
+1- Have you built a Pine Script v6 indicator that detects continuous intraday uptrends? Describe a relevant project and how you verified its accuracy.
+2- Have you used custom Pine Script indicators in TradingView Pine Screener? Explain its limitations for scanning multiple stocks and automatic alerts.
+3- How would you distinguish a sustained 5-minute uptrend from a single large candle or brief spike without requiring a fixed trend duration?
+4- How would you track an uptrend from premarket into regular hours and remove a stock after a 50% retracement using candle wicks, without repainting?
+5- Will you demonstrate the working scanner on historical charts I select, provide editable source code, and explain false signals before final acceptance?
+
+Description:
+We are looking for an experienced Python developer to build a real-time U.S. stock monitoring and news-analysis system for discretionary day trading.
+
+This is not an automated trading bot. The system will not place trades or determine technical entries.
+
+Its purpose is to identify stocks that are moving because of fresh, meaningful news, analyze the underlying catalyst, and alert the trader quickly. The trader will independently review the chart and wait for their own technical setup before entering a trade.
+
+The system will focus on three types of opportunities:
+
+1. Small-Cap Short Watch
+Identify small-cap stocks making significant moves where a fresh catalyst exists, but the substance of the news may be weak, promotional, vague, non-binding, financially insignificant, or disproportionate to the stock's price reaction.
+Examples may include partnerships with no disclosed financial value, vague AI announcements, preliminary results, non-binding agreements, or announcements with no clear revenue impact.
+The system should flag these as potential short-watch candidates, not automatic short signals.
+
+2. Small-Cap Long Watch
+Identify small-cap stocks making significant moves supported by fresh and materially strong news.
+Examples may include meaningful contracts, strong clinical/FDA developments, acquisitions, strong earnings/guidance, significant financing/business developments, or other genuinely material catalysts.
+
+3. Large-Cap Long Watch
+Identify larger U.S. companies experiencing significant moves based on strong fresh catalysts such as earnings surprises, raised guidance, material contracts, M&A, FDA/regulatory developments, or other major company-specific news.
+Large-cap stocks should not be selected simply because they are moving. A meaningful catalyst should be verified.
+
+Market / Mover Detection
+We currently use Trade Ideas for stock scanning and mover detection.
+The developer should first determine whether our Trade Ideas subscription provides a practical supported method to integrate scanner results with the Python application.
+Do not assume Trade Ideas API access is included.
+Possible supported integration methods should be investigated before rebuilding functionality already available through Trade Ideas.
+If direct integration is not practical, the developer should propose an alternative market-data architecture.
+
+The system should monitor both:
+- Premarket gap/momentum stocks
+- Fresh intraday movers
+
+Target monitoring window:
+5:00 AM – 4:00 PM Pacific Time
+Periodic market scans may run approximately every 15 minutes, but breaking news should not wait for the next 15-minute scan.
+
+Real-Time News Architecture
+News speed and coverage are critical to this project.
+The application should use a multi-source architecture rather than relying on a single provider.
+Sources/services to investigate include:
+*Alpaca Real-Time News
+*Benzinga / Benzinga APIs
+*SEC EDGAR
+*GlobeNewswire
+*Business Wire
+*PR Newswire
+*Company Investor Relations / Press Releases
+
+TradingView is currently useful to us as a reference because we sometimes see news there that does not appear in Benzinga. However, the application should not depend on unsupported TradingView scraping.
+The developer should identify reliable and legally supported APIs/feeds that provide comparable coverage.
+
+Before recommending any paid news/data service, please provide:
+- Monthly cost
+- Real-time vs delayed status
+- Expected latency
+- News/source coverage
+- API or streaming method
+- Why the paid service is necessary
+- Whether a lower-cost source can provide comparable coverage
+
+We prefer to keep recurring costs reasonable while prioritizing news speed and reliability.
+
+SEC Integration
+SEC information should come directly from the official:
+
+SEC EDGAR / data.sec.gov
+The system should monitor relevant filings when appropriate, including:
+- 8-K
+- 6-K
+- S-1 / S-3
+- 424B filings
+- 10-Q / 10-K when relevant
+- Offering/dilution-related filings
+- Material corporate events
+
+SEC data should be used to verify and enrich catalysts, not replace the real-time news feed.
+
+AI Catalyst Analysis
+The AI component should analyze the actual underlying news, press release, or filing whenever possible — not simply classify a headline.
+We are considering models/APIs from:
+*OpenAI
+*Anthropic
+*Google
+
+The architecture should preferably be model-independent, allowing us to benchmark or replace the AI provider without rebuilding the entire application.
+AI should be used for qualitative catalyst analysis.
+Deterministic Python logic should handle numeric calculations, market-data filters, timestamps, security eligibility, and other objective rules whenever possible.
+For each catalyst, the system should attempt to determine items such as:
+- Publication timestamp and freshness
+- Original source
+- Catalyst category
+- Materiality
+- Contract/value disclosed or not
+- Potential revenue impact
+- Binding vs non-binding agreement
+- Clinical/FDA significance where applicable
+- Offering/dilution risk
+- Recent reverse split or important corporate action
+- Promotional/vague wording
+- Whether old news is being recycled
+- Whether the stock reaction appears disproportionate to the substance of the catalyst
+
+The AI should return a structured classification such as:
+STRONG CATALYST
+Potential Long Watch
+POTENTIAL PUFFY / WEAK CATALYST
+Potential Short Watch
+MIXED / UNCLEAR
+Requires manual review
+NO FRESH CATALYST
+No current verifiable company-specific catalyst found
+Every classification should include the evidence/reasoning used to reach it.
+
+Critical Requirement: No False Catalyst Matching
+This is extremely important.
+If a stock is moving strongly but the system cannot verify a fresh relevant catalyst, it must explicitly report:
+NO FRESH CATALYST
+The system must not attach an old, unrelated, or recycled article to today's price movement simply because the ticker appears in the article.
+News freshness should be based on reliable timestamps and original-source verification whenever possible.
+
+Alerts
+Breaking material news should be analyzed as quickly as practical rather than waiting for a scheduled market scan.
+
+A typical alert might contain:
+Ticker: XYZ
+Type: Small Cap
+Move: +48%
+News age: 3 minutes
+Source: GlobeNewswire
+Catalyst: Strategic Partnership
+Financial value disclosed: No
+Revenue impact disclosed: No
+Binding agreement: Not verified
+Recent dilution: Yes
+Assessment: Potential Puffy Catalyst
+Watch: Short Watch — Wait for Technical Setup
+The application is providing decision support only.
+It should never automatically execute a trade.
+
+Reliability Requirements
+
+The finished system should be capable of unattended operation and include:
+- Logging
+- Error handling
+- API retry/backoff
+- Duplicate-news detection
+- Duplicate-alert prevention
+- State persistence
+- Stale-news protection
+- Time-zone handling
+- Market calendar/holiday handling
+- Monitoring/heartbeat for failures
+- Secure handling of API credentials
+- Clear configuration for thresholds and providers
+
+If the same stock remains on the scanner, it should not repeatedly send identical alerts.
+A new alert/update should generally require a meaningful change such as new news, a new filing, a significant market move, or a catalyst-classification change.
+
+Testing / Acceptance
+We want the system tested against historical and real examples before considering the project complete.
+
+Testing should include cases such as:
+- Small cap with genuinely strong fresh news
+- Small cap with weak/promotional news and extreme price reaction
+- Large cap with strong earnings/guidance or another material catalyst
+- Stock moving significantly with no fresh verifiable catalyst
+- Old news incorrectly appearing in a ticker search
+- Recent reverse split
+- Offering/dilution filing
+- Duplicate versions of the same press release from multiple providers
+- News appearing before the next scheduled market scan
+- API/news provider outage
+The developer should demonstrate why the system produced each classification.
+
+Existing Resources
+We already have:
+- Trade Ideas
+- Benzinga Pro
+- Alpaca account/API
+- An existing Python stock-scanner project that may contain reusable components
+
+The developer should review what is already available before recommending additional subscriptions or rebuilding existing functionality.
+
+Ideal Developer
+We are looking for someone with strong experience in:
+- Python
+- REST APIs
+- WebSocket/event-driven systems
+- Financial market data
+- Real-time data pipelines
+- News/API integration
+- LLM/API integration
+- Structured AI output
+- Production reliability
+- U.S. equity market mechanics
+
+Direct experience with Alpaca, Trade Ideas, Benzinga, SEC EDGAR, financial news feeds, or similar systems is highly desirable.
+
+Important Note for Applicants
+We do not expect you to already know every news provider or AI service listed above.
+However, we expect you to understand how to research API capabilities, verify subscription/access requirements, compare latency and coverage, and design a reliable multi-source architecture.
+Please do not assume that a retail subscription automatically includes API access.
+This project will begin with a short live video/screen-sharing discussion before hiring so we can review the proposed architecture and confirm technical understanding.
+
+Thank you!
+
+
+Thank you!

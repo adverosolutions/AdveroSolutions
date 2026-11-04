@@ -1,0 +1,464 @@
+{
+  "schemaVersion": 1,
+  "id": "grok-ai-bot-real-estate-automations-2112748953415130313",
+  "title": "Your priority leads.",
+  "systemName": "Approved follow-up for your top leads.",
+  "account": {
+    "name": "Joe",
+    "initials": "J",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112748953415130313",
+    "facts": [
+      "Original post retained in jd.txt. Synthetic illustrative sample. The bot workspace is a labeled custom surface; no Grok Bot, Muse or Instinct UI is depicted because no accepted native reference exists. GoHighLevel uses the native candidate adapter."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Dana Ruiz",
+      "phone": "(555) 014-2290",
+      "text": "Hi Dana, it's Joe. Did either of the 3-bed homes stand out? Happy to set up a second look this week."
+    },
+    "owner": {
+      "name": "Joe"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for Joe",
+    "title": "Know who needs you today",
+    "accent": "and approve every text first.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Top leads bot + GoHighLevel, with your approval before anything sends."
+    ],
+    "previewSteps": [
+      {
+        "title": "Pick",
+        "detail": "The bot lists your priority leads each morning."
+      },
+      {
+        "title": "Approve",
+        "detail": "You OK the drafted text."
+      },
+      {
+        "title": "Send",
+        "detail": "GoHighLevel sends it and logs the reply."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "Your first bot",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "We'll compare the bot with how you follow up with leads today.",
+    "metrics": [
+      {
+        "name": "Leads waiting a week or more",
+        "direction": "down",
+        "aim": "Fewer priority leads going quiet",
+        "definition": "Priority buyer and seller leads with no contact from you in seven days or more."
+      },
+      {
+        "name": "Time to follow up",
+        "direction": "down",
+        "aim": "Reach priority leads sooner",
+        "definition": "Time from a lead needing attention to your approved text going out."
+      },
+      {
+        "name": "Texts approved as drafted",
+        "direction": "up",
+        "aim": "Drafts that sound like you",
+        "definition": "Drafted texts you approve without edits, divided by drafts the bot suggests."
+      }
+    ],
+    "baselineNote": "We'll measure your current follow-up first, then compare results after launch.",
+    "ctaTitle": "Pick the first bot.",
+    "ctaCopy": "Reply here and I'll send times for a 15-minute call.",
+    "beat": "Reply here and I'll send times for a 15-minute call. We'll pick the first bot to build for your real estate business."
+  },
+  "scenes": [
+    {
+      "id": "approved-follow-up",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "Nothing sends until you approve.",
+      "caption": "When you approve a text, GoHighLevel sends it, moves the lead and reminds you to check in.",
+      "beat": "This is the GoHighLevel workflow. Nothing sends until you approve. When you say yes, the bot adds this tag, and GoHighLevel sends the text, moves the lead to Contacted, and reminds you to check in two days later.",
+      "details": [
+        "Open Send approved text to show the exact message.",
+        "The bot only adds the tag. GoHighLevel does the sending."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Approved follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "builder",
+        "graph": {
+          "name": "Approved follow-up",
+          "nodes": [
+            {
+              "id": "approved",
+              "type": "contact_tag",
+              "label": "Joe approves the text",
+              "detail": "Tag added: bot-approved"
+            },
+            {
+              "id": "send",
+              "type": "sms",
+              "label": "Send approved text",
+              "detail": "{{lead.phone}}"
+            },
+            {
+              "id": "stage",
+              "type": "opportunity",
+              "label": "Move to Contacted",
+              "detail": "Buyers pipeline · Contacted"
+            },
+            {
+              "id": "wait",
+              "type": "wait",
+              "label": "Wait 2 days",
+              "detail": "Time delay · 2 days"
+            },
+            {
+              "id": "remind",
+              "type": "notification",
+              "label": "Remind Joe to check in",
+              "detail": "In-app notification to Joe"
+            }
+          ],
+          "edges": [
+            {
+              "from": "approved",
+              "to": "send"
+            },
+            {
+              "from": "send",
+              "to": "stage"
+            },
+            {
+              "from": "stage",
+              "to": "wait"
+            },
+            {
+              "from": "wait",
+              "to": "remind"
+            }
+          ],
+          "runOrder": [
+            "approved",
+            "send",
+            "stage",
+            "wait",
+            "remind"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Priority buyer · Illustrative sample",
+            "fields": [
+              {
+                "label": "Pipeline",
+                "value": "Buyers"
+              },
+              {
+                "label": "Last contact",
+                "value": "9 days ago"
+              }
+            ],
+            "states": [
+              "Joe approved the drafted text",
+              "Approved text sent to Dana",
+              "Dana moved to Contacted",
+              "Waiting 2 days",
+              "Check-in reminder ready for Joe"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "approved",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Tag",
+                "value": "bot-approved"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Joe approved the drafted text"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Workflow Trigger",
+                "value": "Contact Tag"
+              },
+              {
+                "label": "Filters",
+                "value": "Tag Added: bot-approved"
+              }
+            ]
+          },
+          {
+            "node": "send",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Tag",
+                "value": "bot-approved"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Approved text sent to Dana"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Message",
+                "value": "{{lead.text}}"
+              }
+            ]
+          },
+          {
+            "node": "stage",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Tag",
+                "value": "bot-approved"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Dana moved to Contacted"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "In pipeline",
+                "value": "Buyers"
+              },
+              {
+                "label": "In pipeline stage",
+                "value": "Contacted"
+              },
+              {
+                "label": "Opportunity name",
+                "value": "{{lead.name}}, buyer"
+              }
+            ]
+          },
+          {
+            "node": "wait",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Tag",
+                "value": "bot-approved"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Waiting 2 days"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Wait For",
+                "value": "Time Delay"
+              },
+              {
+                "label": "Wait",
+                "value": "2 Days"
+              }
+            ]
+          },
+          {
+            "node": "remind",
+            "input": [
+              {
+                "label": "Contact",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "Tag",
+                "value": "bot-approved"
+              }
+            ],
+            "output": [
+              {
+                "label": "Sample state",
+                "value": "Check-in reminder ready for Joe"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Notification type",
+                "value": "In App"
+              },
+              {
+                "label": "User",
+                "value": "Joe"
+              },
+              {
+                "label": "Message",
+                "value": "Check in with {{lead.name}} about a second showing."
+              }
+            ]
+          }
+        ],
+        "selectedNode": "approved"
+      },
+      "statuses": [
+        "Joe approved the drafted text",
+        "Approved text sent to Dana",
+        "Dana moved to Contacted",
+        "Waiting 2 days",
+        "Check-in reminder ready for Joe"
+      ]
+    },
+    {
+      "id": "morning-leads",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Your bot picks who needs you today.",
+      "caption": "Each morning it lists your priority leads, drafts the follow-up and waits for your OK.",
+      "beat": "Each morning the bot tells you which leads need you and why. Here it's Dana, nine days without hearing from you. It drafts the text, and nothing goes out until you say yes.",
+      "details": [
+        "Custom bot workspace, illustrative. It stands in for whichever bot platform we pick.",
+        "Point to the draft, then Joe's approval."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Top leads bot",
+        "subtitle": "Custom project workspace, illustrative",
+        "fields": [
+          {
+            "label": "Lead",
+            "value": "{{lead.name}}"
+          },
+          {
+            "label": "Type",
+            "value": "Priority buyer"
+          },
+          {
+            "label": "Last contact",
+            "value": "9 days ago"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Top leads bot",
+            "time": "8:00 AM, sample",
+            "body": "Morning Joe. Three priority leads need you today. Dana Ruiz is first: she toured two 3-bed homes last week and hasn't heard from you in 9 days."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Top leads bot",
+            "time": "8:00 AM, sample",
+            "body": "Suggested text for Dana: \"{{lead.text}}\" Want me to send it?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Joe",
+            "time": "8:12 AM, sample",
+            "body": "Approved. Send it."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Top leads bot",
+            "time": "8:12 AM, sample",
+            "body": "Done. I tagged Dana bot-approved in GoHighLevel, so the workflow sends your text."
+          }
+        ],
+        "notice": "Custom bot workspace, illustrative. Nothing sends without Joe's approval."
+      },
+      "statuses": [
+        "Priority leads listed",
+        "Text drafted for Dana",
+        "Joe approved",
+        "Tag added in GoHighLevel"
+      ]
+    },
+    {
+      "id": "dana-reply",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "Dana gets your text and replies.",
+      "caption": "The approved text goes out from GoHighLevel, and her reply lands in Conversations.",
+      "beat": "Here's Dana's conversation in GoHighLevel. Your approved text went out at 8:12, and she replied asking to see the Maple Street home on Saturday.",
+      "details": [
+        "Both messages sit on Dana's contact in Conversations.",
+        "Her reply is sample data."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Conversations",
+        "subtitle": "Illustrative sample",
+        "surface": "conversations",
+        "contact": "{{lead.name}}",
+        "fields": [
+          {
+            "label": "Phone",
+            "value": "{{lead.phone}}"
+          },
+          {
+            "label": "Assigned to",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Pipeline stage",
+            "value": "Buyers · Contacted"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "Joe",
+            "time": "8:12 AM",
+            "body": "{{lead.text}}"
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "9:40 AM",
+            "body": "Yes, the one on Maple Street. Could we see it Saturday morning?"
+          }
+        ]
+      },
+      "statuses": [
+        "Approved text sent",
+        "Dana replied"
+      ]
+    }
+  ]
+}

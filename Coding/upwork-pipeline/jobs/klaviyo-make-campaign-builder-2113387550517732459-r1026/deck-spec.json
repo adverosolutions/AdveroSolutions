@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 1,
+  "id": "klaviyo-make-campaign-builder-2113387550517732459-r1026",
+  "title": "Make scenario that turns a short brief into a Klaviyo draft campaign with AI copy, sized banners and a sign-off step",
+  "systemName": "Your brief-to-Klaviyo campaign builder",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113387550517732459",
+    "facts": [
+      "Post: LA direct-to-consumer fine jewelry brand (custom engagement rings and bridal) on Shopify and Klaviyo; wants brief (offer, product, theme, date) to ready-to-review Klaviyo campaign.",
+      "Post asks for AI copy with A/B variations, on-brand banners sized for email and mobile, Shopify product pull, Klaviyo build via API (template, blocks, images, links, UTM, segment, schedule), optional SMS and social, human approval before sending.",
+      "Tools open: Klaviyo API, Shopify API, OpenAI/Claude, AI image tools incl. Bannerbear/Placid, Make.com/Zapier/n8n. This rebuild uses Make (Lorenzo works daily in Make). Oct 22 deck used n8n; this one is fresh content.",
+      "No verified first name: one review says Yaniv, only one, so U-006 fallback 'your team'.",
+      "Rebuild on 2026-10-26 per Lorenzo 3:11 PM CT via COO: all saved jobs current on today's legacy template."
+    ]
+  },
+  "entities": {
+    "brief": {
+      "id": "BRF-1207",
+      "theme": "Anniversary week",
+      "product": "Emerald-cut eternity band",
+      "offer": "Free at-home ring sizer",
+      "send": "Tue, Dec 1, 9:00 AM PT"
+    },
+    "campaign": {
+      "name": "Anniversary Week: Eternity Bands",
+      "segment": "Past bridal buyers, 12+ months",
+      "utm": "utm_source=klaviyo, utm_campaign=anniversary-week"
+    },
+    "copy": {
+      "subjectA": "A year in, still the one",
+      "subjectB": "Eternity bands for your anniversary",
+      "preview": "Try your size at home before you choose.",
+      "headline": "Mark the year with an eternity band",
+      "button": "See the eternity bands"
+    },
+    "banner": {
+      "desktop": "1200 x 600 email hero",
+      "mobile": "750 x 900 mobile hero"
+    },
+    "products": {
+      "lead": "Emerald-cut eternity band",
+      "second": "Oval halo eternity band",
+      "third": "Thin pave eternity band"
+    },
+    "team": {
+      "approver": "Marketing lead"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your brief-to-Klaviyo campaign builder",
+    "title": "Write a four-line brief,",
+    "accent": "get back a campaign ready to check.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Make scenario",
+      "Banners in email and mobile sizes",
+      "Marketing lead signs off first"
+    ],
+    "previewSteps": [
+      {
+        "title": "Brief in",
+        "detail": "Theme, product, offer and send date."
+      },
+      {
+        "title": "Draft built",
+        "detail": "Copy, banners, links and audience in one Klaviyo draft."
+      },
+      {
+        "title": "Sign-off",
+        "detail": "Scheduled only after your marketing lead approves."
+      }
+    ],
+    "footer": "Illustrative sample data · no live store or Klaviyo account connected",
+    "beat": "Here's how one short brief becomes a Klaviyo campaign your team only has to check and approve."
+  },
+  "scenes": [
+    {
+      "id": "make-scenario",
+      "kind": "workflow",
+      "platform": "make",
+      "title": "One brief runs through the Make scenario.",
+      "caption": "Products come from Shopify, copy and banners are generated, and the campaign is built as a draft in Klaviyo.",
+      "beat": "Your team fills in a four-line brief for anniversary week. Make pulls the emerald-cut band and two related rings from Shopify, writes the copy in your brand voice, checks it against your word list, renders the banners from your template, and builds the campaign in Klaviyo as a draft. Then it asks your marketing lead to review it in Slack.",
+      "details": [
+        "Brief {{brief.id}}: {{brief.theme}}, {{brief.product}}, {{brief.offer}}, send {{brief.send}}",
+        "If the copy uses a word on your banned list, the second route logs it for a rewrite and nothing is built",
+        "Each Make a request module stands for an API call; keys and field mapping are set up with your accounts during the build"
+      ],
+      "content": {
+        "name": "Brief to Klaviyo draft",
+        "nodes": [
+          {
+            "id": "brief-in",
+            "type": "custom_webhook",
+            "label": "Team fills in the brief",
+            "detail": "{{brief.theme}} · {{brief.product}} · {{brief.offer}} · {{brief.send}}"
+          },
+          {
+            "id": "shopify",
+            "type": "http_request",
+            "label": "Shopify: get products, photos and links",
+            "detail": "{{products.lead}}, {{products.second}}, {{products.third}}"
+          },
+          {
+            "id": "write-copy",
+            "type": "http_request",
+            "label": "AI: write subject lines, preview and body",
+            "detail": "Two subject lines to test, preview text, headline, body and button, in your brand voice"
+          },
+          {
+            "id": "voice-check",
+            "type": "router",
+            "label": "Brand word check",
+            "detail": "Clear route continues; flagged copy goes to the rewrite log"
+          },
+          {
+            "id": "banners",
+            "type": "http_request",
+            "label": "Banner template: render both sizes",
+            "detail": "{{banner.desktop}} and {{banner.mobile}} with your logo, fonts and product photo"
+          },
+          {
+            "id": "klaviyo",
+            "type": "http_request",
+            "label": "Klaviyo: create the campaign as a draft",
+            "detail": "Template blocks, images, links with UTM tags, {{campaign.segment}}, {{brief.send}}"
+          },
+          {
+            "id": "ask-approval",
+            "type": "slack_create_message",
+            "label": "Ask the marketing lead to review",
+            "detail": "Draft link and send time posted for sign-off"
+          },
+          {
+            "id": "rewrite-log",
+            "type": "google_sheets_add_row",
+            "label": "Log copy for a rewrite",
+            "detail": "Flagged word and brief ID saved; no campaign built"
+          }
+        ],
+        "edges": [
+          {
+            "from": "brief-in",
+            "to": "shopify"
+          },
+          {
+            "from": "shopify",
+            "to": "write-copy"
+          },
+          {
+            "from": "write-copy",
+            "to": "voice-check"
+          },
+          {
+            "from": "voice-check",
+            "to": "banners",
+            "label": "Copy clear"
+          },
+          {
+            "from": "voice-check",
+            "to": "rewrite-log",
+            "label": "Banned word found"
+          },
+          {
+            "from": "banners",
+            "to": "klaviyo"
+          },
+          {
+            "from": "klaviyo",
+            "to": "ask-approval"
+          }
+        ],
+        "runOrder": [
+          "brief-in",
+          "shopify",
+          "write-copy",
+          "voice-check",
+          "banners",
+          "klaviyo",
+          "ask-approval"
+        ],
+        "context": {
+          "name": "{{brief.id}}",
+          "subtitle": "{{campaign.name}}",
+          "fields": [
+            {
+              "label": "Theme",
+              "value": "{{brief.theme}}"
+            },
+            {
+              "label": "Send time",
+              "value": "{{brief.send}}"
+            },
+            {
+              "label": "Data",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Brief received",
+            "3 products and photos pulled",
+            "Copy written with two subject lines",
+            "Copy cleared the word check",
+            "Banners rendered in both sizes",
+            "Klaviyo draft created",
+            "Review request sent to the marketing lead"
+          ]
+        },
+        "related": [
+          {
+            "title": "Rewrite route",
+            "detail": "Flagged copy is logged with the brief ID and stops before Klaviyo."
+          },
+          {
+            "title": "No sending here",
+            "detail": "The scenario only creates a draft. Scheduling happens after sign-off."
+          }
+        ]
+      },
+      "statuses": [
+        "Brief received",
+        "Products pulled from Shopify",
+        "Copy written",
+        "Word check passed",
+        "Banners rendered",
+        "Klaviyo draft created",
+        "Review requested"
+      ],
+      "optional": false
+    },
+    {
+      "id": "draft-campaign",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Everything the draft needs, filled in from the brief.",
+      "caption": "Subject lines, preview text, banners, tracked links, audience and send time are all set before anyone opens it.",
+      "beat": "This is what the scenario hands your team. On the left is the brief. On the right is everything it filled in: two subject lines for the A/B test, the preview text, the headline and button, both banner sizes, the tracked links, the audience and the send time.",
+      "details": [
+        "Subject A: {{copy.subjectA}}",
+        "Subject B: {{copy.subjectB}}",
+        "Links carry {{campaign.utm}}"
+      ],
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "Klaviyo draft built from {{brief.id}}",
+        "sourceTitle": "Brief",
+        "sourceFields": [
+          {
+            "label": "Theme",
+            "value": "{{brief.theme}}"
+          },
+          {
+            "label": "Product",
+            "value": "{{brief.product}}"
+          },
+          {
+            "label": "Offer",
+            "value": "{{brief.offer}}"
+          },
+          {
+            "label": "Send date",
+            "value": "{{brief.send}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Subject line A",
+            "value": "{{copy.subjectA}}"
+          },
+          {
+            "label": "Subject line B",
+            "value": "{{copy.subjectB}}"
+          },
+          {
+            "label": "Preview text",
+            "value": "{{copy.preview}}"
+          },
+          {
+            "label": "Headline",
+            "value": "{{copy.headline}}"
+          },
+          {
+            "label": "Button",
+            "value": "{{copy.button}}"
+          },
+          {
+            "label": "Banners",
+            "value": "{{banner.desktop}}, {{banner.mobile}}"
+          },
+          {
+            "label": "Products shown",
+            "value": "{{products.lead}}, {{products.second}}, {{products.third}}"
+          },
+          {
+            "label": "Tracked links",
+            "value": "{{campaign.utm}}"
+          },
+          {
+            "label": "Audience",
+            "value": "{{campaign.segment}}"
+          },
+          {
+            "label": "Send time",
+            "value": "{{brief.send}}"
+          }
+        ],
+        "events": [
+          {
+            "title": "Products and photos pulled",
+            "detail": "Names, photos and product links come straight from Shopify."
+          },
+          {
+            "title": "Banners rendered",
+            "detail": "Same template, your logo and fonts, sized for desktop email and phones."
+          },
+          {
+            "title": "Draft saved in Klaviyo",
+            "detail": "Status is draft. Nothing is scheduled yet."
+          }
+        ],
+        "notice": "Custom project workspace showing the draft's contents. Sample data is illustrative; the real draft lives in your Klaviyo account."
+      },
+      "statuses": [
+        "Brief on the left",
+        "Copy and banners filled in",
+        "Links, audience and send time set"
+      ],
+      "optional": false
+    },
+    {
+      "id": "sms-social",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "The matching text and social post come from the same brief.",
+      "caption": "Optional extras from your post, written as drafts for the same campaign.",
+      "beat": "Because you mentioned SMS and social, the same brief also produces a matching text message and a social caption. Both stay as drafts with the campaign.",
+      "details": [
+        "SMS goes only to subscribers who opted in to texts",
+        "Both are drafts; nothing posts or sends from here"
+      ],
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "Extra drafts for {{brief.id}}",
+        "fields": [
+          {
+            "label": "Status",
+            "value": "Drafts"
+          },
+          {
+            "label": "Send time",
+            "value": "{{brief.send}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "SMS draft",
+            "time": "{{brief.send}}",
+            "body": "{{brief.theme}}: our eternity bands are here, with a {{brief.offer}} so you can check the fit first. Reply STOP to opt out."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Social caption draft",
+            "time": "For review",
+            "body": "One year, one band. The {{products.lead}} is part of our {{brief.theme}} edit. Try your size at home with a {{brief.offer}}."
+          }
+        ],
+        "notice": "Custom project workspace. These are unsent drafts with illustrative sample copy."
+      },
+      "statuses": [
+        "SMS draft ready",
+        "Social caption draft ready"
+      ],
+      "optional": true
+    },
+    {
+      "id": "sign-off",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Your marketing lead approves, then it's scheduled.",
+      "caption": "The draft waits in review. Once approved, it's scheduled for the brief's send time.",
+      "beat": "Nothing goes out on its own. The draft waits until your marketing lead checks it and approves. Only then is it scheduled for Tuesday at 9 AM Pacific, to past bridal buyers.",
+      "details": [
+        "Approver: {{team.approver}}",
+        "Changes requested go back to the draft instead of scheduling"
+      ],
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "{{brief.id}} · {{campaign.segment}}",
+        "fields": [
+          {
+            "label": "Approver",
+            "value": "{{team.approver}}"
+          },
+          {
+            "label": "Scheduled for",
+            "value": "{{brief.send}}"
+          },
+          {
+            "label": "Test",
+            "value": "Subject A vs subject B"
+          }
+        ],
+        "stages": [
+          "Draft built",
+          "In review",
+          "Approved",
+          "Scheduled"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Brief",
+            "value": "1",
+            "note": "Illustrative sample"
+          },
+          {
+            "label": "Banners",
+            "value": "2",
+            "note": "Desktop and mobile"
+          },
+          {
+            "label": "Subject lines",
+            "value": "2",
+            "note": "A/B test"
+          }
+        ],
+        "note": "Illustrative sample. In your account, Klaviyo schedules the campaign only after the approval step."
+      },
+      "statuses": [
+        "Draft built in Klaviyo",
+        "Waiting for the marketing lead",
+        "Approved",
+        "Scheduled for Tue, Dec 1, 9:00 AM PT"
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Less time building campaigns,",
+    "accent": "fewer rounds of fixes.",
+    "caption": "We'd agree a starting point from your current campaigns, then track these three.",
+    "metrics": [
+      {
+        "name": "Time from brief to a campaign ready to check",
+        "direction": "down",
+        "aim": "Shorter wait for a reviewable draft",
+        "definition": "Time between submitting the brief and the draft being ready for the marketing lead."
+      },
+      {
+        "name": "Rounds of fixes before approval",
+        "direction": "down",
+        "aim": "Fewer copy and banner rewrites",
+        "definition": "How many times a draft goes back for changes before it is approved."
+      },
+      {
+        "name": "Campaigns out on the planned day",
+        "direction": "up",
+        "aim": "More campaigns sent on schedule",
+        "definition": "Campaigns sent on the date in their brief, divided by all briefs submitted."
+      }
+    ],
+    "baselineNote": "We'd measure your current campaigns first and agree targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your brand rules and banner template with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

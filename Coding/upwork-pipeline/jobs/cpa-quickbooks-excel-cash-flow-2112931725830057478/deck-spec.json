@@ -1,0 +1,894 @@
+{
+  "schemaVersion": 1,
+  "id": "cpa-quickbooks-excel-cash-flow-2112931725830057478",
+  "title": "A client's monthly cash flow.",
+  "systemName": "A checked cash flow template.",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112931725830057478",
+    "facts": [
+      "Original post and screening questions retained in jd.txt. Client name and company not stated in the post; using 'your team'. Ridgeline Supply Co. and all amounts are invented illustrative sample data. No native Excel or QuickBooks adapter exists; the workflow is shown in the native n8n editor and the checked result in the custom workbench."
+    ]
+  },
+  "entities": {
+    "client": {
+      "name": "Ridgeline Supply Co."
+    },
+    "period": {
+      "label": "September 2026"
+    },
+    "cash": {
+      "beginning": "84,200.00",
+      "netIncome": "18,450.00",
+      "receivables": "-6,300.00",
+      "payables": "2,150.00",
+      "equipment": "-9,800.00",
+      "loan": "-3,500.00",
+      "netChange": "1,000.00",
+      "ending": "85,200.00"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Fill your cash flow template",
+    "accent": "straight from QuickBooks.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "QuickBooks numbers go into your existing Excel template. Your formulas stay, and the totals get checked."
+    ],
+    "previewSteps": [
+      {
+        "title": "Pull",
+        "detail": "Get the month's cash flow from QuickBooks."
+      },
+      {
+        "title": "Fill",
+        "detail": "Write only the input cells in your template."
+      },
+      {
+        "title": "Check",
+        "detail": "Match ending cash against QuickBooks."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "Your first automation",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "Once this is running, we can look at your ChatGPT assistants and your lead and meeting steps.",
+    "metrics": [
+      {
+        "name": "Time to finish each cash flow",
+        "direction": "down",
+        "aim": "Spend less time on each client's cash flow",
+        "definition": "Staff time from month close to a finished, checked template for one client."
+      },
+      {
+        "name": "Templates that match the first time",
+        "direction": "up",
+        "aim": "Get more templates right on the first run",
+        "definition": "Runs where template ending cash equals QuickBooks ending cash with no manual fixes, divided by all runs."
+      },
+      {
+        "name": "Clients on the automated template",
+        "direction": "up",
+        "aim": "Cover more of your clients each month",
+        "definition": "Client files filled by the run each month, out of the clients who use this template."
+      }
+    ],
+    "baselineNote": "We'll time how your team does this today, then compare after launch.",
+    "ctaTitle": "Pick the first client file.",
+    "ctaCopy": "Reply here and I'll send times for a 15-minute call.",
+    "beat": "Reply here and I'll send times for a 15-minute call. We'll look at your template together and pick the first client to run it on."
+  },
+  "scenes": [
+    {
+      "id": "cash-flow-run",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Pull the month from QuickBooks.",
+      "caption": "One run takes a client's September numbers from QuickBooks and puts them into your existing cash flow template.",
+      "beat": "Your team starts a run here for one client and one month. n8n pulls the cash flow report from QuickBooks, writes the numbers into the template, then reads the totals back to check them. This sample uses Ridgeline Supply for September.",
+      "content": {
+        "name": "Cash flow template run",
+        "subtitle": "Illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "Cash flow template run",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "webhook",
+              "label": "Start cash flow run",
+              "detail": "POST /cash-flow-run"
+            },
+            {
+              "id": "quickbooks",
+              "type": "http_request",
+              "label": "Get QuickBooks cash flow",
+              "detail": "GET Cash Flow report"
+            },
+            {
+              "id": "write",
+              "type": "http_request",
+              "label": "Write input cells",
+              "detail": "PATCH C5:C10 only"
+            },
+            {
+              "id": "readback",
+              "type": "http_request",
+              "label": "Read template totals",
+              "detail": "GET C12:C13"
+            },
+            {
+              "id": "compare",
+              "type": "edit_fields",
+              "label": "Compare with QuickBooks",
+              "detail": "Ending cash check"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "quickbooks"
+            },
+            {
+              "from": "quickbooks",
+              "to": "write"
+            },
+            {
+              "from": "write",
+              "to": "readback"
+            },
+            {
+              "from": "readback",
+              "to": "compare"
+            }
+          ],
+          "runOrder": [
+            "start",
+            "quickbooks",
+            "write",
+            "readback",
+            "compare"
+          ],
+          "context": {
+            "name": "{{client.name}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Period",
+                "value": "{{period.label}}"
+              },
+              {
+                "label": "Sheet",
+                "value": "Cash Flow"
+              }
+            ],
+            "states": [
+              "Run started for {{client.name}}",
+              "{{period.label}} pulled from QuickBooks",
+              "Input cells C5 to C10 filled",
+              "Formula totals read back",
+              "Ending cash matches QuickBooks"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "start",
+            "input": [
+              {
+                "label": "client",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "period",
+                "value": "{{period.label}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "client",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "startDate",
+                "value": "2026-09-01"
+              },
+              {
+                "label": "endDate",
+                "value": "2026-09-30"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "cash-flow-run"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "quickbooks",
+            "input": [
+              {
+                "label": "client",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "startDate",
+                "value": "2026-09-01"
+              },
+              {
+                "label": "endDate",
+                "value": "2026-09-30"
+              }
+            ],
+            "output": [
+              {
+                "label": "beginningCash",
+                "value": "{{cash.beginning}}"
+              },
+              {
+                "label": "netIncome",
+                "value": "{{cash.netIncome}}"
+              },
+              {
+                "label": "changeInReceivables",
+                "value": "{{cash.receivables}}"
+              },
+              {
+                "label": "changeInPayables",
+                "value": "{{cash.payables}}"
+              },
+              {
+                "label": "equipmentPurchases",
+                "value": "{{cash.equipment}}"
+              },
+              {
+                "label": "loanPayments",
+                "value": "{{cash.loan}}"
+              },
+              {
+                "label": "endingCash",
+                "value": "{{cash.ending}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://quickbooks.api.intuit.com/v3/company/COMPANY_ID/reports/CashFlow?start_date=2026-09-01&end_date=2026-09-30"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "QuickBooks Online OAuth2 API"
+              }
+            ]
+          },
+          {
+            "node": "write",
+            "input": [
+              {
+                "label": "beginningCash",
+                "value": "{{cash.beginning}}"
+              },
+              {
+                "label": "netIncome",
+                "value": "{{cash.netIncome}}"
+              },
+              {
+                "label": "changeInReceivables",
+                "value": "{{cash.receivables}}"
+              },
+              {
+                "label": "changeInPayables",
+                "value": "{{cash.payables}}"
+              },
+              {
+                "label": "equipmentPurchases",
+                "value": "{{cash.equipment}}"
+              },
+              {
+                "label": "loanPayments",
+                "value": "{{cash.loan}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "address",
+                "value": "Cash Flow!C5:C10"
+              },
+              {
+                "label": "cellsWritten",
+                "value": "6"
+              },
+              {
+                "label": "formulaCells",
+                "value": "C12:C13 not changed"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://graph.microsoft.com/v1.0/me/drive/items/TEMPLATE_ID/workbook/worksheets/Cash%20Flow/range(address='C5:C10')"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "Microsoft Excel OAuth2 API"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"values\": [[84200], [18450], [-6300], [2150], [-9800], [-3500]]}"
+              }
+            ]
+          },
+          {
+            "node": "readback",
+            "input": [
+              {
+                "label": "address",
+                "value": "Cash Flow!C12:C13"
+              }
+            ],
+            "output": [
+              {
+                "label": "netChangeInCash",
+                "value": "{{cash.netChange}}"
+              },
+              {
+                "label": "templateEndingCash",
+                "value": "{{cash.ending}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://graph.microsoft.com/v1.0/me/drive/items/TEMPLATE_ID/workbook/worksheets/Cash%20Flow/range(address='C12:C13')"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "Microsoft Excel OAuth2 API"
+              }
+            ]
+          },
+          {
+            "node": "compare",
+            "input": [
+              {
+                "label": "templateEndingCash",
+                "value": "{{cash.ending}}"
+              },
+              {
+                "label": "quickbooksEndingCash",
+                "value": "{{cash.ending}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "difference",
+                "value": "0.00"
+              },
+              {
+                "label": "status",
+                "value": "Matches QuickBooks"
+              },
+              {
+                "label": "nextStep",
+                "value": "Ready for review"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Mode",
+                "value": "Manual Mapping"
+              },
+              {
+                "label": "difference",
+                "value": "Template ending cash minus QuickBooks ending cash"
+              },
+              {
+                "label": "status",
+                "value": "Matches QuickBooks when the difference is zero, otherwise Needs review"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "quickbooks"
+      },
+      "statuses": [
+        "Run started",
+        "Report pulled",
+        "Cells filled",
+        "Totals read back",
+        "Totals checked"
+      ],
+      "details": [
+        "0:10 to 0:40. Point left to right: start, QuickBooks, write, read back, compare.",
+        "Click Get QuickBooks cash flow only if you want to show the September values."
+      ],
+      "optional": false
+    },
+    {
+      "id": "template-write",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Only the input cells get filled.",
+      "caption": "Six numbers go into cells C5 to C10. The formula cells below them don't change.",
+      "beat": "Here's what gets written. Beginning cash, net income, receivables, payables, equipment and the loan payment go into C5 through C10. Your totals and ending cash stay as formulas, so the template still does its own math.",
+      "content": {
+        "name": "Cash flow template run",
+        "subtitle": "Illustrative sample",
+        "surface": "node",
+        "graph": {
+          "name": "Cash flow template run",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "webhook",
+              "label": "Start cash flow run",
+              "detail": "POST /cash-flow-run"
+            },
+            {
+              "id": "quickbooks",
+              "type": "http_request",
+              "label": "Get QuickBooks cash flow",
+              "detail": "GET Cash Flow report"
+            },
+            {
+              "id": "write",
+              "type": "http_request",
+              "label": "Write input cells",
+              "detail": "PATCH C5:C10 only"
+            },
+            {
+              "id": "readback",
+              "type": "http_request",
+              "label": "Read template totals",
+              "detail": "GET C12:C13"
+            },
+            {
+              "id": "compare",
+              "type": "edit_fields",
+              "label": "Compare with QuickBooks",
+              "detail": "Ending cash check"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start",
+              "to": "quickbooks"
+            },
+            {
+              "from": "quickbooks",
+              "to": "write"
+            },
+            {
+              "from": "write",
+              "to": "readback"
+            },
+            {
+              "from": "readback",
+              "to": "compare"
+            }
+          ],
+          "runOrder": [
+            "start",
+            "quickbooks",
+            "write",
+            "readback",
+            "compare"
+          ],
+          "context": {
+            "name": "{{client.name}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Period",
+                "value": "{{period.label}}"
+              },
+              {
+                "label": "Sheet",
+                "value": "Cash Flow"
+              }
+            ],
+            "states": [
+              "Run started for {{client.name}}",
+              "{{period.label}} pulled from QuickBooks",
+              "Input cells C5 to C10 filled",
+              "Formula totals read back",
+              "Ending cash matches QuickBooks"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "start",
+            "input": [
+              {
+                "label": "client",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "period",
+                "value": "{{period.label}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "client",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "startDate",
+                "value": "2026-09-01"
+              },
+              {
+                "label": "endDate",
+                "value": "2026-09-30"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "cash-flow-run"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "quickbooks",
+            "input": [
+              {
+                "label": "client",
+                "value": "{{client.name}}"
+              },
+              {
+                "label": "startDate",
+                "value": "2026-09-01"
+              },
+              {
+                "label": "endDate",
+                "value": "2026-09-30"
+              }
+            ],
+            "output": [
+              {
+                "label": "beginningCash",
+                "value": "{{cash.beginning}}"
+              },
+              {
+                "label": "netIncome",
+                "value": "{{cash.netIncome}}"
+              },
+              {
+                "label": "changeInReceivables",
+                "value": "{{cash.receivables}}"
+              },
+              {
+                "label": "changeInPayables",
+                "value": "{{cash.payables}}"
+              },
+              {
+                "label": "equipmentPurchases",
+                "value": "{{cash.equipment}}"
+              },
+              {
+                "label": "loanPayments",
+                "value": "{{cash.loan}}"
+              },
+              {
+                "label": "endingCash",
+                "value": "{{cash.ending}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://quickbooks.api.intuit.com/v3/company/COMPANY_ID/reports/CashFlow?start_date=2026-09-01&end_date=2026-09-30"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "QuickBooks Online OAuth2 API"
+              }
+            ]
+          },
+          {
+            "node": "write",
+            "input": [
+              {
+                "label": "beginningCash",
+                "value": "{{cash.beginning}}"
+              },
+              {
+                "label": "netIncome",
+                "value": "{{cash.netIncome}}"
+              },
+              {
+                "label": "changeInReceivables",
+                "value": "{{cash.receivables}}"
+              },
+              {
+                "label": "changeInPayables",
+                "value": "{{cash.payables}}"
+              },
+              {
+                "label": "equipmentPurchases",
+                "value": "{{cash.equipment}}"
+              },
+              {
+                "label": "loanPayments",
+                "value": "{{cash.loan}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "address",
+                "value": "Cash Flow!C5:C10"
+              },
+              {
+                "label": "cellsWritten",
+                "value": "6"
+              },
+              {
+                "label": "formulaCells",
+                "value": "C12:C13 not changed"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://graph.microsoft.com/v1.0/me/drive/items/TEMPLATE_ID/workbook/worksheets/Cash%20Flow/range(address='C5:C10')"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "Microsoft Excel OAuth2 API"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"values\": [[84200], [18450], [-6300], [2150], [-9800], [-3500]]}"
+              }
+            ]
+          },
+          {
+            "node": "readback",
+            "input": [
+              {
+                "label": "address",
+                "value": "Cash Flow!C12:C13"
+              }
+            ],
+            "output": [
+              {
+                "label": "netChangeInCash",
+                "value": "{{cash.netChange}}"
+              },
+              {
+                "label": "templateEndingCash",
+                "value": "{{cash.ending}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://graph.microsoft.com/v1.0/me/drive/items/TEMPLATE_ID/workbook/worksheets/Cash%20Flow/range(address='C12:C13')"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "Microsoft Excel OAuth2 API"
+              }
+            ]
+          },
+          {
+            "node": "compare",
+            "input": [
+              {
+                "label": "templateEndingCash",
+                "value": "{{cash.ending}}"
+              },
+              {
+                "label": "quickbooksEndingCash",
+                "value": "{{cash.ending}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "difference",
+                "value": "0.00"
+              },
+              {
+                "label": "status",
+                "value": "Matches QuickBooks"
+              },
+              {
+                "label": "nextStep",
+                "value": "Ready for review"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Mode",
+                "value": "Manual Mapping"
+              },
+              {
+                "label": "difference",
+                "value": "Template ending cash minus QuickBooks ending cash"
+              },
+              {
+                "label": "status",
+                "value": "Matches QuickBooks when the difference is zero, otherwise Needs review"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "write"
+      },
+      "statuses": [
+        "Run started",
+        "Report pulled",
+        "Cells filled",
+        "Totals read back",
+        "Totals checked"
+      ],
+      "details": [
+        "0:40 to 1:10. Point to INPUT for the six values, then OUTPUT for the address and the unchanged formula cells.",
+        "The request only touches C5:C10, which is how the formulas are kept."
+      ],
+      "optional": false
+    },
+    {
+      "id": "checked-template",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "The finished template, checked.",
+      "caption": "Ending cash from your formulas matches QuickBooks, so the file is ready for review.",
+      "beat": "This is the check at the end. Your template's formula says ending cash is 85,200, and QuickBooks says the same. They match, so the file goes to review. If they ever disagree, the run gets flagged for your team instead.",
+      "content": {
+        "name": "{{client.name}} cash flow",
+        "subtitle": "Illustrative sample",
+        "fields": [
+          {
+            "label": "Client",
+            "value": "{{client.name}}"
+          },
+          {
+            "label": "Period",
+            "value": "{{period.label}}"
+          },
+          {
+            "label": "Template",
+            "value": "Your existing cash flow template"
+          },
+          {
+            "label": "Sheet",
+            "value": "Cash Flow"
+          }
+        ],
+        "stages": [
+          "QuickBooks pulled",
+          "Cells filled",
+          "Totals read back",
+          "Totals checked",
+          "Ready for review"
+        ],
+        "stageSequence": [
+          1,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Inputs written",
+            "value": "6",
+            "note": "Cells C5 to C10"
+          },
+          {
+            "label": "Formula cells",
+            "value": "Kept",
+            "note": "C12 and C13 not changed"
+          },
+          {
+            "label": "Difference",
+            "value": "None",
+            "note": "Template matches QuickBooks"
+          }
+        ],
+        "proof": {
+          "label": "Ending cash, September",
+          "value": "${{cash.ending}}",
+          "description": "Your template's formula in C13 and QuickBooks both show ${{cash.ending}}, so the file moves to review.",
+          "sourceNote": "Illustrative sample"
+        },
+        "note": "If the two ending cash numbers disagree, the run is flagged for your team instead of marked ready."
+      },
+      "statuses": [
+        "Cells filled",
+        "Totals checked",
+        "Ready for review"
+      ],
+      "details": [
+        "1:10 to 1:40. Point to the ending cash card, then the Difference tile.",
+        "Mention the flag for a mismatch, then move to the close."
+      ],
+      "optional": false
+    }
+  ]
+}

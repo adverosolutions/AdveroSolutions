@@ -1,0 +1,429 @@
+{
+  "schemaVersion": 1,
+  "id": "gohighlevel-telehealth-crm-automation-2112970393588434381",
+  "title": "GoHighLevel Automation & CRM Expert – Telehealth | Precise & Fast",
+  "systemName": "HealFastRx patient journeys",
+  "account": {
+    "name": "HealFastRx",
+    "initials": "HF",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112970393588434381",
+    "facts": [
+      "Post: You'll own HealFastRx's GoHighLevel marketing automation: funnels, workflows, landing pages, forms, email and SMS for patient acquisition, retention, product sales and feedback.",
+      "Post: You'll start by quality-checking our existing GoHighLevel flows, then connect them with new funnels.",
+      "Post: one feedback reply might trigger three other journeys and add a product-interest tag for later segmentation. You keep it all mapped and documented as it scales, and you learn and follow which patient data (PHI) must stay out of which systems.",
+      "Post: Email template design and testing, so every message renders cleanly in every inbox and on every device. A step-by-step approach to QA testing before anything goes live.",
+      "Personalization: no first name in the post; reviews say 'Healfast team' only, so the business name HealFastRx is used."
+    ]
+  },
+  "entities": {
+    "patient": {
+      "name": "Dana Whitfield",
+      "first": "Dana",
+      "email": "dana.whitfield@example.com"
+    },
+    "coach": {
+      "name": "Priya Raman",
+      "first": "Priya"
+    },
+    "product": {
+      "name": "recovery bundle"
+    },
+    "checkin": {
+      "name": "14-day check-in"
+    }
+  },
+  "cover": {
+    "eyebrow": "HealFastRx patient journeys",
+    "title": "One patient reply,",
+    "accent": "every journey it should start.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Feedback reply to product interest",
+      "Concierge coach follow-up",
+      "No health details in marketing messages"
+    ],
+    "previewSteps": [
+      {
+        "title": "Route the reply",
+        "detail": "A feedback reply that mentions a product starts the right journeys."
+      },
+      {
+        "title": "Send the right messages",
+        "detail": "The patient gets the guide and the coach gets the context."
+      },
+      {
+        "title": "Track the next step",
+        "detail": "The pipeline shows where the patient is and who owns her."
+      }
+    ],
+    "footer": "Illustrative sample · built in GoHighLevel",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "reply-routing",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "A feedback reply that mentions a product starts three journeys.",
+      "caption": "{{patient.first}} answers her {{checkin.name}} and asks about the {{product.name}}.",
+      "beat": "Here's the GoHighLevel workflow. {{patient.first}} replies to her {{checkin.name}}, and the feedback flow tags her. This workflow checks whether she asked about a product. She did, so she goes into the Product interest pipeline, {{coach.first}} becomes her coach, the {{product.name}} guide goes out, and {{coach.first}} gets a note.",
+      "details": [
+        "Trigger: Contact Tag added, feedback-replied",
+        "If/Else: reply mentions a product, Yes branch shown, No branch sends a thank-you"
+      ],
+      "content": {
+        "name": "Feedback reply routing",
+        "nodes": [
+          {
+            "id": "tag-trigger",
+            "type": "contact_tag",
+            "label": "Tag added: feedback-replied",
+            "detail": "{{patient.first}} replied to the {{checkin.name}}"
+          },
+          {
+            "id": "product-check",
+            "type": "condition",
+            "label": "Reply mentions a product?",
+            "detail": "Yes: {{product.name}}"
+          },
+          {
+            "id": "interest-opp",
+            "type": "opportunity",
+            "label": "Product interest opportunity",
+            "detail": "Pipeline: Product interest · Interested"
+          },
+          {
+            "id": "assign-coach",
+            "type": "assign_user",
+            "label": "Assign concierge coach",
+            "detail": "{{coach.name}}"
+          },
+          {
+            "id": "bundle-email",
+            "type": "email",
+            "label": "Send the {{product.name}} guide",
+            "detail": "Approved template, no health details"
+          },
+          {
+            "id": "coach-note",
+            "type": "notification",
+            "label": "Notify {{coach.first}}",
+            "detail": "Reply and pipeline stage attached"
+          },
+          {
+            "id": "thanks-email",
+            "type": "email",
+            "label": "Send thank-you note",
+            "detail": "Replies with no product question"
+          }
+        ],
+        "edges": [
+          {
+            "from": "tag-trigger",
+            "to": "product-check"
+          },
+          {
+            "from": "product-check",
+            "to": "interest-opp",
+            "label": "Yes"
+          },
+          {
+            "from": "product-check",
+            "to": "thanks-email",
+            "label": "No"
+          },
+          {
+            "from": "interest-opp",
+            "to": "assign-coach"
+          },
+          {
+            "from": "assign-coach",
+            "to": "bundle-email"
+          },
+          {
+            "from": "bundle-email",
+            "to": "coach-note"
+          }
+        ],
+        "runOrder": [
+          "tag-trigger",
+          "product-check",
+          "interest-opp",
+          "assign-coach",
+          "bundle-email",
+          "coach-note"
+        ],
+        "context": {
+          "name": "{{patient.name}}",
+          "subtitle": "{{checkin.name}} reply · {{coach.name}}",
+          "fields": [
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            },
+            {
+              "label": "Asked about",
+              "value": "{{product.name}}"
+            }
+          ],
+          "states": [
+            "Reply tagged feedback-replied",
+            "Product question found",
+            "In Product interest pipeline",
+            "Coach: {{coach.name}}",
+            "{{product.name}} guide sent",
+            "{{coach.first}} notified"
+          ]
+        },
+        "related": [
+          {
+            "title": "Journey map",
+            "detail": "This reply links to three journeys, documented in the map."
+          },
+          {
+            "title": "No branch",
+            "detail": "Replies without a product question get a thank-you note."
+          }
+        ]
+      },
+      "statuses": [
+        "Reply tagged",
+        "Product question found",
+        "Product interest opportunity created",
+        "{{coach.first}} assigned",
+        "Guide sent",
+        "{{coach.first}} notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "journey-map",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "The journey map and test log for this reply.",
+      "caption": "Every flow this reply touches is written down and tested before it goes live.",
+      "beat": "This is the documentation side. The map shows the three journeys this one reply starts, the data rule for health details, and the test contact that ran the Yes branch before anything went live.",
+      "details": [
+        "Existing flow checked first, then connected to the new journeys",
+        "Sample test contact ran the Yes branch end to end"
+      ],
+      "content": {
+        "name": "Feedback reply journey map",
+        "subtitle": "Documentation and test log",
+        "sourceTitle": "Existing flow checked",
+        "sourceFields": [
+          {
+            "label": "Flow",
+            "value": "{{checkin.name}}"
+          },
+          {
+            "label": "Trigger",
+            "value": "Tag added: feedback-replied"
+          },
+          {
+            "label": "Check",
+            "value": "Sample test passed"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Journeys started",
+            "value": "Product interest · Coach follow-up · {{product.name}} guide"
+          },
+          {
+            "label": "Data rule",
+            "value": "Health details stay out of marketing fields and messages"
+          },
+          {
+            "label": "Email check",
+            "value": "Guide previewed on desktop and mobile"
+          }
+        ],
+        "events": [
+          {
+            "title": "Map updated",
+            "detail": "Feedback reply now links to three journeys"
+          },
+          {
+            "title": "Test contact run",
+            "detail": "Sample contact followed the Yes branch end to end"
+          },
+          {
+            "title": "SOP written",
+            "detail": "How to add a branch for a new product"
+          }
+        ],
+        "notice": "Sample documentation for the illustrative journey."
+      },
+      "statuses": [
+        "Existing flow checked",
+        "Journeys mapped",
+        "Test run logged"
+      ],
+      "optional": true
+    },
+    {
+      "id": "patient-messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "What {{patient.first}} and {{coach.first}} actually see.",
+      "caption": "The check-in, her reply, the guide and the coach's note, with no health details in marketing messages.",
+      "beat": "Here's the conversation. The check-in goes out, {{patient.first}} asks about the {{product.name}}, the guide lands a minute later, and {{coach.first}} gets a note with the reply and the pipeline stage so she can follow up.",
+      "details": [
+        "SMS check-in → reply → email guide → internal note",
+        "Messages stay friendly and leave out health details"
+      ],
+      "content": {
+        "name": "{{patient.name}}",
+        "subtitle": "{{patient.email}}",
+        "fields": [
+          {
+            "label": "Coach",
+            "value": "{{coach.name}}"
+          },
+          {
+            "label": "Pipeline",
+            "value": "Product interest"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "HealFastRx",
+            "time": "9:00 am",
+            "body": "Hi {{patient.first}}, it's HealFastRx. You're two weeks in. How is everything going? Just reply here."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{patient.name}}",
+            "time": "9:42 am",
+            "body": "Going well, thank you. Can you tell me more about the {{product.name}}?"
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "HealFastRx",
+            "time": "9:43 am",
+            "subject": "Your {{product.name}} guide",
+            "body": "Hi {{patient.first}}, here's what's in the {{product.name}}, how people use it and how to order. {{coach.first}}, your concierge coach, will reach out with any questions."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "GoHighLevel",
+            "time": "9:43 am",
+            "body": "{{patient.first}} asked about the {{product.name}}. She's in Product interest and assigned to you. Guide sent."
+          }
+        ],
+        "notice": "{{coach.first}} has the reply and the stage before she follows up. Sample messages."
+      },
+      "statuses": [
+        "Check-in sent",
+        "{{patient.first}} replies",
+        "Guide sent",
+        "{{coach.first}} notified"
+      ],
+      "optional": false
+    },
+    {
+      "id": "journey-result",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "{{patient.first}} is with her coach, one step from an order.",
+      "caption": "The pipeline shows where she is, who owns her and why she's there.",
+      "beat": "Here's where {{patient.first}} ends up. She moved from Feedback received to Product interest to Coach follow-up, and {{coach.first}} owns the next step. Everyone in this pipeline asked about a product, so the group is ready for later campaigns.",
+      "details": [
+        "Feedback received → Product interest → Coach follow-up",
+        "Illustrative sample, one patient"
+      ],
+      "content": {
+        "name": "{{patient.name}}",
+        "subtitle": "Product interest pipeline",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{coach.name}}"
+          },
+          {
+            "label": "Interest",
+            "value": "{{product.name}}"
+          },
+          {
+            "label": "Source",
+            "value": "{{checkin.name}} reply"
+          }
+        ],
+        "stages": [
+          "Feedback received",
+          "Product interest",
+          "Coach follow-up",
+          "Ordered"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Journeys from one reply",
+            "value": "3",
+            "note": "Illustrative sample"
+          },
+          {
+            "label": "Current stage",
+            "value": "Coach follow-up",
+            "note": "{{patient.first}}, sample patient"
+          },
+          {
+            "label": "Health details in messages",
+            "value": "None",
+            "note": "Checked in the sample test"
+          }
+        ],
+        "note": "{{patient.first}} stays in Coach follow-up until she orders or {{coach.first}} closes the opportunity. Sample data."
+      },
+      "statuses": [
+        "Reply received",
+        "Moved to Product interest",
+        "{{coach.first}} following up"
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Measure every journey",
+    "accent": "from reply to order.",
+    "caption": "Set the starting baseline, then track routing accuracy, coach response time and orders.",
+    "metrics": [
+      {
+        "name": "Replies routed correctly",
+        "direction": "up",
+        "aim": "Route more replies to the right journeys",
+        "definition": "Share of feedback replies in a weekly test sample that start exactly the journeys shown in the journey map."
+      },
+      {
+        "name": "Time from reply to coach outreach",
+        "direction": "down",
+        "aim": "Reach interested patients sooner",
+        "definition": "Median time from a product-interest reply to the coach's first outreach to that patient."
+      },
+      {
+        "name": "Product-interest orders",
+        "direction": "up",
+        "aim": "Turn more interest into orders",
+        "definition": "Patients in the Product interest pipeline who order within the agreed period, divided by all patients who entered it in that period."
+      }
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd measure how many replies route correctly, how fast coaches reach interested patients, and how many of them order, against a baseline we agree on. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

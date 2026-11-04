@@ -1,0 +1,193 @@
+{
+  "applied": false,
+  "bid_stats_basis": {
+    "contract_type": "HOURLY",
+    "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+  },
+  "can_apply": true,
+  "client_feedback": {
+    "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nBrilliant client! Highly recommend!\n</untrusted_participant_content>",
+        "ended": "2023-03-14T13:25:58.000Z",
+        "score": 5,
+        "title": "Senior Power Platforms "
+      }
+    ],
+    "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+    "shown": 1
+  },
+  "client_open_jobs": {
+    "jobs": [
+      {
+        "id": "2108490299046267131",
+        "job_type": "hourly",
+        "title": "We’re Hiring - Data & Analytics Professionals",
+        "url": "https://www.upwork.com/jobs/~022108490299046267131?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor"
+      },
+      {
+        "id": "2107872557811052372",
+        "job_type": "hourly",
+        "title": "UI/UX Designer — Mobile Apps",
+        "url": "https://www.upwork.com/jobs/~022107872557811052372?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor"
+      },
+      {
+        "id": "2107869085686424210",
+        "job_type": "hourly",
+        "title": "React Native Developer",
+        "url": "https://www.upwork.com/jobs/~022107869085686424210?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor"
+      },
+      {
+        "id": "2105962419558575483",
+        "job_type": "hourly",
+        "title": "SAP Ariba & Fieldglass Functional SME",
+        "url": "https://www.upwork.com/jobs/~022105962419558575483?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor"
+      },
+      {
+        "id": "2103519718956059007",
+        "job_type": "hourly",
+        "title": "Nintex Process Manager",
+        "url": "https://www.upwork.com/jobs/~022103519718956059007?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor"
+      }
+    ],
+    "more_available": true,
+    "note": "A sample, never a count; client_record.open_jobs also counts private jobs and this one.",
+    "selection": "at most 5 of the client's other open jobs visible to freelancers; private jobs are never listed",
+    "shown": 5
+  },
+  "client_record": {
+    "contracts_active": 5,
+    "contracts_total": 9,
+    "feedback_count": 2,
+    "feedback_score": 4.99,
+    "hire_rate_percent": 5,
+    "hours_total": 136,
+    "jobs_posted": 150,
+    "jobs_with_hires": 8,
+    "open_jobs": 7,
+    "spend_total": "$10,621.30"
+  },
+  "client_work_history": {
+    "closed": [
+      {
+        "ended": "2025-03-23T00:48:14.522Z",
+        "feedback_to_client_score": 4.85,
+        "started": "2025-02-24T06:27:46.188Z",
+        "status": "CLOSED",
+        "title": "Azure B2C Configuration Expert Needed",
+        "type": "FIXED"
+      },
+      {
+        "ended": "2023-03-14T13:25:58.000Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2022-07-11T13:03:13.000Z",
+        "title": "Senior Power Platforms ",
+        "type": "HOURLY"
+      }
+    ],
+    "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+    "open": [
+      {
+        "started": "2025-04-02T17:00:08.812Z",
+        "title": "K2 Developer",
+        "type": "FIXED"
+      },
+      {
+        "started": "2025-03-04T13:17:26.741Z",
+        "status": "ACTIVE",
+        "title": "Senior Project Manager Needed for Dynamic Projects",
+        "type": "FIXED"
+      },
+      {
+        "started": "2024-12-05T17:42:35.229Z",
+        "status": "ACTIVE",
+        "title": "K2 Developer",
+        "type": "FIXED"
+      }
+    ],
+    "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+    "shown": 5
+  },
+  "connects_balance": 1475,
+  "connects_cost": 21,
+  "data": {
+    "marketplaceJobPosting": {
+      "activityStat": {
+        "applicationsBidStats": {
+          "avgRateBid": {
+            "currency": "USD",
+            "displayValue": "$25.28",
+            "rawValue": "25.278888888888886"
+          },
+          "maxRateBid": {
+            "currency": "USD",
+            "displayValue": "$48.72",
+            "rawValue": "48.72"
+          },
+          "minRateBid": {
+            "currency": "USD",
+            "displayValue": "$8.00",
+            "rawValue": "8.0"
+          }
+        },
+        "jobActivity": {
+          "invitesSent": 0,
+          "totalHired": 0,
+          "totalInvitedToInterview": 1,
+          "totalOffered": 0
+        }
+      },
+      "classification": {
+        "category": {
+          "id": "531770282580668418",
+          "preferredLabel": "Web, Mobile & Software Dev"
+        },
+        "subCategory": {
+          "id": "1737190722360750082",
+          "preferredLabel": "AI Apps & Integration"
+        }
+      },
+      "clientCompanyPublic": {
+        "country": {
+          "name": "India"
+        },
+        "id": "1002179188",
+        "timezone": "Europe/London"
+      },
+      "content": {
+        "description": "<untrusted_participant_content>\nWe are looking for a skilled HubSpot Developer with experience in Agentic AI, AI-powered automation, and CRM integrations to design and implement intelligent business workflows. The ideal candidate will combine HubSpot development expertise with AI agents and large language models (LLMs) to improve sales, marketing, and customer service operations.\n\nKey Responsibilities\n\nCustomize HubSpot CRM, custom objects, workflows, properties, and pipelines.\n\nDevelop integrations using HubSpot APIs, webhooks, and custom-coded actions.\n\nBuild AI agents that automate lead qualification, customer engagement, ticket resolution, and CRM data management.\n\nIntegrate LLMs such as OpenAI or other AI models with HubSpot.\n\nImplement agentic workflows with tool calling, multi-step reasoning, and human approval where required.\n\nConnect HubSpot with external applications, databases, and enterprise systems.\n\nDevelop automation using Python, JavaScript/Node.js, and integration platforms.\n\nMonitor AI agent performance, security, accuracy, and reliability.\n\nCollaborate with sales, marketing, and customer success teams to identify automation opportunities.\n\nRequired Skills\n\nStrong hands-on experience with HubSpot CRM development.\n\nKnowledge of HubSpot APIs, CRM extensions, workflows, and custom-coded actions.\n\nExperience with REST APIs, webhooks, OAuth, JavaScript, or Python.\n\nUnderstanding of generative AI, LLMs, prompt engineering, and AI integrations.\n\nExperience building AI agents using frameworks or tools such as LangChain, LangGraph, or equivalent.\n\nKnowledge of JSON, databases, authentication, and cloud-based integrations.\n\nStrong troubleshooting and problem-solving skills.\n\nPreferred Qualifications\n\nExperience with retrieval-augmented generation (RAG), vector databases, and knowledge-base integrations.\n\nFamiliarity with MCP (Model Context Protocol), function calling, and multi-agent orchestration.\n\nExperience with n8n, Make, Zapier, or similar automation platforms.\n\nUnderstanding of AI governance, data privacy, and secure CRM integrations.\n\nSuccess Metrics\n\nReduced manual CRM operations.\n\nImproved lead response and qualification times.\n\nIncreased workflow automation and data quality.\n\nReliable, secure, and measurable AI agent performance.\n</untrusted_participant_content>",
+        "title": "HubSpot Developer – Agentic AI & AI Automation"
+      },
+      "contractTerms": {
+        "contractType": "HOURLY",
+        "experienceLevel": "EXPERT",
+        "hourlyContractTerms": {
+          "engagementType": "FULL_TIME",
+          "hourlyBudgetType": "NOT_PROVIDED"
+        },
+        "personsToHire": 1
+      },
+      "id": "2112932304859291673",
+      "url": "https://www.upwork.com/jobs/~022112932304859291673?utm_campaign=LLM_cursor_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=cursor",
+      "workFlowState": {
+        "status": "ACTIVE"
+      }
+    }
+  },
+  "plan": "Freelancer Plus",
+  "preferred_qualifications": {
+    "contractor_type": "All freelancers",
+    "english_proficiency": "Any",
+    "has_portfolio": false,
+    "min_earnings": "Any",
+    "min_hours_worked": 0,
+    "min_job_success_score": 0,
+    "rising_talent": false
+  },
+  "proposals_tier_unavailable": true,
+  "status": "ok",
+  "trace_id": "f40ff0d34df7e0d9f48c35ceeb1739e3",
+  "unanswered_invites_unavailable": true
+}

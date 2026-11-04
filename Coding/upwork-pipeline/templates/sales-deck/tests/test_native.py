@@ -23,9 +23,9 @@ def test_claude_needs_real_result_scene():
 def test_inspector_must_match_all_nodes():
  value=spec('n8n');value['scenes'][0]['content']['inspectors'][0]['node']='missing-node'
  with pytest.raises(ValidationError,match='unknown node'):validate(value,CAT)
-def test_unimplemented_ai_node_stays_blocked():
+def test_ai_node_without_required_subnodes_stays_blocked():
  value=spec('n8n');value['scenes'][0]['content']['graph']['nodes'][1]['type']='ai_agent'
- with pytest.raises(ValidationError,match='unsupported action'):validate(value,CAT)
+ with pytest.raises(ValidationError,match='requires one chat model and at least one tool'):validate(value,CAT)
 def test_zero_value_contact_and_invalid_stage_rejected():
  for key,data in [('value','$0.00'),('stageSequence',[0,1,999])]:
   value=spec('ghl');value['scenes'][2]['content'][key]=data

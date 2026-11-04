@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "id": "notion-folk-sync-claude-digest-2114799815279451950",
+  "title": "Keep Notion projects and Folk contacts in step, with a weekly stale-deal note",
+  "systemName": "Your Notion to Folk sync and stale-deal digest",
+  "account": {"name": "Your team", "initials": "YT", "operatorInitials": "LV"},
+  "personalization": {"firstName": "Felix", "source": "client_reviews", "reviewCount": 3},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114799815279451950",
+    "facts": [
+      "Post: real estate investment and development firm; Claude or Google Apps Script automations; Notion project management and Folk CRM kept organized and connected to other tools; Google Workspace.",
+      "Felix named as the client contact in three separate reviews (2026-09-21, 2026-07-27, 2026-06-21). Not evidenced as owner.",
+      "No Notion or Folk adapter exists; Notion and Folk are named only as data sources in a Claude Code transcript and the custom workspace."
+    ]
+  },
+  "entities": {
+    "project": {"name": "Maple Court renovation", "id": "PRJ-118", "stage": "Under contract", "units": "14 units", "close": "Nov 20"},
+    "contact": {"name": "Marcus Bell", "company": "Bell and Rowe Realty", "email": "marcus@example.com", "role": "Listing broker"},
+    "owner": {"name": "Dana Whitfield"},
+    "stale": {"name": "Riverside Lofts parcel", "contact": "Priya Nair", "days": "16 days"},
+    "file": {"script": "sync.gs", "map": "field-map.json"}
+  },
+  "cover": {
+    "eyebrow": "Your Notion to Folk sync",
+    "title": "Your projects and contacts,",
+    "accent": "always in step.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["Claude Code builds the sync", "One deal, matched in both tools", "Monday stale-deal note"],
+    "previewSteps": [
+      {"title": "Build", "detail": "Claude Code writes the Apps Script sync from your Notion and Folk fields."},
+      {"title": "Match", "detail": "Each Notion project updates the right Folk contact."},
+      {"title": "Flag", "detail": "Deals nobody has touched show up in a Monday note."}
+    ],
+    "footer": "Illustrative sample data · no live accounts connected",
+    "beat": "Felix, this is a sync that keeps your Notion projects and your Folk contacts matched, plus a Monday note on deals that have gone quiet."
+  },
+  "scenes": [
+    {
+      "id": "build-sync",
+      "kind": "workflow",
+      "platform": "claude-code",
+      "title": "Claude Code writes the sync for you.",
+      "caption": "It reads both field lists, writes one Apps Script file, and tests it on sample projects before anything runs for real.",
+      "beat": "Here I ask Claude Code to connect Notion and Folk. It reads the project fields and the contact fields, writes the Apps Script, and does a dry run on three sample projects. One project has no matching contact, so it gets held for review instead of creating a duplicate.",
+      "details": [
+        "Sample project: {{project.name}} ({{project.id}})",
+        "Dry run only on illustrative data; real field names are confirmed with you first."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Notion to Folk sync build",
+        "nodes": [
+          {"id": "ask", "type": "prompt", "label": "Match each Notion project to its Folk contact", "detail": "Update stage, close date and owner on the contact. Hold anything without a match."},
+          {"id": "fields", "type": "read", "label": "Read Notion project fields and Folk contact fields", "detail": "Project, Stage, Close date, Owner, Broker email  →  Folk name, email, group, custom fields"},
+          {"id": "write", "type": "edit", "label": "Write {{file.script}} and {{file.map}}", "detail": "Apps Script: match by broker email, update the contact, log each change to a Sheet"},
+          {"id": "dry", "type": "command", "label": "Dry run on three sample projects", "detail": "2 matched and updated · 1 held: no Folk contact with that email"},
+          {"id": "check", "type": "review", "label": "Check the held project before anything is created", "detail": "Held row goes to the review tab, so no duplicate contact is made"},
+          {"id": "done", "type": "result", "label": "Sync ready to run every morning at 7 AM ET", "detail": "{{project.name}} now shows {{project.stage}} on {{contact.name}} in Folk"}
+        ],
+        "edges": [
+          {"from": "ask", "to": "fields"},
+          {"from": "fields", "to": "write"},
+          {"from": "write", "to": "dry"},
+          {"from": "dry", "to": "check"},
+          {"from": "check", "to": "done"}
+        ],
+        "runOrder": ["ask", "fields", "write", "dry", "check", "done"],
+        "context": {
+          "name": "notion-folk-sync",
+          "subtitle": "Apps Script project · sample data",
+          "fields": [
+            {"label": "Source", "value": "Notion projects database"},
+            {"label": "Destination", "value": "Folk contacts"},
+            {"label": "Match on", "value": "Broker email"},
+            {"label": "Change log", "value": "Google Sheet"}
+          ],
+          "states": ["Task received", "Fields mapped", "Script written", "Dry run finished", "1 project held for review", "Ready for the daily run"]
+        },
+        "related": [
+          {"title": "{{file.script}}", "detail": "Apps Script sync, daily trigger"},
+          {"title": "{{file.map}}", "detail": "Which Notion field fills which Folk field"},
+          {"title": "Sync log sheet", "detail": "One row per change, with the time and the source project"}
+        ]
+      },
+      "statuses": ["Task received", "Both field lists read", "Script and field map written", "Dry run: 2 matched, 1 held", "Held project sent to review", "Sync ready for the daily run"]
+    },
+    {
+      "id": "matched-record",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "One deal, the same in both tools.",
+      "caption": "When {{owner.name}} moves {{project.name}} in Notion, {{contact.name}}'s contact in Folk picks up the change the next morning.",
+      "beat": "This is the sample deal after the sync. On the left is the Notion project. On the right is what the Folk contact now holds: the stage, the close date and who on your team owns it. Every change is written to the log, so you can see where it came from.",
+      "details": [
+        "{{contact.name}} · {{contact.email}} · {{contact.company}}",
+        "Owner: {{owner.name}}"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{contact.name}}",
+        "subtitle": "{{contact.role}} · {{contact.company}}",
+        "sourceTitle": "Notion project · {{project.id}}",
+        "sourceFields": [
+          {"label": "Project", "value": "{{project.name}}"},
+          {"label": "Size", "value": "{{project.units}}"},
+          {"label": "Stage", "value": "{{project.stage}}"},
+          {"label": "Close date", "value": "{{project.close}}"},
+          {"label": "Owner", "value": "{{owner.name}}"}
+        ],
+        "fields": [
+          {"label": "Email", "value": "{{contact.email}}"},
+          {"label": "Group", "value": "Active deals"},
+          {"label": "Deal stage", "value": "{{project.stage}}"},
+          {"label": "Expected close", "value": "{{project.close}}"},
+          {"label": "Deal owner", "value": "{{owner.name}}"},
+          {"label": "Linked project", "value": "{{project.id}} · {{project.name}}"}
+        ],
+        "events": [
+          {"title": "Matched by email", "detail": "{{contact.email}} found in Folk, no new contact made"},
+          {"title": "Stage and close date updated", "detail": "Copied from {{project.id}} in Notion"},
+          {"title": "Change logged", "detail": "Row added to the sync log sheet"}
+        ],
+        "notice": "Illustrative sample record. Field names are confirmed against your Notion and Folk setup before the first run."
+      },
+      "statuses": ["Contact matched by email", "Stage and close date updated", "Change written to the log"]
+    },
+    {
+      "id": "monday-note",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "A Monday note on deals that went quiet.",
+      "caption": "Claude reads the synced deals and lists the ones with no activity in two weeks, with a suggested next step for each.",
+      "beat": "Every Monday, Claude goes through the synced deals and writes a short note to your team. In this sample, {{stale.name}} has had no activity for {{stale.days}}, so it is at the top with a suggested follow-up to {{stale.contact}}. {{project.name}} is current, so it is not on the list.",
+      "details": [
+        "Top of the list: {{stale.name}}, {{stale.days}} without activity",
+        "Counts are illustrative"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Monday stale-deal note",
+        "subtitle": "Drafted by Claude from synced Folk deals · sent by email to your team",
+        "fields": [
+          {"label": "First on the list", "value": "{{stale.name}}"},
+          {"label": "Last activity", "value": "{{stale.days}} ago"},
+          {"label": "Suggested next step", "value": "Call {{stale.contact}} to confirm the survey date"},
+          {"label": "Up to date, not listed", "value": "{{project.name}}"}
+        ],
+        "stages": ["Deals synced", "Quiet deals found", "Next steps suggested", "Note in your inbox"],
+        "stageSequence": [0, 1, 2, 3],
+        "metrics": [
+          {"label": "Deals checked", "value": "23", "note": "Illustrative sample"},
+          {"label": "Quiet for two weeks", "value": "3", "note": "Illustrative sample"},
+          {"label": "Held for review", "value": "1", "note": "No matching contact"}
+        ],
+        "note": "Illustrative sample. The note is a draft written from sample data; nothing is sent in this demo."
+      },
+      "statuses": ["23 sample deals synced", "3 deals quiet for two weeks", "A next step written for each", "Monday note ready for your team"]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Track the sync",
+    "accent": "and the follow-ups.",
+    "caption": "First I'd count how often Notion and Folk disagree today, then follow these three.",
+    "metrics": [
+      {"name": "Records out of step", "direction": "down", "aim": "Fewer mismatches between Notion and Folk", "definition": "Projects whose stage, close date or owner differs from the linked Folk contact."},
+      {"name": "Quiet deals", "direction": "down", "aim": "Fewer deals going untouched", "definition": "Active deals with no logged activity in the last fourteen days."},
+      {"name": "Hours on manual updates", "direction": "down", "aim": "Less time copying updates by hand", "definition": "Time your team spends each week updating one tool to match the other."}
+    ],
+    "baselineNote": "We'd measure where things stand today and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your real Notion and Folk fields with you and pick the first automation to set up. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "id": "klaviyo-ai-campaign-automation-2113387550517732459",
+  "title": "Brief to Klaviyo campaign, with AI copy, on-brand banners and an approval step",
+  "systemName": "Your brief to Klaviyo campaign workflow",
+  "account": {"name": "Your team", "initials": "YT", "operatorInitials": "LV"},
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113387550517732459",
+    "facts": [
+      "Post: LA fine jewelry DTC brand on Shopify and Klaviyo; wants brief (offer, product, theme, date) to ready-to-review Klaviyo campaign, AI copy with A/B, on-brand banners from real product images, Shopify product pull, Klaviyo build via API, optional SMS/social, human approval before send.",
+      "Tools listed by the post: Klaviyo API, Shopify API, OpenAI/Claude, AI image tools incl. Bannerbear/Placid, Make/Zapier/n8n. No client name in the post; U-006 fallback 'your team'.",
+      "Rebuild of the 7:03 PM live tour on the legacy sales-deck template per Lorenzo 7:33 PM CT. Same story and sample data as tour/tour.html."
+    ]
+  },
+  "entities": {
+    "brief": {"offer": "Complimentary engraving", "product": "Oval solitaire ring", "theme": "Proposal season", "send": "Thu, Nov 12 at 10:00 AM PT", "ends": "Nov 30"},
+    "campaign": {"name": "Proposal season: The Solitaire Edit", "segment": "Bridal, engaged 90 days", "links": "12 links"},
+    "copy": {"subjectA": "The ring she'll say yes to", "subjectB": "Proposal season starts here", "button": "Find her ring"},
+    "products": {"lead": "Oval solitaire ring", "pair": "Pavé wedding band", "gift": "Diamond studs"}
+  },
+  "cover": {
+    "eyebrow": "Your brief to Klaviyo campaign workflow",
+    "title": "From a four-field brief",
+    "accent": "to a Klaviyo draft you approve.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": ["n8n workflow", "Copy and banner drafts", "Your approval before sending"],
+    "previewSteps": [
+      {"title": "Brief", "detail": "Offer, product, theme and send date go in."},
+      {"title": "Draft", "detail": "Products, copy, banner and the Klaviyo campaign get built."},
+      {"title": "Approve", "detail": "Your team checks it and approves the send."}
+    ],
+    "footer": "Illustrative sample with made-up products and dates · nothing here ran in your Klaviyo",
+    "beat": "Here's how one short brief turns into a Klaviyo campaign your team approves before it sends."
+  },
+  "close": {
+    "eyebrow": "What we'd track",
+    "title": "Faster campaigns,",
+    "accent": "still on brand.",
+    "caption": "Three goals from your post, measured against how your team builds campaigns today.",
+    "metrics": [
+      {"name": "Time from brief to draft", "direction": "down", "aim": "Campaigns ready for review sooner", "definition": "Time from the brief being submitted to the draft waiting in Klaviyo."},
+      {"name": "Hands-on time per campaign", "direction": "down", "aim": "Less building by hand", "definition": "Minutes your team spends writing, designing and assembling each campaign."},
+      {"name": "Drafts approved as written", "direction": "up", "aim": "More drafts that need no rewrite", "definition": "Campaigns your team approves without rewriting the copy or banner, out of all drafted."}
+    ],
+    "baselineNote": "First we time how your team builds one campaign today, then we agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times. We'll map out your first campaign together.",
+    "beat": "We'd start by timing how your team builds a campaign today. Your post also mentions matching SMS, social posts, and docs with a training video. Worth a quick 15-minute call? Reply here and I'll send times."
+  },
+  "scenes": [
+    {
+      "id": "brief-to-draft",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "One brief goes in. A Klaviyo draft comes out.",
+      "caption": "The workflow pulls your products, writes the copy, renders the banner and builds the campaign.",
+      "beat": "It starts with the short brief from your post: complimentary engraving on the oval solitaire for proposal season. n8n pulls the products from Shopify, Claude writes the copy in your brand voice, a template tool places your logo and product photo on the banner, and the campaign gets built in Klaviyo as a draft.",
+      "details": [
+        "Brief: {{brief.offer}}, {{brief.product}}, {{brief.theme}}, {{brief.send}}",
+        "The banner keeps your real logo, fonts and product photo exact, because a template tool like Bannerbear or Placid places them",
+        "Each HTTP Request stands for one API call; keys and field mapping get set up with you during the build"
+      ],
+      "content": {
+        "name": "Brief to Klaviyo campaign",
+        "nodes": [
+          {"id": "brief", "type": "webhook", "label": "Campaign brief submitted", "detail": "{{brief.offer}} · {{brief.product}} · {{brief.theme}} · {{brief.send}}"},
+          {"id": "shopify", "type": "http_request", "label": "Pull products from Shopify", "detail": "{{products.lead}}, {{products.pair}} and {{products.gift}} with prices, photos and links"},
+          {"id": "copy", "type": "http_request", "label": "Write copy in your brand voice", "detail": "Claude drafts subject, preview, body and button, with an A and a B version"},
+          {"id": "banner", "type": "http_request", "label": "Render the on-brand banner", "detail": "Logo, fonts, colors and product photo, sized for email and mobile"},
+          {"id": "klaviyo", "type": "http_request", "label": "Build the draft in Klaviyo", "detail": "Template, images, {{campaign.links}} with UTM tags, segment and send time, saved as a draft"}
+        ],
+        "edges": [
+          {"from": "brief", "to": "shopify"},
+          {"from": "shopify", "to": "copy"},
+          {"from": "copy", "to": "banner"},
+          {"from": "banner", "to": "klaviyo"}
+        ],
+        "runOrder": ["brief", "shopify", "copy", "banner", "klaviyo"],
+        "context": {
+          "name": "{{campaign.name}}",
+          "subtitle": "Sample brief with made-up products",
+          "fields": [
+            {"label": "Offer", "value": "{{brief.offer}}"},
+            {"label": "Send date", "value": "{{brief.send}}"},
+            {"label": "Status", "value": "Illustrative sample"}
+          ],
+          "states": [
+            "Brief received",
+            "3 products pulled from Shopify",
+            "Copy A and B written",
+            "Banner rendered for email and mobile",
+            "Draft saved in Klaviyo, not scheduled"
+          ]
+        },
+        "related": [
+          {"title": "Brand voice notes", "detail": "Warm, quiet, no hard sell. The copy step checks against them."},
+          {"title": "Banner template", "detail": "Your logo, fonts and colors locked in place; only the photo and promo line change."}
+        ]
+      },
+      "statuses": [
+        "Brief received",
+        "3 products pulled from Shopify",
+        "Copy A and B written",
+        "Banner rendered for email and mobile",
+        "Draft saved in Klaviyo, not scheduled"
+      ],
+      "optional": false
+    },
+    {
+      "id": "drafted-copy",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Here's the copy it wrote for this campaign.",
+      "caption": "Two subject lines to test, plus the matching SMS and social post from your post's optional list.",
+      "beat": "This is what the copy step produced. Two subject lines to test against each other, the body and button, and the matching SMS and social post. They're all drafts, and none of them sends on its own.",
+      "details": [
+        "Subject A: {{copy.subjectA}}",
+        "Subject B: {{copy.subjectB}}",
+        "The SMS and social post are optional in your post and wait for the same approval"
+      ],
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "Drafts for review",
+        "fields": [
+          {"label": "Product", "value": "{{brief.product}}"},
+          {"label": "Theme", "value": "{{brief.theme}}"},
+          {"label": "Status", "value": "Drafts, nothing sent"}
+        ],
+        "items": [
+          {"channel": "email", "direction": "outgoing", "sender": "Email draft, version A", "time": "Draft", "subject": "{{copy.subjectA}}", "body": "Oval solitaires, custom made in LA. An oval solitaire in 14k yellow gold, made in Los Angeles. Through {{brief.ends}} we'll engrave the band for you. Button: {{copy.button}}"},
+          {"channel": "email", "direction": "outgoing", "sender": "Email draft, version B", "time": "Draft", "subject": "{{copy.subjectB}}", "body": "Engraving on us, this month only. Our oval solitaire in 14k yellow gold, custom made in Los Angeles, engraved free through {{brief.ends}}. Button: See the solitaire"},
+          {"channel": "sms", "direction": "outgoing", "sender": "SMS draft", "time": "Draft", "body": "Proposal season is here. Oval solitaires from LA, engraving on us this month. Shop: [link] Reply STOP to opt out."},
+          {"channel": "internal", "direction": "outgoing", "sender": "Social post draft", "time": "Draft", "body": "The one she'll say yes to. Engraving on us through {{brief.ends}}."}
+        ],
+        "notice": "Custom project workspace showing sample drafts. Nothing here was sent."
+      },
+      "statuses": [
+        "Email version A drafted",
+        "Email version B drafted",
+        "SMS drafted",
+        "Social post drafted"
+      ],
+      "optional": false
+    },
+    {
+      "id": "approve-send",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Nothing sends until your team approves it.",
+      "caption": "Your team checks the draft, segment and send time, then approves and it gets scheduled.",
+      "beat": "Here's the human step. The draft waits in Klaviyo with the segment and send time filled in. Your team checks that the products match Shopify, the links open the right pages and the banner fits on a phone, then approves. Only then does it get scheduled.",
+      "details": [
+        "Segment: {{campaign.segment}}",
+        "Send time: {{brief.send}}, A and B split evenly",
+        "Request changes sends it back to the copy or banner step"
+      ],
+      "content": {
+        "name": "{{campaign.name}}",
+        "subtitle": "Klaviyo campaign draft",
+        "fields": [
+          {"label": "Audience", "value": "{{campaign.segment}}"},
+          {"label": "Send", "value": "{{brief.send}}"},
+          {"label": "Test", "value": "Subject A against B, split evenly"}
+        ],
+        "stages": ["Draft in Klaviyo", "Waiting for your approval", "Approved and scheduled"],
+        "stageSequence": [0, 1, 2],
+        "metrics": [
+          {"label": "Products checked", "value": "3 of 3", "note": "Names, prices and photos match Shopify"},
+          {"label": "Links tagged", "value": "12", "note": "Every link has UTM tags and opens the right page"},
+          {"label": "Banner sizes", "value": "2", "note": "Email and mobile"}
+        ],
+        "note": "Illustrative sample in a custom project workspace. Nothing here ran in your Klaviyo."
+      },
+      "statuses": ["Draft saved in Klaviyo", "Waiting for your approval", "Approved and scheduled"],
+      "optional": false
+    }
+  ]
+}

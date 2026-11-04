@@ -34,8 +34,8 @@
   let timers = [];
   let generation = 0;
   const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-  const sceneLabels = { workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result', carousel: 'Content preview', native: 'Native workspace' };
-  const sceneLabel = scene => scene.kind === 'native' ? ({builder:'Workflow',pipeline:'Pipeline',conversations:'Conversation',editor:scene.platform==='zapier'?'The Zap':'Workflow',node:'The result',execution:'Execution',test:scene.content.selectedNode==='email'?'Customer response':'Saved enquiry',skills:'The skill',project:'Project context',chat:'The brief'}[scene.content.surface]) : sceneLabels[scene.kind];
+  const sceneLabels = { gmail: 'Gmail draft', funnel: 'Booking journey', product: 'Transaction review', architecture: 'System overview', workflow: 'The workflow', record: 'Capture', messages: 'Messages', outcome: 'The result', workshop: 'The result', carousel: 'Content preview', native: 'Native workspace' };
+  const sceneLabel = scene => scene.kind === 'intelligence' ? (scene.content.surface === 'workflow' ? 'How it works' : 'Your briefing') : scene.kind === 'native' ? ({builder:'Workflow',pipeline:'Pipeline',conversations:'Conversation',editor:scene.platform==='zapier'?'The Zap':'Workflow',node:'The result',execution:'Execution',test:scene.content.selectedNode==='email'?'Customer response':'Saved enquiry',skills:'The skill',project:'Project context',chat:'The brief'}[scene.content.surface]) : sceneLabels[scene.kind];
   const routes = () => [
     { id: 'cover', kind: 'cover', ...job.cover },
     ...job.scenes.filter(scene => duration === '3' || !scene.optional),
@@ -53,6 +53,10 @@
   }
 
   if (window.NativeScreens) window.NativeScreens.cancelReplay = cancel;
+  if (window.GmailScreens) window.GmailScreens.cancelReplay = cancel;
+  if (window.FunnelScreens) window.FunnelScreens.cancelReplay = cancel;
+  if (window.ProductScreens) window.ProductScreens.cancelReplay = cancel;
+  if (window.IntelligenceScreens) window.IntelligenceScreens.cancelReplay = cancel;
 
   function native(scene, title, active, tabs, body) {
     if (scene.platform !== 'ghl') {
@@ -164,6 +168,11 @@
   }
 
   function sceneBody(scene) {
+    if (scene.kind === 'intelligence') return window.IntelligenceScreens.render(scene, job);
+    if (scene.kind === 'gmail') return window.GmailScreens.render(scene, job);
+    if (scene.kind === 'funnel') return window.FunnelScreens.render(scene, job);
+    if (scene.kind === 'product') return window.ProductScreens.render(scene, job);
+    if (scene.kind === 'architecture') return window.ArchitectureScreens.render(scene, job);
     if (scene.kind === 'native') return window.NativeScreens.render(scene, job);
     const compatible = { ghl: ['workflow', 'record', 'messages', 'outcome', 'workshop'], n8n: ['workflow'], make: ['workflow'], workbench: ['record', 'messages', 'outcome', 'carousel'], 'claude-code': ['workflow', 'record', 'messages', 'outcome'], codex: ['workflow', 'record', 'messages', 'outcome'] };
     if (!Object.prototype.hasOwnProperty.call(compatible, scene.platform) || !compatible[scene.platform].includes(scene.kind)) throw new Error('Unsupported scene/platform combination.');
@@ -177,8 +186,10 @@
   function stepCount(scene) {
     const content = scene.content;
     if (!content) return 0;
+    if (['gmail','funnel','product','intelligence'].includes(scene.kind)) return scene.statuses.length;
     if (scene.kind === 'native') return scene.statuses.length;
     const visibleSteps = {
+      architecture: () => content.runOrder.length,
       workflow: () => content.runOrder.length,
       record: () => content.events.length,
       carousel: () => content.slides.length,
@@ -191,6 +202,11 @@
 
   function applyStep(scene, index) {
     const stage = query('#stage');
+    if (scene.kind === 'intelligence') window.IntelligenceScreens.applyStep(scene, index);
+    if (scene.kind === 'gmail') window.GmailScreens.applyStep(scene, index);
+    if (scene.kind === 'funnel') window.FunnelScreens.applyStep(scene, index);
+    if (scene.kind === 'product') window.ProductScreens.applyStep(scene, index);
+    if (scene.kind === 'architecture') window.ArchitectureScreens.applyStep(scene, index);
     if (scene.kind === 'native') window.NativeScreens.apply(scene, index, job);
     stage.querySelectorAll('[data-step]').forEach(element => element.classList.toggle('pending', Number(element.dataset.step) > index));
     if (scene.kind === 'workflow') window.SalesPlatforms.applyStep(scene, Math.min(index, scene.content.runOrder.length - 1));
@@ -243,6 +259,7 @@
     cancel();
     const scene = current();
     if (!scene.content) return;
+    if (scene.kind === 'intelligence') applyStep(scene, 0);
     if (motion.matches) {
       applyStep(scene, stepCount(scene) - 1);
       return;
@@ -285,7 +302,13 @@
         <button id="showResult" class="replay">Show result</button>${scene.kind === 'native' && scene.statuses.length === 1 ? '' : '<button id="replay" class="replay"><span class="replay-icon" aria-hidden="true">↻</span>Replay</button>'}</div></div>`;
       query('#replay')?.addEventListener('click', replay);
       query('#showResult').addEventListener('click', finish);
-      if (scene.kind === 'native') finish(); else replay();
+      if (['native','gmail','funnel','product','intelligence'].includes(scene.kind)) finish(); else replay();
+      // Open a long GHL mechanism at its trigger. Explicit replay/result controls
+      // still pan through the sample, without moving the presentation page.
+      if (scene.kind === 'native' && scene.platform === 'ghl' && scene.content.surface === 'builder') {
+        const canvas = query('.ns-canvas', stage);
+        if (canvas) canvas.scrollTop = 0;
+      }
     }
     query('#chapters').innerHTML = routes().map((value, index) => `<button class="chapter-dot ${index === chapterIndex ? 'active' : ''}" data-chapter="${index}" ${index === chapterIndex ? 'aria-current="step"' : ''}><i></i><span>${esc(value.kind === 'cover' ? 'Your project' : value.kind === 'close' ? '15-minute call' : sceneLabel(value))}</span></button>`).join('');
     query('#chapters').querySelectorAll('[data-chapter]').forEach(button => button.addEventListener('click', () => go(Number(button.dataset.chapter))));
@@ -297,9 +320,13 @@
 
   function go(index) {
     if (index < 0 || index >= routes().length) return;
+    const direction = index >= chapterIndex ? 1 : -1;
     chapterIndex = index;
-    render();
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const update = () => {
+      render();
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    };
+    if (window.DemoMotion) window.DemoMotion.change(update, direction); else update();
   }
 
   function showNotes(visible) {

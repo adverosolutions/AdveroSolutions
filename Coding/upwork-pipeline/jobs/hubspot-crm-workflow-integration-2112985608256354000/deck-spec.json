@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 1,
+  "id": "hubspot-crm-workflow-integration-2112985608256354000",
+  "title": "HubSpot CRM & Workflow Integration Specialist | Data Hygiene & Business Development Automation",
+  "systemName": "Studio Leonelli's lead capture process",
+  "account": {
+    "name": "Studio Leonelli",
+    "initials": "SL",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112985608256354000",
+    "facts": [
+      "Post: Studio Leonelli is a boutique U.S. law firm seeking an experienced HubSpot specialist to improve CRM data quality, lead management processes, and integration with existing business systems.",
+      "Post: Many new business relationships originate through the founding partner's Outlook email; the Mac, Outlook and HubSpot integration causes inconsistent contact creation, tagging, and activity logging.",
+      "Post: The firm administrator corrects records but often lacks the original relationship context needed to classify contacts.",
+      "Post: Establish consistent contact properties, relationship classifications, lead sources, referral attribution, and tagging standards; resolve duplicate, incomplete, or miscategorized records; clarify responsibilities between founding partner and firm administrator.",
+      "Post: Phase 1 substantially completed before the founding partner's international business development trip in early November.",
+      "Personalization: business name stated in post. Only one client review (names Michelle), so no first name per U-006.",
+      "No native HubSpot or Outlook adapter exists; all screens are the custom workbench, labelled as such."
+    ]
+  },
+  "entities": {
+    "intro": {
+      "name": "Priya Raman",
+      "company": "Raman Imports",
+      "email": "priya@ramanimports.example",
+      "matter": "Commercial contracts",
+      "received": "Tue 20 Oct, 4:12 pm",
+      "meeting": "Wed 28 Oct, 10:00 am CT"
+    },
+    "referrer": {
+      "name": "Daniel Okafor",
+      "firm": "Okafor & Lin CPAs"
+    },
+    "partner": {
+      "role": "Founding partner"
+    },
+    "admin": {
+      "role": "Firm administrator"
+    }
+  },
+  "cover": {
+    "eyebrow": "Studio Leonelli lead capture",
+    "title": "From an Outlook introduction",
+    "accent": "to a contact your team can trust.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Outlook introductions",
+      "Referral attribution",
+      "Phase 1 before early November"
+    ],
+    "previewSteps": [
+      {
+        "title": "Capture the introduction",
+        "detail": "One email from Outlook becomes one contact, with the referral kept."
+      },
+      {
+        "title": "Classify it once",
+        "detail": "The partner adds the context, the administrator confirms it."
+      },
+      {
+        "title": "Clean the priority records",
+        "detail": "Duplicates and missing sources get found and fixed."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works. We'll follow one referral introduction from the founding partner's Outlook inbox to a clean, classified contact.",
+    "footer": "Illustrative sample · custom project workspace, not a HubSpot screen"
+  },
+  "scenes": [
+    {
+      "id": "capture-path",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Follow one introduction from Outlook into the CRM.",
+      "caption": "{{referrer.name}} introduces {{intro.name}} by email. Each step adds one piece of context to her contact.",
+      "beat": "Here's a typical introduction. {{referrer.name}}, an accountant, emails the founding partner about {{intro.name}} at {{intro.company}}. The partner flags it, the process checks for an existing contact, saves who referred her and why she reached out, and logs the email and the meeting on her record. The administrator only gets a short task to confirm it.",
+      "details": [
+        "{{referrer.name}} → {{intro.name}} → founding partner",
+        "Duplicate check runs before a new contact is created"
+      ],
+      "content": {
+        "name": "Introduction to contact",
+        "subtitle": "Illustrative sample · one referral email",
+        "nodes": [
+          {
+            "id": "intro-email",
+            "label": "Introduction lands in Outlook",
+            "detail": "{{referrer.name}} introduces {{intro.name}} of {{intro.company}}, {{intro.received}}"
+          },
+          {
+            "id": "partner-flag",
+            "label": "Partner flags it for capture",
+            "detail": "Picks relationship type and practice interest in two clicks"
+          },
+          {
+            "id": "dedupe",
+            "label": "Check for an existing contact",
+            "detail": "Email and company compared with current records. No match found."
+          },
+          {
+            "id": "classify",
+            "label": "Save source and referral",
+            "detail": "Lead source: Referral. Referred by: {{referrer.name}}, {{referrer.firm}}"
+          },
+          {
+            "id": "log-activity",
+            "label": "Log the email and meeting",
+            "detail": "Intro email and the {{intro.meeting}} consult attached to the contact"
+          },
+          {
+            "id": "admin-task",
+            "label": "Administrator confirms the record",
+            "detail": "One task with the partner's note, due the next business day"
+          }
+        ],
+        "edges": [
+          {
+            "from": "intro-email",
+            "to": "partner-flag"
+          },
+          {
+            "from": "partner-flag",
+            "to": "dedupe"
+          },
+          {
+            "from": "dedupe",
+            "to": "classify"
+          },
+          {
+            "from": "classify",
+            "to": "log-activity"
+          },
+          {
+            "from": "log-activity",
+            "to": "admin-task"
+          }
+        ],
+        "runOrder": [
+          "intro-email",
+          "partner-flag",
+          "dedupe",
+          "classify",
+          "log-activity",
+          "admin-task"
+        ],
+        "context": {
+          "name": "{{intro.name}}",
+          "subtitle": "{{intro.company}} · referred by {{referrer.name}}",
+          "fields": [
+            {
+              "label": "Inbox",
+              "value": "Founding partner, Outlook on Mac"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Introduction email received",
+            "Flagged by the founding partner",
+            "No existing contact found",
+            "Source and referral saved",
+            "Email and meeting logged",
+            "Confirmation task sent to the administrator"
+          ]
+        },
+        "related": [
+          {
+            "title": "Contact standards",
+            "detail": "One list of properties, tags and relationship types the whole firm uses."
+          },
+          {
+            "title": "Who does what",
+            "detail": "The partner supplies context, the administrator keeps the data clean."
+          }
+        ]
+      },
+      "statuses": [
+        "Introduction received",
+        "Partner flagged it",
+        "No duplicate found",
+        "Referral saved",
+        "Email and meeting logged",
+        "Administrator task created"
+      ],
+      "optional": false
+    },
+    {
+      "id": "classified-contact",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "Give the administrator the context with the contact.",
+      "caption": "These are the standard properties I'd set up for every new contact. The referral and the original email stay attached.",
+      "beat": "This is {{intro.name}}'s record after capture. It shows she's a prospective client, she came by referral from {{referrer.name}}, and she's interested in commercial contracts. The partner owns the relationship, the administrator owns the data, and the email and meeting are already on the record.",
+      "details": [
+        "Relationship owner: founding partner · Data steward: firm administrator",
+        "Tags follow one shared standard"
+      ],
+      "content": {
+        "name": "{{intro.name}}",
+        "subtitle": "{{intro.email}} · {{intro.company}}",
+        "sourceTitle": "Introduction email",
+        "sourceFields": [
+          {
+            "label": "From",
+            "value": "{{referrer.name}}, {{referrer.firm}}"
+          },
+          {
+            "label": "Received",
+            "value": "{{intro.received}}, founding partner's inbox"
+          },
+          {
+            "label": "Subject",
+            "value": "Introduction: {{intro.name}}, {{intro.company}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Relationship type",
+            "value": "Prospective client"
+          },
+          {
+            "label": "Lead source",
+            "value": "Referral"
+          },
+          {
+            "label": "Referred by",
+            "value": "{{referrer.name}}"
+          },
+          {
+            "label": "Practice interest",
+            "value": "{{intro.matter}}"
+          },
+          {
+            "label": "Relationship owner",
+            "value": "{{partner.role}}"
+          },
+          {
+            "label": "Data steward",
+            "value": "{{admin.role}}"
+          },
+          {
+            "label": "Tags",
+            "value": "referral-cpa, intro-2026-10"
+          }
+        ],
+        "events": [
+          {
+            "title": "Duplicate check",
+            "detail": "No existing contact for this email or company"
+          },
+          {
+            "title": "Email logged",
+            "detail": "Introduction from {{referrer.name}}, {{intro.received}}"
+          },
+          {
+            "title": "Meeting logged",
+            "detail": "Consult with the founding partner, {{intro.meeting}}"
+          },
+          {
+            "title": "Confirmed",
+            "detail": "{{admin.role}} checked the classification"
+          }
+        ],
+        "notice": "Sample record. Every new contact gets the same properties and tags."
+      },
+      "statuses": [
+        "Contact created with context",
+        "Activity attached",
+        "Classification confirmed"
+      ],
+      "optional": false
+    },
+    {
+      "id": "partner-admin-notes",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Split the work between the partner and the administrator.",
+      "caption": "The partner writes one line of context. The administrator asks only when something is missing.",
+      "beat": "This is how the two roles work together. The partner adds a one-line note when flagging the email. If something is unclear, the administrator asks on the task instead of guessing, and the answer stays on the record.",
+      "details": [
+        "Internal notes on the contact, nothing goes to the client",
+        "Questions stay with the record for later"
+      ],
+      "content": {
+        "name": "{{intro.name}}",
+        "subtitle": "Internal notes · {{intro.company}}",
+        "fields": [
+          {
+            "label": "Relationship owner",
+            "value": "{{partner.role}}"
+          },
+          {
+            "label": "Data steward",
+            "value": "{{admin.role}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{partner.role}}",
+            "time": "4:20 pm",
+            "body": "{{referrer.name}}'s client. Needs a supplier contract reviewed before year end. Consult booked for {{intro.meeting}}."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "{{admin.role}}",
+            "time": "9:05 am",
+            "body": "Should {{referrer.firm}} be saved as a referral partner too, or only {{referrer.name}}?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "{{partner.role}}",
+            "time": "9:18 am",
+            "body": "Save the firm as a referral partner. Daniel has sent us two others this year."
+          }
+        ],
+        "notice": "Sample internal notes. The referral partner is saved once and linked to each contact it sends."
+      },
+      "statuses": [
+        "Partner adds context",
+        "Administrator asks one question",
+        "Answer saved on the record"
+      ],
+      "optional": true
+    },
+    {
+      "id": "priority-cleanup",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Clean up the records that matter first.",
+      "caption": "The same standards run over the agreed priority records, so duplicates and missing sources show up in one list.",
+      "beat": "Then I run the same standards over the priority records we agree on. In this sample, 150 records get checked, 12 duplicate pairs get merged, and 6 are left that only the partner can classify. That list goes to the partner before the November trip.",
+      "details": [
+        "Illustrative counts, not a promised result",
+        "Past project: intake system for a PI law firm"
+      ],
+      "content": {
+        "name": "Priority record cleanup",
+        "subtitle": "Illustrative sample · agreed priority records",
+        "fields": [
+          {
+            "label": "Standard",
+            "value": "Contact properties and tags v1"
+          },
+          {
+            "label": "Reviewer",
+            "value": "{{admin.role}}"
+          },
+          {
+            "label": "Open questions for",
+            "value": "{{partner.role}}"
+          }
+        ],
+        "stages": [
+          "Records checked",
+          "Duplicates merged",
+          "Sources filled in",
+          "Partner questions listed"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Records checked",
+            "value": "150",
+            "note": "Illustrative priority list"
+          },
+          {
+            "label": "Duplicate pairs merged",
+            "value": "12",
+            "note": "Illustrative, kept the older record"
+          },
+          {
+            "label": "Need the partner",
+            "value": "6",
+            "note": "Illustrative, missing relationship context"
+          }
+        ],
+        "note": "Counts are illustrative. {{intro.name}} passed every check at capture.",
+        "proof": {
+          "label": "Relevant past project · law firm",
+          "value": "PI law firm intake system",
+          "description": "I built the intake system for a personal injury law firm.",
+          "sourceNote": "Past project, separate from this sample."
+        }
+      },
+      "statuses": [
+        "150 records checked",
+        "12 duplicate pairs merged",
+        "Missing sources filled in",
+        "6 questions listed for the partner"
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Keep the data clean",
+    "accent": "after the cleanup is done.",
+    "caption": "We agree the starting point, then track complete contacts, admin corrections and logged introductions.",
+    "metrics": [
+      {
+        "name": "Complete new contacts",
+        "direction": "up",
+        "aim": "More contacts complete at creation",
+        "definition": "New contacts created in the period that already have relationship type, lead source and, for referrals, the referrer filled in, divided by all new contacts created in that period."
+      },
+      {
+        "name": "Administrator corrections",
+        "direction": "down",
+        "aim": "Fewer fixes after the fact",
+        "definition": "Edits the firm administrator makes to classification properties after a contact is created, divided by new contacts created in the same period."
+      },
+      {
+        "name": "Logged introductions",
+        "direction": "up",
+        "aim": "More introductions fully logged",
+        "definition": "Email introductions where the email is attached to the contact and a follow-up task or meeting exists, divided by all email introductions the founding partner flags in the period."
+      }
+    ],
+    "baselineNote": "We'll establish the baseline and agree the targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd track how many new contacts are complete when they're created, how often the administrator has to fix them, and how many introductions get fully logged, against a baseline we agree on. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

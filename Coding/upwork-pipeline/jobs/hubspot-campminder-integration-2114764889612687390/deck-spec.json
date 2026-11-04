@@ -1,0 +1,401 @@
+{
+  "schemaVersion": 1,
+  "id": "hubspot-campminder-integration-2114764889612687390",
+  "title": "Sync Campminder families into HubSpot without duplicates",
+  "systemName": "Your Campminder to HubSpot sync",
+  "account": {
+    "name": "Your camp office",
+    "initials": "CO",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114764889612687390",
+    "facts": [
+      "Residential summer camp. Campminder is the camper and family database; HubSpot is used for lead cultivation and marketing. The two do not communicate today.",
+      "Asks: meet the office manager, investigate Campminder API options, recommend the simplest reliable connection, implement and test, document and train staff.",
+      "Qualifications named: HubSpot integrations, REST APIs, Zapier, Make or similar, CRM data sync and duplicate prevention.",
+      "No contact name in the post. Personalization omitted (U-006 fallback: your team)."
+    ]
+  },
+  "entities": {
+    "family": {
+      "parent": "Dana Alvarez",
+      "email": "dana.alvarez@example.com",
+      "phone": "(555) 014-2290",
+      "camper": "Mateo Alvarez",
+      "age": "11",
+      "session": "Session 2, July 12 to 25",
+      "cmid": "CM-48213",
+      "first": "Dana",
+      "sessionShort": "Session 2"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your Campminder to HubSpot sync",
+    "title": "One family update in Campminder,",
+    "accent": "the same contact in HubSpot.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Make sync workflow",
+      "Field map for one family",
+      "Duplicate check before every write"
+    ],
+    "previewSteps": [
+      {
+        "title": "Read",
+        "detail": "Pick up the family change from Campminder."
+      },
+      {
+        "title": "Match",
+        "detail": "Look for the family in HubSpot before writing anything."
+      },
+      {
+        "title": "Update",
+        "detail": "Write the mapped fields and log the test run."
+      }
+    ],
+    "footer": "Sample family and records · no live accounts connected",
+    "beat": "This is how a family update in Campminder lands in HubSpot, so your office isn't copying families between the two by hand."
+  },
+  "scenes": [
+    {
+      "id": "sync-workflow",
+      "kind": "workflow",
+      "platform": "make",
+      "title": "Follow one family update from Campminder into HubSpot.",
+      "caption": "The sync looks for the family in HubSpot before it writes anything.",
+      "beat": "When {{family.parent}} updates her family's details in Campminder, Make reads the full family record, then searches HubSpot by her email. She's already a contact from an earlier inquiry, so the sync updates that contact instead of creating a second one.",
+      "details": [
+        "The search checks email first, then the Campminder ID saved on the HubSpot contact.",
+        "Two possible matches go to a review task for your office manager instead of guessing.",
+        "Whether Make hears about changes right away or checks on a schedule depends on what Campminder's API allows. I confirm that in discovery."
+      ],
+      "content": {
+        "name": "Campminder to HubSpot family sync",
+        "nodes": [
+          {
+            "id": "family-change",
+            "type": "custom_webhook",
+            "label": "Campminder family change received",
+            "detail": "Sample: family {{family.cmid}} updated"
+          },
+          {
+            "id": "read-family",
+            "type": "http_request",
+            "label": "Read the family from Campminder",
+            "detail": "Illustrative request for parent, camper, session and enrollment status"
+          },
+          {
+            "id": "search-hubspot",
+            "type": "http_request",
+            "label": "Search HubSpot for the parent",
+            "detail": "Match on {{family.email}}, then on the saved Campminder ID"
+          },
+          {
+            "id": "route-match",
+            "type": "router",
+            "label": "Route by match result",
+            "detail": "One match, no match, or two possible matches"
+          },
+          {
+            "id": "update-contact",
+            "type": "http_request",
+            "label": "Update the HubSpot contact",
+            "detail": "Write the mapped fields to the contact that already exists"
+          },
+          {
+            "id": "create-contact",
+            "type": "http_request",
+            "label": "Create a new HubSpot contact",
+            "detail": "Only for a family HubSpot has never seen"
+          },
+          {
+            "id": "review-task",
+            "type": "http_request",
+            "label": "Create a review task in HubSpot",
+            "detail": "Your office manager picks the right contact"
+          }
+        ],
+        "edges": [
+          {
+            "from": "family-change",
+            "to": "read-family"
+          },
+          {
+            "from": "read-family",
+            "to": "search-hubspot"
+          },
+          {
+            "from": "search-hubspot",
+            "to": "route-match"
+          },
+          {
+            "from": "route-match",
+            "to": "update-contact",
+            "label": "One match"
+          },
+          {
+            "from": "route-match",
+            "to": "create-contact",
+            "label": "No match"
+          },
+          {
+            "from": "route-match",
+            "to": "review-task",
+            "label": "Two possible matches"
+          }
+        ],
+        "runOrder": [
+          "family-change",
+          "read-family",
+          "search-hubspot",
+          "route-match",
+          "update-contact"
+        ],
+        "context": {
+          "name": "{{family.parent}}",
+          "subtitle": "Sample Campminder family",
+          "fields": [
+            {
+              "label": "Campminder ID",
+              "value": "{{family.cmid}}"
+            },
+            {
+              "label": "Camper",
+              "value": "{{family.camper}}"
+            },
+            {
+              "label": "Session",
+              "value": "{{family.sessionShort}}"
+            }
+          ],
+          "states": [
+            "Family change received from Campminder",
+            "Parent, camper and session read",
+            "One HubSpot contact found by email",
+            "One match route selected",
+            "Existing HubSpot contact updated"
+          ]
+        },
+        "related": [
+          {
+            "title": "New family route",
+            "detail": "Not used for this sample. It runs only when HubSpot has no contact for the family."
+          },
+          {
+            "title": "Review route",
+            "detail": "Not used for this sample. It holds unclear matches for your office manager."
+          }
+        ]
+      },
+      "statuses": [
+        "Family change received from Campminder",
+        "Parent, camper and session read",
+        "One HubSpot contact found by email",
+        "One match route selected",
+        "Existing HubSpot contact updated"
+      ],
+      "optional": false
+    },
+    {
+      "id": "field-map",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "See which Campminder fields land on which HubSpot properties.",
+      "caption": "Campminder stays the source for family details, and HubSpot keeps its own marketing history.",
+      "beat": "Here's the field map for this family. On the left is what Campminder holds for {{family.parent}}. On the right is her HubSpot contact after the sync: the phone number, camper, session and Campminder ID come over, and her lifecycle stage moves to customer because {{family.camper}} is enrolled.",
+      "details": [
+        "Each field moves one way only, so the two systems never overwrite each other.",
+        "Marketing emails, lead source and form history stay in HubSpot and are never written back to Campminder.",
+        "The final field list comes from the walkthrough with your office manager."
+      ],
+      "content": {
+        "name": "{{family.parent}}",
+        "subtitle": "Field map for one sample family",
+        "sourceTitle": "Campminder family record (sample)",
+        "sourceFields": [
+          {
+            "label": "Parent",
+            "value": "{{family.parent}}"
+          },
+          {
+            "label": "Email",
+            "value": "{{family.email}}"
+          },
+          {
+            "label": "Phone",
+            "value": "{{family.phone}}"
+          },
+          {
+            "label": "Camper",
+            "value": "{{family.camper}}, age {{family.age}}"
+          },
+          {
+            "label": "Session",
+            "value": "{{family.session}}"
+          },
+          {
+            "label": "Enrollment status",
+            "value": "Enrolled"
+          },
+          {
+            "label": "Campminder ID",
+            "value": "{{family.cmid}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Contact",
+            "value": "{{family.parent}} (existing contact, unchanged)"
+          },
+          {
+            "label": "Email",
+            "value": "{{family.email}} (used to match)"
+          },
+          {
+            "label": "Phone",
+            "value": "{{family.phone}} (updated)"
+          },
+          {
+            "label": "Camper name",
+            "value": "{{family.camper}} (added)"
+          },
+          {
+            "label": "Camp session",
+            "value": "{{family.session}} (added)"
+          },
+          {
+            "label": "Lifecycle stage",
+            "value": "Customer (moved from Lead)"
+          },
+          {
+            "label": "Campminder ID",
+            "value": "{{family.cmid}} (saved for future matches)"
+          }
+        ],
+        "events": [
+          {
+            "title": "Campminder to HubSpot",
+            "detail": "Phone, camper, session, enrollment status and Campminder ID."
+          },
+          {
+            "title": "Stays in HubSpot",
+            "detail": "Marketing emails, lead source and form history."
+          },
+          {
+            "title": "How a family is matched",
+            "detail": "Email first, then the saved Campminder ID."
+          }
+        ],
+        "notice": "Sample field map. The final list depends on what Campminder's API exposes and how your office works today."
+      },
+      "statuses": [
+        "Campminder record read",
+        "Fields mapped",
+        "HubSpot contact updated"
+      ],
+      "optional": false
+    },
+    {
+      "id": "test-run",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Check the test run before your team relies on it.",
+      "caption": "{{family.first}}'s existing contact is updated, no second contact was created, and the run is logged.",
+      "beat": "This is the test run log. The same family went in, the existing contact was updated with five fields, and no duplicate was created. Your staff gets a short guide for reading this log and fixing a held match.",
+      "details": [
+        "Counts are from one sample test family.",
+        "The handover includes a short guide and a training session for your staff."
+      ],
+      "content": {
+        "name": "Test run for {{family.cmid}}",
+        "subtitle": "{{family.parent}} · sample data",
+        "fields": [
+          {
+            "label": "Family",
+            "value": "{{family.parent}} and {{family.camper}}"
+          },
+          {
+            "label": "HubSpot contact",
+            "value": "Existing contact updated"
+          },
+          {
+            "label": "Lifecycle stage",
+            "value": "Lead to Customer"
+          },
+          {
+            "label": "Run type",
+            "value": "Test run with sample data"
+          }
+        ],
+        "stages": [
+          "Read from Campminder",
+          "Matched in HubSpot",
+          "Contact updated",
+          "Run logged"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Families synced",
+            "value": "1",
+            "note": "One sample test family"
+          },
+          {
+            "label": "Duplicates created",
+            "value": "0",
+            "note": "Matched on email"
+          },
+          {
+            "label": "Fields updated",
+            "value": "5",
+            "note": "From the field map"
+          }
+        ],
+        "note": "Illustrative test run with sample data. No live Campminder or HubSpot account is connected."
+      },
+      "statuses": [
+        "Read from Campminder",
+        "Matched in HubSpot",
+        "Contact updated",
+        "Run logged"
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Less copying between systems,",
+    "accent": "cleaner family records.",
+    "caption": "We'd agree a starting point for each of these with your office manager.",
+    "metrics": [
+      {
+        "name": "Time spent re-entering families",
+        "direction": "down",
+        "aim": "Spend less time copying families",
+        "definition": "Staff time each week spent typing Campminder family details into HubSpot."
+      },
+      {
+        "name": "Duplicate contacts",
+        "direction": "down",
+        "aim": "Create fewer duplicates",
+        "definition": "New HubSpot contacts that turn out to match a family already in HubSpot, counted each month."
+      },
+      {
+        "name": "Families in sync",
+        "direction": "up",
+        "aim": "Keep more families matching",
+        "definition": "Enrolled Campminder families whose HubSpot contact shows the same session and status."
+      }
+    ],
+    "baselineNote": "We'd measure where things stand today before the sync goes live, then agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "On the call I'd go through how your office moves families between the two systems today and what Campminder's API allows. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

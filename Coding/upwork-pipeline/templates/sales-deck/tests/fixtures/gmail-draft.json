@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture-gmail-draft",
+  "title": "Draft the email.",
+  "systemName": "Keep the follow-up.",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "fixture:gmail-draft",
+    "facts": [
+      "Synthetic regression fixture; not a saved job or delivered client system."
+    ]
+  },
+  "entities": {
+    "client": {
+      "name": "Evelyn Carter",
+      "email": "evelyn.carter@example.com",
+      "reference": "AC-1042"
+    },
+    "thread": {
+      "id": "sample-thread-ac-1042",
+      "subject": "Next week\u2019s visit",
+      "received": "20 Oct 2026, 09:10 (Sydney)",
+      "body": "Hi, could someone call me about moving next week\u2019s visit to the afternoon? I\u2019m available after 2 pm tomorrow. Thanks, Evelyn."
+    },
+    "action": {
+      "owner": "Founder",
+      "due": "21 October, after 2 pm (Sydney)",
+      "missing": "Preferred visit day"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Draft the email.",
+    "accent": "Keep the follow-up.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Gmail drafts, founder review and an action ready for your CRM."
+    ],
+    "previewSteps": [
+      {
+        "title": "Read",
+        "detail": "Use the original email context."
+      },
+      {
+        "title": "Draft",
+        "detail": "Review and edit before sending."
+      },
+      {
+        "title": "Capture",
+        "detail": "Keep the callback and missing details together."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "Your first workflow",
+    "title": "What we would",
+    "accent": "measure together.",
+    "caption": "Choose a small pilot, measure it, then decide what to add.",
+    "metrics": [
+      {
+        "name": "Email handling time",
+        "direction": "down",
+        "aim": "Reduce founder admin",
+        "definition": "Active founder minutes reviewing, editing, responding and recording actions per eligible email thread."
+      },
+      {
+        "name": "Action capture",
+        "direction": "up",
+        "aim": "Keep commitments recorded",
+        "definition": "Identified commitments recorded with the correct contact, owner and due date, with missing dates flagged."
+      },
+      {
+        "name": "Human review coverage",
+        "direction": "up",
+        "aim": "Keep review before send",
+        "definition": "AI-assisted outgoing messages reviewed by the founder before sending divided by AI-assisted messages sent."
+      }
+    ],
+    "baselineNote": "Directional goals. We\u2019ll agree the baseline using your current workflow.",
+    "ctaTitle": "Review the first process.",
+    "ctaCopy": "Reply here and I\u2019ll send times for a 15-minute call.",
+    "beat": "Reply here and I\u2019ll send times for a 15-minute call."
+  },
+  "scenes": [
+    {
+      "id": "email-pilot",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Start with one email category.",
+      "caption": "A visit-change request needs a reply, a callback and the correct contact reference.",
+      "beat": "I\u2019d start by reviewing this email category and your CRM. The founder checks the draft before it is sent. The same thread supplies the callback action.",
+      "content": {
+        "name": "Founder email pilot",
+        "subtitle": "Custom workflow plan",
+        "nodes": [
+          {
+            "id": "email",
+            "label": "Read the thread",
+            "detail": "Capture the requested callback and missing visit day."
+          },
+          {
+            "id": "draft",
+            "label": "Prepare the reply",
+            "detail": "Draft in Gmail for founder review."
+          },
+          {
+            "id": "note",
+            "label": "Prepare the action",
+            "detail": "Map the note and callback to the correct CRM contact."
+          }
+        ],
+        "edges": [
+          {
+            "from": "email",
+            "to": "draft"
+          },
+          {
+            "from": "draft",
+            "to": "note"
+          }
+        ],
+        "runOrder": [
+          "email",
+          "draft",
+          "note"
+        ],
+        "context": {
+          "name": "{{client.name}}",
+          "subtitle": "Illustrative sample",
+          "fields": [],
+          "states": [
+            "Read the visit-change request",
+            "Draft awaits founder review",
+            "Callback and missing day captured"
+          ]
+        },
+        "related": []
+      },
+      "statuses": [
+        "Email read",
+        "Draft prepared",
+        "Action captured"
+      ],
+      "details": [
+        "0:10\u20130:30. This is a custom workflow plan.",
+        "The CRM product and founder tone examples need confirmation in the first review."
+      ],
+      "optional": false
+    },
+    {
+      "id": "review-email",
+      "kind": "gmail",
+      "platform": "gmail",
+      "title": "The reply stays in Drafts.",
+      "caption": "Evelyn\u2019s request stays above the editable reply. The visit has not been rescheduled.",
+      "beat": "Evelyn asks for a call after two tomorrow. The reply asks which day she wants. You can change the wording here and review it before sending.",
+      "content": {
+        "name": "Visit change request",
+        "subtitle": "Illustrative sample",
+        "surface": "thread",
+        "thread": {
+          "id": "{{thread.id}}",
+          "subject": "{{thread.subject}}",
+          "fromName": "{{client.name}}",
+          "fromEmail": "{{client.email}}",
+          "toEmail": "founder@example.com",
+          "received": "{{thread.received}}",
+          "body": "{{thread.body}}",
+          "label": "Needs review"
+        },
+        "draft": {
+          "id": "sample-draft-ac-1042",
+          "recipient": "{{client.email}}",
+          "body": "Hi Evelyn,\n\nThanks for letting me know. Which day would you like to move the visit to? I\u2019ll arrange a call after 2 pm tomorrow to discuss the options.\n\nThanks",
+          "status": "draft"
+        }
+      },
+      "statuses": [
+        "Original request visible",
+        "Reply draft ready for review"
+      ],
+      "details": [
+        "0:30\u20131:15. Point to the sender, request and missing day.",
+        "The reply is editable. Send is disabled in the local sample. Needs review is a custom Gmail label."
+      ],
+      "optional": false
+    },
+    {
+      "id": "capture-action",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "The callback is ready to map.",
+      "caption": "The email and the action share Evelyn\u2019s contact reference. The preferred visit day is still missing.",
+      "beat": "This is the note and action I\u2019d map to your CRM. It keeps AC-1042, the callback time and the missing day together. The first review would confirm the CRM and how contacts are matched.",
+      "content": {
+        "name": "{{client.name}}",
+        "subtitle": "Custom integration preview",
+        "sourceTitle": "Source email",
+        "sourceFields": [
+          {
+            "label": "Subject",
+            "value": "{{thread.subject}}"
+          },
+          {
+            "label": "From",
+            "value": "{{client.email}}"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Contact reference",
+            "value": "{{client.reference}}"
+          },
+          {
+            "label": "Owner",
+            "value": "{{action.owner}}"
+          },
+          {
+            "label": "Follow-up",
+            "value": "Call Evelyn about visit options"
+          },
+          {
+            "label": "Due",
+            "value": "{{action.due}}"
+          },
+          {
+            "label": "Missing detail",
+            "value": "{{action.missing}}"
+          },
+          {
+            "label": "Reply",
+            "value": "Draft, not sent"
+          },
+          {
+            "label": "Visit",
+            "value": "Change requested, not confirmed"
+          }
+        ],
+        "events": [
+          {
+            "title": "Note prepared",
+            "detail": "Requested an afternoon visit and a callback after 2 pm on 21 October."
+          },
+          {
+            "title": "CRM mapping to confirm",
+            "detail": "Match the sender to the correct contact before saving a note or creating a task."
+          }
+        ],
+        "notice": "Proposed CRM note and action. We\u2019ll confirm your CRM and its contact matching during the process review."
+      },
+      "statuses": [
+        "Note prepared",
+        "Action ready for mapping"
+      ],
+      "details": [
+        "1:15\u20131:40. Point to AC-1042, the Sydney callback time and the missing day.",
+        "This custom preview does not claim a CRM record has been saved."
+      ],
+      "optional": false
+    }
+  ]
+}

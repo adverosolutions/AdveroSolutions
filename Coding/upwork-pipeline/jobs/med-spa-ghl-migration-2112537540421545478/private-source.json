@@ -1,0 +1,176 @@
+{
+  "applied": false,
+  "bid_stats_basis": {
+    "contract_type": "HOURLY",
+    "note": "The bid amounts in activityStat.applicationsBidStats have no unit attached: on fixed-price jobs they have been observed as both hourly rates and whole-project totals, and the API does not say which applies to this job. Do not compare these numbers across jobs, and do not state or imply a per-hour or per-project basis for them — report them as the bid amounts recorded for this job and say the basis is unspecified."
+  },
+  "can_apply": true,
+  "client_feedback": {
+    "note": "Reviews freelancers wrote about this client after a contract. A comment often names the client contact or the project — use those to personalize the proposal. Never infer a name that no comment states.",
+    "reviews": [
+      {
+        "comment": "<untrusted_participant_content>\nMuhammad is an excellent client—clear, responsive, and professional throughout the project. It was a pleasure working with him, and I’d be happy to collaborate again.\n</untrusted_participant_content>",
+        "ended": "2025-07-22T08:20:03.503Z",
+        "score": 5,
+        "title": "GA4 & Facebook Tracking Setup Expert Needed"
+      },
+      {
+        "comment": "<untrusted_participant_content>\nClient sets unreasonable demands. His requirements don't match work description.\n</untrusted_participant_content>",
+        "ended": "2024-07-13T08:18:40.752Z",
+        "score": 2.25,
+        "title": "Creative Content Writing For Digital Marketing Service Page "
+      },
+      {
+        "comment": "<untrusted_participant_content>\nNice working with him\n</untrusted_participant_content>",
+        "ended": "2023-06-07T00:13:26.000Z",
+        "score": 5,
+        "title": "Need a Go High Level Expert to help with membership website"
+      }
+    ],
+    "selection": "at most 5 of the client's latest revealed reviews that carry a written comment, newest first",
+    "shown": 3
+  },
+  "client_record": {
+    "contracts_active": 2,
+    "contracts_total": 7,
+    "feedback_count": 5,
+    "feedback_score": 4.54,
+    "hire_rate_percent": 47,
+    "hours_total": 9,
+    "jobs_posted": 15,
+    "jobs_with_hires": 7,
+    "open_jobs": 1,
+    "spend_total": "$215.94"
+  },
+  "client_work_history": {
+    "closed": [
+      {
+        "ended": "2025-07-22T08:20:03.503Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2025-07-07T08:25:49.214Z",
+        "status": "CLOSED",
+        "title": "GA4 & Facebook Tracking Setup Expert Needed",
+        "type": "FIXED"
+      },
+      {
+        "ended": "2025-05-17T09:20:40.077Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2025-05-13T17:55:31.151Z",
+        "status": "CLOSED",
+        "title": "Need an email designer expert to design email complete flow for cbd industry",
+        "type": "FIXED"
+      },
+      {
+        "ended": "2024-07-13T08:18:40.752Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 2.25,
+        "started": "2024-07-09T11:26:13.041Z",
+        "status": "CLOSED",
+        "title": "Creative Content Writing For Digital Marketing Service Page ",
+        "type": "FIXED"
+      },
+      {
+        "ended": "2023-06-07T00:13:26.000Z",
+        "feedback_score": 5,
+        "feedback_to_client_score": 5,
+        "started": "2023-06-06T23:06:02.000Z",
+        "status": "CLOSED",
+        "title": "Need a Go High Level Expert to help with membership website",
+        "type": "HOURLY"
+      }
+    ],
+    "note": "A sample of the client's history, not all of it, and no total can be derived from it. Use client_record for their totals.",
+    "open": [
+      {
+        "started": "2025-07-22T08:23:41.793Z",
+        "title": "Tiktok Tracking Setup Expert Needed",
+        "type": "FIXED"
+      }
+    ],
+    "selection": "at most 5 open and 5 closed contracts, the latest of each by start date, newest first",
+    "shown": 5
+  },
+  "connects_balance": 1798,
+  "connects_cost": 19,
+  "data": {
+    "marketplaceJobPosting": {
+      "activityStat": {
+        "applicationsBidStats": {
+          "avgRateBid": {
+            "currency": "USD",
+            "displayValue": "$17.30",
+            "rawValue": "17.303548387096775"
+          },
+          "maxRateBid": {
+            "currency": "USD",
+            "displayValue": "$40.00",
+            "rawValue": "40.0"
+          },
+          "minRateBid": {
+            "currency": "USD",
+            "displayValue": "$8.00",
+            "rawValue": "8.0"
+          }
+        },
+        "jobActivity": {
+          "invitesSent": 0,
+          "totalHired": 0,
+          "totalInvitedToInterview": 0,
+          "totalOffered": 0
+        }
+      },
+      "classification": {
+        "category": {
+          "id": "531770282580668422",
+          "preferredLabel": "Sales & Marketing"
+        },
+        "subCategory": {
+          "id": "531770282597445636",
+          "preferredLabel": "Digital Marketing"
+        }
+      },
+      "clientCompanyPublic": {
+        "country": {
+          "name": "Pakistan"
+        },
+        "id": "1007823495",
+        "state": "PUNJAB",
+        "timezone": "Asia/Karachi"
+      },
+      "content": {
+        "description": "<untrusted_participant_content>\nWe’re a growing med spa with two locations and we’re moving everything over from Mindbody and Mailchimp into GoHighLevel. We need an experienced GHL specialist to set up our account properly from the start.\n\nWhat we need:\n\nA 3-step funnel: landing page with a Botox/filler offer, booking page, and thank you page\nCalendar setup for both locations with different staff and service durations\nAppointment reminder automations (SMS + email) at 24 hours and 2 hours before\nA no-show follow-up workflow to rebook missed appointments\nMissed call text-back\nReview request automation sent 2 hours after an appointment\nImport of around 4,000 existing contacts with tags based on past services\nBasic pipeline for tracking new leads through to booked and showed\n\nRequirements:\n\nProven experience with GHL funnels, workflows, and calendars\nExperience with A2P registration is a plus\nMust test everything before launch\nGood communication and English\n\nBudget: Fixed price, open to bids. Please include your price and timeline.\n\nTimeline: We’d like this live within 2 weeks.\n\nTo apply, please answer:\n\nHave you worked with med spas or healthcare businesses before?\nHow would you handle the contact import so we don’t text people who previously unsubscribed?\nShare 1–2 funnels you’ve built in GHL.\n\nPlease don’t send a generic proposal. We’ll skip anyone who doesn’t answer the questions.\n</untrusted_participant_content>",
+        "title": "GoHighLevel Expert for Med Spa"
+      },
+      "contractTerms": {
+        "contractType": "HOURLY",
+        "experienceLevel": "INTERMEDIATE",
+        "hourlyContractTerms": {
+          "engagementType": "PART_TIME",
+          "hourlyBudgetMax": 25,
+          "hourlyBudgetMin": 10,
+          "hourlyBudgetType": "MANUAL"
+        },
+        "personsToHire": 1
+      },
+      "id": "2112537540421545478",
+      "url": "https://www.upwork.com/jobs/~022112537540421545478?utm_campaign=LLM_chatgpt_MCP_jobpost&utm_content=jobpost&utm_medium=LLM&utm_source=chatgpt",
+      "workFlowState": {
+        "status": "ACTIVE"
+      }
+    }
+  },
+  "plan": "Freelancer Plus",
+  "preferred_qualifications": {
+    "english_proficiency": "Any",
+    "has_portfolio": false,
+    "min_hours_worked": 0,
+    "min_job_success_score": 0,
+    "rising_talent": false
+  },
+  "proposals_tier_unavailable": true,
+  "status": "ok",
+  "trace_id": "853739b4f182c326074d9aad8178293f",
+  "unanswered_invites_unavailable": true
+}

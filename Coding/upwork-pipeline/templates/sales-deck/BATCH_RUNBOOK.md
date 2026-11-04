@@ -2,6 +2,8 @@
 
 Read `SALES_ACCEPTANCE.md` before authoring or reviewing any demo. Its whole-walkthrough sales gate applies to every future generation; visual-only approval is insufficient.
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014.
+
 Current model/speed/usage controls are in `OPERATING_POLICY.md`: GPT-6.1 Sol Medium coordinates and builds; one focused Astra High review occurs at the end. Standard speed is used for preparation and administration. Fast is reserved for explicitly time-sensitive demo production. Do not create extra coordinator chats by default. The Python tools compile specs and serialize queue changes; they do not select models, fetch jobs or perform visual review. All sessions on this Mac use the canonical queue.
 
 ## Daily commands
@@ -60,7 +62,7 @@ Main records the reviewer's exact verdict and page SHA-256:
   --page-hash <reviewed-page-sha256> --notes '<independent review evidence>'
 ```
 
-Use `--verdict reject` for a failed review. The CLI verifies the artifact identities before recording the receipt. Send precise defects to a content agent with a task-specific repair brief and explicit supported model/effort settings, rebuild, and request a new independent review. Content workers never approve their own work. Current support is documented in `PLATFORMS.md` and `extension-contract.md`: GHL, n8n, Make, Claude Code/Codex task transcripts, and explicitly custom workbench outputs including carousel previews. Unsupported native tools/actions require approved adapter maintenance, never a GHL substitution for another tool.
+Use `--verdict reject` for a failed review. The CLI verifies the artifact identities before recording the receipt. Send precise defects to a content agent with a task-specific repair brief and explicit supported model/effort settings, rebuild, and request a new independent review. Content workers never approve their own work. Current support is documented in `PLATFORMS.md` and `extension-contract.md`: GHL, n8n, Make, Claude Code/Codex task transcripts, and explicitly custom workbench outputs including carousel previews, plus the explicit `native` candidate surfaces in `native-templates/README.md`: GoHighLevel, n8n (including the typed AI agent extension), Zapier editor/test panel and Claude app skills/project/chat. Each is a desktop sales candidate under bounded review with native production parity withheld (`native-templates/SALES-REVIEW-2026-10-19.md`). Unsupported native tools/actions require approved adapter maintenance, never a GHL substitution for another tool.
 
 Exact unchanged spec/template/page/script and valid review receipts allow reuse, including approved or recorded jobs. Any changed generation resets review. A template change does not automatically approve previously ready pages, even when the story is unchanged. A receipt from an older pilot may be carried only after independent approval is evidenced and the exact reviewed page hash matches the queue artifact; otherwise review again.
 
@@ -109,3 +111,5 @@ Read /Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-pipeline/AGE
 
 [Paste the jobs here, or ask for the saved-job batch.]
 ```
+
+After explicit compiler/schema/LOCK_FILES maintenance, restart the existing local queue server to load the new Python definitions before building/approving. An older in-memory server can invalidate otherwise correct new artifacts during its refresh. Verify the PID and command from the canonical server.pid belong to this queue before stopping only that process, then run `start --port 8769` and rebuild invalidated entries. Do not kill an unrelated port owner. This restart is unnecessary for ordinary data-only job generation.

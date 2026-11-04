@@ -1,0 +1,501 @@
+{
+ "schemaVersion": 1,
+ "id": "clay-hubspot-gtm-systems-architect-2113250797032355590",
+ "title": "Senior Clay + HubSpot GTM Systems Architect | Enrichment, CRM Governance & Signals",
+ "systemName": "Your governed enrichment and signals system",
+ "account": {
+  "name": "Bumblebee IT Services",
+  "initials": "BB",
+  "operatorInitials": "LV"
+ },
+ "source": {
+  "jobUrl": "https://www.upwork.com/jobs/~022113250797032355590",
+  "facts": [
+   "Post: design and implement a reusable data, enrichment, and market-intelligence foundation (Clay + HubSpot).",
+   "Post: establish source-of-truth, field-precedence, and writeback rules; protect known-good HubSpot data from enrichment overwrites.",
+   "Post: enrichment waterfalls, stop-on-success, avoid paying for data already in HubSpot, test before large runs.",
+   "Post: trigger signals such as leadership changes, expansion, cybersecurity events, funding, acquisitions.",
+   "Post: QA checkpoints before writeback, batch/run tracking, correct erroneous updates without overwriting later legitimate changes.",
+   "Company name stated in post: Bumblebee IT Services (BBITS). No contact first name in post; personalization omitted.",
+   "No HubSpot or Clay adapter exists; all screens use the custom workbench. HubSpot builds are not a confirmed Lorenzo fact."
+  ]
+ },
+ "entities": {
+  "company": {
+   "name": "Harbor Point Credit Union",
+   "domain": "harborpoint.example",
+   "size": "410"
+  },
+  "contact": {
+   "name": "Marisol Vega",
+   "title": "Chief Information Officer",
+   "email": "marisol.vega@harborpoint.example"
+  },
+  "owner": {
+   "name": "Jordan Ellis"
+  },
+  "run": {
+   "id": "RUN-1022-A",
+   "size": "40"
+  }
+ },
+ "cover": {
+  "eyebrow": "Prepared for Bumblebee IT Services",
+  "title": "Enrich every account once,",
+  "accent": "and write to HubSpot only what should change.",
+  "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "anchors": [
+   "One governed path from account to HubSpot",
+   "Your edits are never overwritten",
+   "Every run can be traced and reversed"
+  ],
+  "previewSteps": [
+   {
+    "title": "Follow one account through the system",
+    "detail": "{{company.name}} goes from match to verified decision-maker."
+   },
+   {
+    "title": "Decide which source wins",
+    "detail": "See what gets written, kept or sent to review in HubSpot."
+   },
+   {
+    "title": "Check the run before it counts",
+    "detail": "Written, held and skipped records, with lookups you did not pay for."
+   }
+  ],
+  "footer": "Illustrative sample · fictional accounts, contacts and counts",
+  "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+ },
+ "scenes": [
+  {
+   "id": "account-path",
+   "kind": "architecture",
+   "platform": "workbench",
+   "title": "One path every account follows before it touches HubSpot.",
+   "caption": "{{company.name}} is matched first, enriched in a set order, verified, then checked against your field rules.",
+   "beat": "Here's the path for one account, {{company.name}}. It's matched against HubSpot first, so we never pay to look up what you already have. Then providers run in a set order and stop at the first verified answer. {{contact.name}}, their new CIO, gets verified before anything is written.",
+   "details": [
+    "Match on domain {{company.domain}} before any paid lookup",
+    "Providers run in order and stop at the first verified answer",
+    "Conflicts go to a review queue instead of HubSpot"
+   ],
+   "optional": false,
+   "content": {
+    "name": "Account to HubSpot path",
+    "subtitle": "Custom project workspace · run {{run.id}}",
+    "nodes": [
+     {
+      "id": "intake",
+      "label": "Account comes in and is matched",
+      "detail": "Existing HubSpot company or new target, matched by domain first"
+     },
+     {
+      "id": "waterfall",
+      "label": "Enrichment in a set order",
+      "detail": "Skips fields HubSpot already has, stops at the first verified answer"
+     },
+     {
+      "id": "verify",
+      "label": "Decision-maker verified",
+      "detail": "{{contact.name}}, {{contact.title}}, email and employer confirmed"
+     },
+     {
+      "id": "rules",
+      "label": "Field rules decide what changes",
+      "detail": "Write it, keep the HubSpot value, or send it to review"
+     },
+     {
+      "id": "writeback",
+      "label": "Staged update with a run tag",
+      "detail": "Written to HubSpot tagged {{run.id}}, so it can be traced"
+     },
+     {
+      "id": "review",
+      "label": "Review queue",
+      "detail": "Conflicting or unverified values wait for a person"
+     }
+    ],
+    "edges": [
+     {
+      "from": "intake",
+      "to": "waterfall"
+     },
+     {
+      "from": "waterfall",
+      "to": "verify"
+     },
+     {
+      "from": "verify",
+      "to": "rules"
+     },
+     {
+      "from": "rules",
+      "to": "writeback",
+      "label": "Passes rules"
+     },
+     {
+      "from": "rules",
+      "to": "review",
+      "label": "Conflict"
+     }
+    ],
+    "runOrder": [
+     "intake",
+     "waterfall",
+     "verify",
+     "rules",
+     "writeback"
+    ],
+    "context": {
+     "name": "{{company.name}}",
+     "subtitle": "{{company.domain}} · owner {{owner.name}}",
+     "fields": [
+      {
+       "label": "Run",
+       "value": "{{run.id}} · {{run.size}} accounts"
+      },
+      {
+       "label": "Status",
+       "value": "Illustrative sample"
+      }
+     ],
+     "states": [
+      "Matched to existing HubSpot company",
+      "Two fields found, three skipped as already known",
+      "{{contact.name}} verified",
+      "Industry kept, employee count filled",
+      "Update staged under {{run.id}}"
+     ]
+    },
+    "related": [
+     {
+      "title": "Field and writeback map",
+      "detail": "One row per HubSpot property: which source wins and when"
+     },
+     {
+      "title": "Provider order",
+      "detail": "Cheapest reliable source first, paid lookups only when needed"
+     }
+    ]
+   },
+   "statuses": [
+    "Matched to existing HubSpot company",
+    "Two fields found, three skipped as already known",
+    "{{contact.name}} verified",
+    "Industry kept, employee count filled",
+    "Update staged under {{run.id}}"
+   ]
+  },
+  {
+   "id": "field-rules",
+   "kind": "record",
+   "platform": "workbench",
+   "title": "What enrichment found, and what HubSpot actually gets.",
+   "caption": "Values your team edited stay. Blank fields get filled. Every change carries the run tag.",
+   "beat": "On the left is what enrichment found for {{company.name}}. On the right is what lands in HubSpot. {{owner.name}} had already set the industry by hand, so that value stays. The employee count was blank, so it gets filled. {{contact.name}} is added and linked to the company.",
+   "details": [
+    "Owner edits win over enrichment",
+    "Blank fields are filled, known-good values are kept",
+    "Tag {{run.id}} lets a bad batch be undone without touching later edits"
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{company.name}}",
+    "subtitle": "{{contact.name}} · {{contact.title}}",
+    "sourceTitle": "What enrichment returned",
+    "sourceFields": [
+     {
+      "label": "Industry",
+      "value": "Banking"
+     },
+     {
+      "label": "Employees",
+      "value": "{{company.size}}"
+     },
+     {
+      "label": "Decision-maker",
+      "value": "{{contact.name}}, {{contact.title}}"
+     },
+     {
+      "label": "Email",
+      "value": "{{contact.email}} (verified)"
+     }
+    ],
+    "fields": [
+     {
+      "label": "Industry",
+      "value": "Credit union (kept: set by {{owner.name}})"
+     },
+     {
+      "label": "Employee count",
+      "value": "{{company.size}} (filled: was blank)"
+     },
+     {
+      "label": "Contact",
+      "value": "{{contact.name}} added and linked to the company"
+     },
+     {
+      "label": "Lifecycle stage",
+      "value": "Unchanged: not an enrichment field"
+     }
+    ],
+    "events": [
+     {
+      "title": "Matched by domain",
+      "detail": "No duplicate company created"
+     },
+     {
+      "title": "Industry not overwritten",
+      "detail": "A person's edit outranks enrichment"
+     },
+     {
+      "title": "Employee count filled",
+      "detail": "Empty field, verified source"
+     },
+     {
+      "title": "Change log saved",
+      "detail": "Old and new values kept under {{run.id}}"
+     }
+    ],
+    "notice": "Every change keeps its old value and run tag, so it can be reversed without undoing later edits."
+   },
+   "statuses": [
+    "Enrichment results in",
+    "Field rules applied",
+    "Changes logged under {{run.id}}"
+   ]
+  },
+  {
+   "id": "run-check",
+   "kind": "outcome",
+   "platform": "workbench",
+   "title": "Check the whole run before it counts.",
+   "caption": "Illustrative run of {{run.size}} accounts: what was written, what was held, and which lookups were skipped.",
+   "beat": "This is the check after the run. Out of {{run.size}} sample accounts, most were written cleanly, a few were held for review because sources disagreed, and a lot of paid lookups never ran because HubSpot already had the answer. {{owner.name}} can open any held record and decide.",
+   "details": [
+    "Held records wait for a person before anything is written",
+    "Skipped lookups are the credits you did not spend",
+    "Small test run first, then the full list"
+   ],
+   "optional": false,
+   "content": {
+    "name": "Run {{run.id}}",
+    "subtitle": "{{run.size}} accounts · test batch before the full list",
+    "fields": [
+     {
+      "label": "Owner",
+      "value": "{{owner.name}}"
+     },
+     {
+      "label": "Example account",
+      "value": "{{company.name}}"
+     },
+     {
+      "label": "Rollback",
+      "value": "Available for every change in this run"
+     }
+    ],
+    "stages": [
+     "Queued",
+     "Enriched",
+     "Verified",
+     "Written to HubSpot",
+     "Held for review"
+    ],
+    "stageSequence": [
+     1,
+     2,
+     3
+    ],
+    "metrics": [
+     {
+      "label": "Written cleanly",
+      "value": "31",
+      "note": "Illustrative sample run"
+     },
+     {
+      "label": "Held for review",
+      "value": "6",
+      "note": "Sources disagreed or email unverified"
+     },
+     {
+      "label": "Paid lookups skipped",
+      "value": "22",
+      "note": "HubSpot already had the value"
+     }
+    ],
+    "note": "Counts are illustrative. {{company.name}} is written; the held records stay out of HubSpot until reviewed."
+   },
+   "statuses": [
+    "{{run.size}} accounts enriched",
+    "Decision-makers verified",
+    "31 written, 6 held, 22 lookups skipped"
+   ]
+  },
+  {
+   "id": "signals",
+   "kind": "intelligence",
+   "platform": "workbench",
+   "title": "Signals worth acting on, already tied to the right account.",
+   "caption": "Leadership changes, security events and expansion, checked for recency and duplicates before they reach a rep.",
+   "beat": "This is the signal briefing. The new CIO at {{company.name}} shows up as an opportunity, tied to the record we just updated. Each signal has its source and how fresh it is, and duplicates are merged, so {{owner.name}} only sees what's worth a call.",
+   "details": [
+    "Each signal shows its source and date",
+    "Duplicates merged before a rep sees them",
+    "Approve, ask for more evidence, or dismiss"
+   ],
+   "optional": true,
+   "content": {
+    "surface": "briefing",
+    "name": "Account signals",
+    "reportId": "SIG-1022",
+    "edition": "Thursday briefing",
+    "schedule": "Weekday mornings",
+    "objective": "Show reps only recent, sourced, deduplicated signals tied to accounts already in HubSpot.",
+    "summary": "Three sample signals this morning: one security risk, one leadership change, one expansion to watch.",
+    "topics": [
+     {
+      "id": "leadership",
+      "label": "Leadership changes",
+      "priority": "high"
+     },
+     {
+      "id": "security",
+      "label": "Security events",
+      "priority": "high"
+     },
+     {
+      "id": "expansion",
+      "label": "Expansion and funding",
+      "priority": "medium"
+     }
+    ],
+    "stories": [
+     {
+      "id": "s-risk",
+      "title": "Ridgeway Medical Group reports a phishing incident",
+      "category": "risk",
+      "topicId": "security",
+      "priority": "high",
+      "summary": "A sample regional clinic group reported a phishing incident affecting staff email.",
+      "why": "Security events often open a short window for an IT services conversation.",
+      "action": "Route to the account owner with the source attached",
+      "urgency": "This week",
+      "confidence": "Medium",
+      "uncertainty": "Scope of the incident not yet confirmed",
+      "evidence": [
+       {
+        "id": "e1",
+        "title": "Local news report",
+        "kind": "primary",
+        "excerpt": "The group said it is reviewing staff email access after a phishing attempt."
+       }
+      ]
+     },
+     {
+      "id": "s-opp",
+      "title": "{{company.name}} names a new CIO",
+      "category": "opportunity",
+      "topicId": "leadership",
+      "priority": "high",
+      "summary": "{{contact.name}} joined as {{contact.title}}. Contact verified and linked in HubSpot.",
+      "why": "New IT leaders often review vendors in their first months.",
+      "action": "Ask {{owner.name}} to reach out this week",
+      "urgency": "This week",
+      "confidence": "High",
+      "uncertainty": "Start date taken from one announcement",
+      "evidence": [
+       {
+        "id": "e2",
+        "title": "Company announcement",
+        "kind": "primary",
+        "excerpt": "Harbor Point welcomes Marisol Vega as Chief Information Officer."
+       },
+       {
+        "id": "e3",
+        "title": "Industry newsletter",
+        "kind": "repost",
+        "excerpt": "Repost of the same announcement, merged as a duplicate."
+       }
+      ]
+     },
+     {
+      "id": "s-watch",
+      "title": "Lakeshore Logistics opens a second warehouse",
+      "category": "watch",
+      "topicId": "expansion",
+      "priority": "medium",
+      "summary": "A sample logistics firm announced a second site.",
+      "why": "New sites can mean new network and security needs later.",
+      "action": "Watch for an IT hiring post before reaching out",
+      "urgency": "Next month",
+      "confidence": "Low",
+      "uncertainty": "No IT budget signal yet",
+      "evidence": [
+       {
+        "id": "e4",
+        "title": "Trade blog",
+        "kind": "unverified",
+        "excerpt": "Lakeshore is said to be opening a second warehouse this spring."
+       }
+      ]
+     }
+    ],
+    "health": {
+     "fetched": 4,
+     "developments": 3,
+     "failedSource": "Funding news feed",
+     "failure": "Feed timed out on the morning check",
+     "retry": "Retried automatically on the next run"
+    },
+    "history": [
+     {
+      "id": "SIG-1021",
+      "time": "Wed 7:00 AM",
+      "status": "Sent, 2 signals"
+     },
+     {
+      "id": "SIG-1022",
+      "time": "Thu 7:00 AM",
+      "status": "Ready for review"
+     }
+    ]
+   },
+   "statuses": [
+    "Sources checked",
+    "Duplicates merged",
+    "Briefing ready for review"
+   ]
+  }
+ ],
+ "close": {
+  "eyebrow": "What I would measure",
+  "title": "A HubSpot your team can trust,",
+  "accent": "at a cost you can control.",
+  "caption": "We set the starting point together, then track clean updates, enrichment spend and duplicates.",
+  "metrics": [
+   {
+    "name": "Clean HubSpot updates",
+    "direction": "up",
+    "aim": "More updates that need no correction",
+    "definition": "Share of enrichment changes written to HubSpot that are not reversed or corrected within an agreed review window, counted per run."
+   },
+   {
+    "name": "Enrichment spend per verified contact",
+    "direction": "down",
+    "aim": "Spend less to verify each contact",
+    "definition": "Total enrichment provider credits used in a run divided by the number of decision-makers verified and written in that run."
+   },
+   {
+    "name": "Duplicate records created",
+    "direction": "down",
+    "aim": "Fewer duplicate companies and contacts",
+    "definition": "New HubSpot companies or contacts that match an existing record by domain or email, counted per run and per month."
+   }
+  ],
+  "baselineNote": "We'll establish the baseline and agree the targets.",
+  "ctaTitle": "Worth a quick 15-minute call?",
+  "ctaCopy": "Reply here and I'll send times.",
+  "beat": "I'd track clean updates, enrichment spend per verified contact, and duplicates against a starting point we agree on. Worth a quick 15-minute call? Reply here and I'll send times."
+ }
+}

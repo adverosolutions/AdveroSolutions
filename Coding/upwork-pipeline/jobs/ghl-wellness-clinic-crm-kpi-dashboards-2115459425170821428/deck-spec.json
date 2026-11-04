@@ -1,0 +1,696 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-wellness-clinic-crm-kpi-dashboards-2115459425170821428",
+  "title": "GoHighLevel Expert Needed - CRM Automation, Workflows & KPI Dashboards",
+  "systemName": "Your clinic's GoHighLevel growth system",
+  "account": {
+    "name": "Your wellness clinic",
+    "initials": "WC",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022115459425170821428",
+    "facts": [
+      "Post: growing medical wellness clinic already on GoHighLevel with basic workflows, calendars and CRM tools.",
+      "Post goals: automate repetitive tasks, improve lead conversion and patient retention, clear visibility of key business metrics.",
+      "Post scope: lead follow-up and booking workflows; reminders, missed appointments, patient follow-ups, feedback requests; service pipelines; retention, membership tracking and reactivation; dashboards for leads, appointments, conversion, revenue, lead sources, membership growth, cancellations, retention; weekly and monthly executive dashboards; no duplicate or conflicting workflows; documentation and training.",
+      "Post prefers milestones: audit and plan, automation, dashboards, testing, training. HIPAA familiarity preferred.",
+      "Post states no contact name; greeting and cover stay generic until Lorenzo rules on review-sourced names."
+    ]
+  },
+  "entities": {
+    "clinic": {
+      "name": "your clinic",
+      "service": "New patient consultation",
+      "membership": "Wellness membership"
+    },
+    "patient": {
+      "name": "Hannah Price",
+      "first": "Hannah",
+      "email": "hannah.price@example.com",
+      "source": "Google search",
+      "booked": "Thursday 5 November, 10:00 am",
+      "rebooked": "Saturday 7 November, 9:30 am"
+    },
+    "member": {
+      "name": "Daniel Okafor",
+      "first": "Daniel",
+      "email": "daniel.okafor@example.com",
+      "lastVisit": "14 September"
+    },
+    "staff": {
+      "name": "Sophie Tran",
+      "first": "Sophie",
+      "role": "Patient coordinator",
+      "membership": "Marcus Bell"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your clinic's GoHighLevel growth system",
+    "title": "From first enquiry",
+    "accent": "to a loyal member.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Lead follow-up and booking",
+      "Reminders and missed appointments",
+      "Membership reactivation",
+      "KPI dashboard"
+    ],
+    "previewSteps": [
+      {
+        "title": "Reply and book",
+        "detail": "Every new enquiry gets a fast reply and a booking link."
+      },
+      {
+        "title": "Protect the appointment",
+        "detail": "Reminders go out, and a missed visit gets a rebooking text."
+      },
+      {
+        "title": "Keep members coming back",
+        "detail": "Members who stop visiting get a check-in before they cancel."
+      },
+      {
+        "title": "See the numbers",
+        "detail": "Leads, bookings, conversion and revenue on one dashboard."
+      }
+    ],
+    "footer": "Illustrative sample · sample patients and figures, no real patient data",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works. We'll follow one new patient from her first enquiry to her visit, then a member who stopped coming in, then the dashboard your team reviews each week."
+  },
+  "close": {
+    "eyebrow": "What we'd measure",
+    "title": "More booked visits,",
+    "accent": "more members who stay.",
+    "caption": "We'd set your starting numbers in the audit, then track these three every week.",
+    "metrics": [
+      {
+        "name": "Enquiries that book a consultation",
+        "direction": "up",
+        "aim": "Book more of the leads you already get",
+        "definition": "New enquiries in a period that book a consultation within an agreed window, divided by all new enquiries in that period, reported by lead source."
+      },
+      {
+        "name": "Missed appointment rate",
+        "direction": "down",
+        "aim": "Fewer empty appointment slots",
+        "definition": "Appointments marked no-show divided by all appointments scheduled in the period, with rebooked visits reported alongside."
+      },
+      {
+        "name": "Active member retention",
+        "direction": "up",
+        "aim": "Keep more members active",
+        "definition": "Members active at the start of the month who are still active at its end, divided by members active at the start, with cancellations listed separately."
+      }
+    ],
+    "baselineNote": "We'll set the baseline from your current GoHighLevel data and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "We'd set your starting numbers in the audit, then track booked consultations, missed appointments and member retention every week. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "enquiry-to-booking",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Reply to every new enquiry and get it booked.",
+      "caption": "A new enquiry gets a text with your booking link within minutes, and Sophie hears about it once the consultation is booked.",
+      "beat": "Hannah fills in your website form. She lands in the new patient pipeline and gets a text with your booking link straight away. The workflow waits for her to book. She books a consultation, so Sophie, your patient coordinator, gets a heads-up. If she hadn't booked, she'd get a follow-up email instead.",
+      "details": [
+        "Website enquiry → Hannah Price → New patient pipeline",
+        "Booked → Sophie notified · Not booked → follow-up email"
+      ],
+      "optional": false,
+      "content": {
+        "name": "New enquiry follow-up and booking",
+        "nodes": [
+          {
+            "id": "enquiry-tag",
+            "type": "contact_tag",
+            "label": "Tag added: website enquiry",
+            "detail": "Your website form tags each new enquiry"
+          },
+          {
+            "id": "pipeline",
+            "type": "opportunity",
+            "label": "New patient pipeline: New enquiry",
+            "detail": "Service: {{clinic.service}} · Source: {{patient.source}}"
+          },
+          {
+            "id": "first-text",
+            "type": "sms",
+            "label": "Text with booking link",
+            "detail": "Sent within minutes of the enquiry"
+          },
+          {
+            "id": "wait-book",
+            "type": "wait",
+            "label": "Wait up to 1 day for a booking",
+            "detail": "Moves on as soon as a consultation is booked"
+          },
+          {
+            "id": "booked-check",
+            "type": "condition",
+            "label": "Consultation booked?",
+            "detail": "Checks the consultation calendar"
+          },
+          {
+            "id": "notify-coordinator",
+            "type": "notification",
+            "label": "Notify {{staff.name}}",
+            "detail": "{{patient.name}} booked {{patient.booked}}"
+          },
+          {
+            "id": "follow-up-email",
+            "type": "email",
+            "label": "Follow-up email with booking link",
+            "detail": "For enquiries that haven't booked yet"
+          }
+        ],
+        "edges": [
+          {
+            "from": "enquiry-tag",
+            "to": "pipeline"
+          },
+          {
+            "from": "pipeline",
+            "to": "first-text"
+          },
+          {
+            "from": "first-text",
+            "to": "wait-book"
+          },
+          {
+            "from": "wait-book",
+            "to": "booked-check"
+          },
+          {
+            "from": "booked-check",
+            "to": "notify-coordinator",
+            "label": "Booked"
+          },
+          {
+            "from": "booked-check",
+            "to": "follow-up-email",
+            "label": "Not booked"
+          }
+        ],
+        "runOrder": [
+          "enquiry-tag",
+          "pipeline",
+          "first-text",
+          "wait-book",
+          "booked-check",
+          "notify-coordinator"
+        ],
+        "context": {
+          "name": "{{patient.name}}",
+          "subtitle": "{{patient.source}} · {{clinic.service}}",
+          "fields": [
+            {
+              "label": "Pipeline",
+              "value": "New patients"
+            },
+            {
+              "label": "Coordinator",
+              "value": "{{staff.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Website enquiry received",
+            "Added to New patient pipeline",
+            "Booking link texted",
+            "Waiting for a booking",
+            "Consultation booked",
+            "{{staff.first}} notified · {{patient.booked}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Reminders and missed appointments",
+            "detail": "Starts from the booked consultation."
+          },
+          {
+            "title": "KPI dashboard",
+            "detail": "Counts this enquiry and its lead source."
+          }
+        ]
+      },
+      "statuses": [
+        "Website enquiry received",
+        "Added to New patient pipeline",
+        "Booking link texted",
+        "Waiting for a booking",
+        "Consultation booked",
+        "{{staff.first}} notified"
+      ]
+    },
+    {
+      "id": "reminder-logic",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Remind before the visit, recover a missed one.",
+      "caption": "A reminder goes out the day before. If the appointment is marked no-show, a rebooking text follows and Sophie gets a task.",
+      "beat": "This is the reminder workflow. It starts from the booked appointment, sends a reminder the day before, then checks the appointment status. A no-show gets a friendly rebooking text and Sophie is told. A patient who attends gets a feedback request instead.",
+      "details": [
+        "Appointment Status trigger → reminder 1 day before",
+        "No-show → rebooking text + coordinator alert · Showed → feedback request"
+      ],
+      "optional": true,
+      "content": {
+        "name": "Appointment reminders and missed-visit recovery",
+        "nodes": [
+          {
+            "id": "appt-status",
+            "type": "appointment_status",
+            "label": "Appointment confirmed",
+            "detail": "Consultation calendar"
+          },
+          {
+            "id": "wait-reminder",
+            "type": "wait",
+            "label": "Wait until 1 day before",
+            "detail": "Based on the appointment start time"
+          },
+          {
+            "id": "reminder-text",
+            "type": "sms",
+            "label": "Reminder text",
+            "detail": "Time, address and how to reschedule"
+          },
+          {
+            "id": "wait-after",
+            "type": "wait",
+            "label": "Wait until 1 hour after start",
+            "detail": "Gives the front desk time to mark attendance"
+          },
+          {
+            "id": "status-check",
+            "type": "condition",
+            "label": "Marked no-show?",
+            "detail": "Checks the appointment status"
+          },
+          {
+            "id": "rebook-text",
+            "type": "sms",
+            "label": "Rebooking text",
+            "detail": "No pressure, with the booking link"
+          },
+          {
+            "id": "alert-coordinator",
+            "type": "notification",
+            "label": "Alert {{staff.name}}",
+            "detail": "Missed visit to follow up"
+          },
+          {
+            "id": "feedback-email",
+            "type": "email",
+            "label": "Feedback request",
+            "detail": "Sent to patients who attended"
+          }
+        ],
+        "edges": [
+          {
+            "from": "appt-status",
+            "to": "wait-reminder"
+          },
+          {
+            "from": "wait-reminder",
+            "to": "reminder-text"
+          },
+          {
+            "from": "reminder-text",
+            "to": "wait-after"
+          },
+          {
+            "from": "wait-after",
+            "to": "status-check"
+          },
+          {
+            "from": "status-check",
+            "to": "rebook-text",
+            "label": "No-show"
+          },
+          {
+            "from": "rebook-text",
+            "to": "alert-coordinator"
+          },
+          {
+            "from": "status-check",
+            "to": "feedback-email",
+            "label": "Showed"
+          }
+        ],
+        "runOrder": [
+          "appt-status",
+          "wait-reminder",
+          "reminder-text",
+          "wait-after",
+          "status-check",
+          "rebook-text",
+          "alert-coordinator"
+        ],
+        "context": {
+          "name": "{{patient.name}}",
+          "subtitle": "{{clinic.service}} · {{patient.booked}}",
+          "fields": [
+            {
+              "label": "Calendar",
+              "value": "Consultations"
+            },
+            {
+              "label": "Coordinator",
+              "value": "{{staff.name}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Appointment confirmed",
+            "Waiting for the day before",
+            "Reminder sent",
+            "Waiting for attendance",
+            "Marked no-show",
+            "Rebooking text sent",
+            "{{staff.first}} alerted"
+          ]
+        },
+        "related": [
+          {
+            "title": "Patient conversation",
+            "detail": "The same texts, as Hannah sees them."
+          },
+          {
+            "title": "Feedback request",
+            "detail": "Asks attended patients how the visit went."
+          }
+        ]
+      },
+      "statuses": [
+        "Appointment confirmed",
+        "Waiting for the day before",
+        "Reminder sent",
+        "Waiting for attendance",
+        "Marked no-show",
+        "Rebooking text sent",
+        "{{staff.first}} alerted"
+      ]
+    },
+    {
+      "id": "patient-conversation",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "Hannah books, misses, and rebooks by text.",
+      "caption": "The booking text, the reminder and the rebooking text all sit in one conversation that Sophie can see.",
+      "beat": "Here's what Hannah actually sees. Her first text has the booking link, and the day before, she gets a reminder. She misses the appointment, so an hour later she gets a friendly text to rebook. She picks Saturday, and the confirmation comes straight back. Sophie can see the whole thread, and none of these messages mention anything about her health.",
+      "details": [
+        "Booking link → reminder → missed visit → rebooked {{patient.rebooked}}",
+        "Messages carry times and links only, no health details"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{patient.name}}",
+        "subtitle": "{{patient.source}} · {{clinic.service}}",
+        "fields": [
+          {
+            "label": "Coordinator",
+            "value": "{{staff.name}}"
+          },
+          {
+            "label": "First booking",
+            "value": "{{patient.booked}}"
+          },
+          {
+            "label": "Rebooked",
+            "value": "{{patient.rebooked}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{staff.name}}",
+            "time": "Mon 2:14 pm",
+            "body": "Hi {{patient.first}}, thanks for getting in touch. You can pick a consultation time on our online booking page. Sophie"
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{staff.name}}",
+            "time": "Wed 10:00 am",
+            "body": "Hi {{patient.first}}, a reminder that your consultation is tomorrow at 10:00 am. Need a different time? Just reply and we'll move it."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{staff.name}}",
+            "time": "Thu 11:00 am",
+            "body": "Hi {{patient.first}}, sorry we missed you this morning. No problem at all. Grab a new time whenever suits on our booking page."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{patient.name}}",
+            "time": "Thu 11:20 am",
+            "body": "So sorry, work ran late. Just booked Saturday morning."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{staff.name}}",
+            "time": "Thu 11:21 am",
+            "body": "You're booked for {{patient.rebooked}}. See you then, {{patient.first}}."
+          }
+        ],
+        "notice": "Rebooked for {{patient.rebooked}}. Sophie sees the full thread in Conversations."
+      },
+      "statuses": [
+        "Booking link sent",
+        "Reminder sent the day before",
+        "Missed visit · rebooking text sent",
+        "Hannah replies",
+        "Rebooked · {{patient.rebooked}}"
+      ]
+    },
+    {
+      "id": "member-reactivation",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Win back members before they cancel.",
+      "caption": "When a member hasn't visited in 45 days, they get a check-in with a booking link, and Marcus gets a call task if they don't book.",
+      "beat": "Now retention. Daniel is a member who hasn't been in since mid-September. When he hits 45 days without a visit, he gets tagged and receives a friendly check-in email with a booking link. Three days later, the workflow checks whether he booked. He did, so he moves back to Active in the membership pipeline. If he hadn't, Marcus, who looks after memberships, would get a task to call him.",
+      "details": [
+        "45 days without a visit → check-in email → wait 3 days",
+        "Booked → Active again · Not booked → call task for Marcus"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Membership check-in and reactivation",
+        "nodes": [
+          {
+            "id": "at-risk-tag",
+            "type": "contact_tag",
+            "label": "Tag added: member at risk",
+            "detail": "Added after 45 days without a visit"
+          },
+          {
+            "id": "checkin-email",
+            "type": "email",
+            "label": "Check-in email with booking link",
+            "detail": "Personal note, no offers or health claims"
+          },
+          {
+            "id": "wait-three",
+            "type": "wait",
+            "label": "Wait 3 days",
+            "detail": "Moves on early if a visit is booked"
+          },
+          {
+            "id": "booked-again",
+            "type": "condition",
+            "label": "Visit booked?",
+            "detail": "Checks the member's calendar bookings"
+          },
+          {
+            "id": "back-active",
+            "type": "opportunity",
+            "label": "Membership pipeline: Active",
+            "detail": "Moved back from At risk"
+          },
+          {
+            "id": "call-task",
+            "type": "assign_user",
+            "label": "Assign to {{staff.membership}} for a call",
+            "detail": "For members who haven't booked"
+          }
+        ],
+        "edges": [
+          {
+            "from": "at-risk-tag",
+            "to": "checkin-email"
+          },
+          {
+            "from": "checkin-email",
+            "to": "wait-three"
+          },
+          {
+            "from": "wait-three",
+            "to": "booked-again"
+          },
+          {
+            "from": "booked-again",
+            "to": "back-active",
+            "label": "Booked"
+          },
+          {
+            "from": "booked-again",
+            "to": "call-task",
+            "label": "Not booked"
+          }
+        ],
+        "runOrder": [
+          "at-risk-tag",
+          "checkin-email",
+          "wait-three",
+          "booked-again",
+          "back-active"
+        ],
+        "context": {
+          "name": "{{member.name}}",
+          "subtitle": "{{clinic.membership}} · last visit {{member.lastVisit}}",
+          "fields": [
+            {
+              "label": "Pipeline",
+              "value": "Memberships"
+            },
+            {
+              "label": "Looked after by",
+              "value": "{{staff.membership}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Tagged: member at risk",
+            "Check-in email sent",
+            "Waiting for a booking",
+            "Visit booked",
+            "Back to Active"
+          ]
+        },
+        "related": [
+          {
+            "title": "Cancellations",
+            "detail": "Members who cancel move to Cancelled and appear on the dashboard."
+          },
+          {
+            "title": "KPI dashboard",
+            "detail": "Active members and cancellations feed the weekly view."
+          }
+        ]
+      },
+      "statuses": [
+        "Tagged: member at risk",
+        "Check-in email sent",
+        "Waiting for a booking",
+        "Visit booked",
+        "{{member.first}} is Active again"
+      ]
+    },
+    {
+      "id": "kpi-dashboard",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "See leads, bookings and revenue in one place.",
+      "caption": "Illustrative week: 64 leads, 29 consultations booked and 11 new patients, with revenue and members alongside.",
+      "beat": "This is the dashboard you'd open for your weekly review. In this sample week there were 64 new leads, 29 booked consultations and 11 new patients, with revenue and active members alongside. You can also see your top lead source and the missed appointments that got rebooked. There's a monthly version of this view for your bigger reviews. These figures are sample numbers, not a forecast.",
+      "details": [
+        "Illustrative week: 64 leads → 29 consultations → 11 new patients",
+        "Lead sources, revenue and membership on the same view"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Weekly clinic review",
+        "subtitle": "Week of 2 November · all lead sources",
+        "fields": [
+          {
+            "label": "Top lead source",
+            "value": "{{patient.source}}"
+          },
+          {
+            "label": "Pipelines",
+            "value": "New patients · Memberships"
+          },
+          {
+            "label": "Also available",
+            "value": "Monthly executive view"
+          }
+        ],
+        "stages": [
+          "New enquiry",
+          "Consultation booked",
+          "Attended",
+          "New patient"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "New leads",
+            "value": "64",
+            "note": "Illustrative · split by lead source"
+          },
+          {
+            "label": "Consultations booked",
+            "value": "29",
+            "note": "Illustrative · 45% of leads"
+          },
+          {
+            "label": "New patients",
+            "value": "11",
+            "note": "Illustrative · lead to patient"
+          },
+          {
+            "label": "Revenue this week",
+            "value": "$18.4k",
+            "note": "Illustrative · from won opportunities"
+          },
+          {
+            "label": "Active members",
+            "value": "212",
+            "note": "Illustrative · 6 joined, 2 cancelled"
+          },
+          {
+            "label": "Missed appointments",
+            "value": "4",
+            "note": "Illustrative · 3 rebooked"
+          }
+        ],
+        "note": "Sample figures for illustration only. The live dashboard reads your own GoHighLevel pipelines and calendars.",
+        "proof": {
+          "label": "Illustrative missed-visit recovery",
+          "value": "3 of 4 rebooked",
+          "description": "Hannah's missed Thursday consultation is one of the three. She is booked again for Saturday 7 November, 9:30 am.",
+          "sourceNote": "Illustrative sample data."
+        }
+      },
+      "statuses": [
+        "64 new leads this week",
+        "29 consultations booked",
+        "Attendance and missed visits tracked",
+        "11 new patients · revenue and members updated"
+      ]
+    }
+  ]
+}

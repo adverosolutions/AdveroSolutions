@@ -1,0 +1,1116 @@
+{
+  "schemaVersion": 1,
+  "id": "autonomous-ai-sales-agent-2115457308108467345",
+  "title": "Your AI sales agent, from prospect to booked meeting.",
+  "systemName": "Autonomous AI sales agent",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022115457308108467345",
+    "facts": [
+      "Saved job 2026-10-28; AI-services company, Pakistan; no client name in post.",
+      "All people, companies, messages and counts in this deck are invented sample data."
+    ]
+  },
+  "entities": {
+    "co": {
+      "name": "Halvorsen Freight",
+      "domain": "halvorsen-freight.example.com",
+      "size": "220 staff",
+      "industry": "Freight and logistics",
+      "region": "US Midwest"
+    },
+    "lead": {
+      "name": "Rosalind Achterberg",
+      "first": "Rosalind",
+      "role": "COO",
+      "email": "rosalind.achterberg@example.com",
+      "id": "PRS-2041"
+    },
+    "signal": {
+      "one": "Opening a second warehouse in Q1",
+      "two": "Hiring two automation analysts",
+      "three": "Quotes still handled by email and spreadsheets"
+    },
+    "score": {
+      "value": "86 / 100",
+      "tier": "High priority",
+      "service": "AI quote-intake automation"
+    },
+    "run": {
+      "id": "RUN-1102-07",
+      "day": "Mon 2 Nov"
+    },
+    "mail": {
+      "subject": "Quote intake at Halvorsen's new warehouse",
+      "sent": "Mon 2 Nov, 10:15 AM CT",
+      "reply": "Tue 3 Nov, 8:40 AM CT",
+      "fu": "Fri 6 Nov"
+    },
+    "meet": {
+      "id": "EVT-5512",
+      "when": "Thu 5 Nov, 10:00 AM CT",
+      "length": "30-minute discovery call"
+    },
+    "approver": "Sales lead, your team",
+    "limit": "40 new emails per day"
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Your AI sales agent,",
+    "accent": "from prospect to booked meeting.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n and an AI agent that research, score, write and book, with your approval on the steps you choose."
+    ],
+    "previewSteps": [
+      {
+        "title": "Find and score",
+        "detail": "Sourced research and a fit score for each prospect."
+      },
+      {
+        "title": "Approve and send",
+        "detail": "Personal outreach and follow-ups after your yes."
+      },
+      {
+        "title": "Book and report",
+        "detail": "Meetings on your calendar, every step logged."
+      }
+    ],
+    "footer": "Illustrative sample",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "research-and-score",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "The agent finds and scores your prospects.",
+      "caption": "Every morning the agent researches companies that match your ideal customer, scores each one and explains why.",
+      "beat": "Every morning this n8n workflow loads your ideal customer rules and hands them to the AI agent. The agent researches {{co.name}}, finds three buying signals with a source for each, and scores them {{score.value}}, high priority. It also checks your CRM so nobody gets contacted twice, then holds the prospect for your approval.",
+      "details": [
+        "Point to the AI Agent output: the score, the three signals and the recommended service.",
+        "The research tools only read permitted sources. Any claim without a source is dropped, so the email never cites made-up research.",
+        "The duplicate check and suppression list run before anything is drafted."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Prospect research and scoring",
+        "subtitle": "Illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "Prospect research and scoring",
+          "nodes": [
+            {
+              "id": "start-run",
+              "type": "webhook",
+              "label": "Start daily prospect run",
+              "detail": "POST /prospect-run"
+            },
+            {
+              "id": "icp",
+              "type": "edit_fields",
+              "label": "Load ideal customer rules",
+              "detail": "Logistics, 50 to 500 staff, US"
+            },
+            {
+              "id": "researcher",
+              "type": "ai_agent",
+              "label": "Research and score prospect",
+              "detail": "Find signals, cite sources, score fit"
+            },
+            {
+              "id": "save",
+              "type": "http_request",
+              "label": "Save to CRM, hold for approval",
+              "detail": "{{lead.id}} status: needs approval"
+            }
+          ],
+          "edges": [
+            {
+              "from": "start-run",
+              "to": "icp"
+            },
+            {
+              "from": "icp",
+              "to": "researcher"
+            },
+            {
+              "from": "researcher",
+              "to": "save"
+            }
+          ],
+          "runOrder": [
+            "start-run",
+            "icp",
+            "researcher",
+            "save"
+          ],
+          "context": {
+            "name": "{{co.name}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Run",
+                "value": "{{run.id}}"
+              },
+              {
+                "label": "Prospect",
+                "value": "{{lead.name}}, {{lead.role}}"
+              },
+              {
+                "label": "Fit score",
+                "value": "{{score.value}}"
+              }
+            ],
+            "states": [
+              "Run {{run.id}} started",
+              "Rules loaded: logistics, 50 to 500 staff",
+              "3 signals found, scored {{score.value}}",
+              "{{lead.id}} waiting for your approval"
+            ]
+          },
+          "related": [
+            {
+              "title": "Ideal customer settings",
+              "detail": "Industries, company size, markets and deal size you can change"
+            },
+            {
+              "title": "Activity log",
+              "detail": "What the agent did, why, and the result"
+            }
+          ]
+        },
+        "aiNodes": [
+          {
+            "id": "brain",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Reasoning and scoring"
+          },
+          {
+            "id": "web-research",
+            "type": "http_request_tool",
+            "label": "Read company sources",
+            "detail": "Website, careers page, news"
+          },
+          {
+            "id": "crm-check",
+            "type": "http_request_tool",
+            "label": "Check CRM and opt-outs",
+            "detail": "Duplicates and suppression list"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "brain",
+            "to": "researcher",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "web-research",
+            "to": "researcher",
+            "type": "ai_tool"
+          },
+          {
+            "from": "crm-check",
+            "to": "researcher",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "start-run",
+            "input": [
+              {
+                "label": "trigger",
+                "value": "Daily at 7:00 AM CT"
+              }
+            ],
+            "output": [
+              {
+                "label": "runId",
+                "value": "{{run.id}}"
+              },
+              {
+                "label": "campaign",
+                "value": "Logistics, US"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "prospect-run"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "Immediately"
+              }
+            ]
+          },
+          {
+            "node": "icp",
+            "input": [
+              {
+                "label": "runId",
+                "value": "{{run.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "industries",
+                "value": "Freight and logistics"
+              },
+              {
+                "label": "companySize",
+                "value": "50 to 500 staff"
+              },
+              {
+                "label": "markets",
+                "value": "US"
+              },
+              {
+                "label": "dailyLimit",
+                "value": "{{limit}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Mode",
+                "value": "Manual Mapping"
+              },
+              {
+                "label": "Include Other Input Fields",
+                "value": "On"
+              }
+            ]
+          },
+          {
+            "node": "researcher",
+            "input": [
+              {
+                "label": "company",
+                "value": "{{co.name}}"
+              },
+              {
+                "label": "domain",
+                "value": "{{co.domain}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "fitScore",
+                "value": "{{score.value}}"
+              },
+              {
+                "label": "tier",
+                "value": "{{score.tier}}"
+              },
+              {
+                "label": "signal1",
+                "value": "{{signal.one}}"
+              },
+              {
+                "label": "signal2",
+                "value": "{{signal.two}}"
+              },
+              {
+                "label": "signal3",
+                "value": "{{signal.three}}"
+              },
+              {
+                "label": "recommend",
+                "value": "{{score.service}}"
+              },
+              {
+                "label": "buyer",
+                "value": "{{lead.name}}, {{lead.role}}"
+              },
+              {
+                "label": "duplicate",
+                "value": "No"
+              },
+              {
+                "label": "suppressed",
+                "value": "No"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "Research {{co.name}} against the ideal customer rules, then score fit from 0 to 100."
+              },
+              {
+                "label": "System Message",
+                "value": "Use only the research tools. Give a source for every signal and drop anything you cannot source. Check the CRM and opt-out list before scoring. Recommend one service and explain why in two sentences."
+              }
+            ]
+          },
+          {
+            "node": "brain",
+            "input": [
+              {
+                "label": "company",
+                "value": "{{co.name}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "response",
+                "value": "Three sourced signals. Strong fit for {{score.service}}."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1"
+              },
+              {
+                "label": "Sampling Temperature",
+                "value": "0.2"
+              }
+            ]
+          },
+          {
+            "node": "web-research",
+            "input": [
+              {
+                "label": "domain",
+                "value": "{{co.domain}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "expansion",
+                "value": "{{signal.one}} (press page)"
+              },
+              {
+                "label": "hiring",
+                "value": "{{signal.two}} (careers page)"
+              },
+              {
+                "label": "process",
+                "value": "{{signal.three}} (contact page)"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://research.example.com/company?domain=halvorsen-freight.example.com"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              }
+            ]
+          },
+          {
+            "node": "crm-check",
+            "input": [
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "existingRecord",
+                "value": "None"
+              },
+              {
+                "label": "optedOut",
+                "value": "No"
+              },
+              {
+                "label": "lastContacted",
+                "value": "Never"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/contacts?email=rosalind.achterberg@example.com"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              }
+            ]
+          },
+          {
+            "node": "save",
+            "input": [
+              {
+                "label": "prospectId",
+                "value": "{{lead.id}}"
+              },
+              {
+                "label": "fitScore",
+                "value": "{{score.value}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "prospectId",
+                "value": "{{lead.id}}"
+              },
+              {
+                "label": "status",
+                "value": "needs approval"
+              },
+              {
+                "label": "owner",
+                "value": "{{approver}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/prospects"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"id\": \"PRS-2041\", \"company\": \"Halvorsen Freight\", \"score\": 86, \"status\": \"needs_approval\"}"
+              },
+              {
+                "label": "Retry On Fail",
+                "value": "On, 3 tries"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "researcher"
+      },
+      "statuses": [
+        "Run started",
+        "Ideal customer rules loaded",
+        "Prospect researched and scored",
+        "Held for your approval"
+      ]
+    },
+    {
+      "id": "outreach-and-reply",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "Outreach goes out only after you approve it.",
+      "caption": "The agent writes from the research, waits for your yes, then follows up and stops the moment the prospect replies.",
+      "beat": "Here's the outreach. The agent drafts an email built on the three signals it found, and because this is a new campaign it waits for your sales lead to approve it. Once approved it sends within your daily limit and queues a follow-up. When {{lead.first}} replies asking for a call, the agent marks it as a meeting request, pauses the sequence and cancels the follow-up.",
+      "details": [
+        "Point to the approval message first, then the email that quotes the warehouse and hiring signals.",
+        "Which steps need approval is your choice: new campaigns, changed targeting, high-volume sends, unusual messages or high-value prospects.",
+        "Replies are sorted into interested, not interested, wants more information, wants a meeting, or needs a person."
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{co.name}} outreach",
+        "subtitle": "Illustrative sample",
+        "fields": [
+          {
+            "label": "Prospect",
+            "value": "{{lead.name}}, {{lead.role}}"
+          },
+          {
+            "label": "Fit score",
+            "value": "{{score.value}}"
+          },
+          {
+            "label": "Sending limit",
+            "value": "{{limit}}"
+          },
+          {
+            "label": "Sequence",
+            "value": "First email plus two follow-ups"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Sales agent",
+            "time": "{{run.day}}, 9:02 AM CT",
+            "body": "{{lead.id}} scored {{score.value}}. First email drafted. This is a new campaign, so it needs your approval before anything sends."
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "{{approver}}",
+            "time": "{{run.day}}, 10:11 AM CT",
+            "body": "Approved. Send it."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Sales agent",
+            "time": "{{mail.sent}}",
+            "subject": "{{mail.subject}}",
+            "body": "Hi {{lead.first}}, congrats on the second warehouse. With two automation analyst roles open, it looks like quoting is getting busier. We build AI that reads quote requests from email and drafts the quote in your system. Worth a short call?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Sales agent",
+            "time": "{{mail.sent}}",
+            "body": "Follow-up 1 queued for {{mail.fu}}. It only sends if there is no reply."
+          },
+          {
+            "channel": "email",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "{{mail.reply}}",
+            "subject": "Re: {{mail.subject}}",
+            "body": "This is timely. Could we talk Wednesday or Thursday morning?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Sales agent",
+            "time": "{{mail.reply}}",
+            "body": "Reply sorted as: wants a meeting. Sequence paused and follow-up 1 cancelled. Offering open times from your calendar."
+          }
+        ],
+        "notice": "Illustrative sample. Names, companies and messages are invented, and nothing here was sent."
+      },
+      "statuses": [
+        "Draft ready for approval",
+        "Approved by your sales lead",
+        "First email sent",
+        "Follow-up queued",
+        "Prospect replied",
+        "Sequence paused, meeting requested"
+      ]
+    },
+    {
+      "id": "meeting-booked",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "A qualified meeting lands on your calendar.",
+      "caption": "The agent books the call, briefs your team and logs every step on the dashboard.",
+      "beat": "And here's the result. {{lead.first}} picked Thursday at 10, so the agent created the calendar event, sent the confirmation and a reminder, and sent your team a briefing with the background, the buying signals and the whole conversation. When the calendar timed out once, it retried and then confirmed. The dashboard shows prospects found, approvals waiting, replies and meetings booked.",
+      "details": [
+        "Point to the meeting card, then the retry line in the activity log.",
+        "If a step still fails after its retries, the run stops and your team gets an alert instead of a silent failure.",
+        "Pause, resume or stop any campaign from here. Spending and usage limits are set per campaign."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Sales agent dashboard",
+        "subtitle": "Illustrative sample",
+        "fields": [
+          {
+            "label": "Meeting",
+            "value": "{{meet.when}}, {{meet.length}}"
+          },
+          {
+            "label": "With",
+            "value": "{{lead.name}}, {{lead.role}}, {{co.name}}"
+          },
+          {
+            "label": "Calendar event",
+            "value": "{{meet.id}}, confirmation and reminder sent"
+          },
+          {
+            "label": "Team briefing",
+            "value": "Background, 3 buying signals and the full thread"
+          },
+          {
+            "label": "Activity log",
+            "value": "Calendar timed out once, retried, booking confirmed"
+          }
+        ],
+        "stages": [
+          "Discovered",
+          "Qualified",
+          "Approved",
+          "Contacted",
+          "Replied",
+          "Meeting booked"
+        ],
+        "stageSequence": [
+          1,
+          3,
+          4,
+          5
+        ],
+        "metrics": [
+          {
+            "label": "Prospects researched",
+            "value": "25",
+            "note": "This run, sample count"
+          },
+          {
+            "label": "High priority",
+            "value": "6",
+            "note": "Scored 80 or higher"
+          },
+          {
+            "label": "Waiting for approval",
+            "value": "2",
+            "note": "High-value prospects"
+          },
+          {
+            "label": "Meetings booked",
+            "value": "1",
+            "note": "{{meet.id}} with {{lead.first}}"
+          }
+        ],
+        "note": "Illustrative sample counts. Every action is logged with what the agent did, why, and what happened next.",
+        "proof": {
+          "label": "Booked meeting",
+          "value": "{{meet.id}}",
+          "description": "{{meet.when}} with {{lead.name}}, briefing sent to your team",
+          "sourceNote": "Illustrative sample, not a live booking"
+        }
+      },
+      "statuses": [
+        "Prospect qualified",
+        "Outreach sent",
+        "Reply received",
+        "Meeting booked and team briefed"
+      ]
+    },
+    {
+      "id": "booking-run",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Booking keeps going when a service fails.",
+      "caption": "This is the run that booked the meeting, including the calendar retry and the failure alert path.",
+      "beat": "This is the booking run behind that meeting. The reply comes in, the agent checks your calendar and creates the event. The first attempt timed out, so it retried and succeeded on the second try. If all three tries had failed, your team would have been alerted with the run ID.",
+      "details": [
+        "Point to the Create calendar event output: attempt 2 of 3, confirmed.",
+        "The same retry and alert settings apply to the CRM, email and research steps."
+      ],
+      "optional": true,
+      "content": {
+        "name": "Reply to booked meeting",
+        "subtitle": "Illustrative sample",
+        "surface": "execution",
+        "execution": {
+          "id": "Execution 4127",
+          "started": "{{mail.reply}}",
+          "duration": "7.8s"
+        },
+        "graph": {
+          "name": "Reply to booked meeting",
+          "nodes": [
+            {
+              "id": "reply-in",
+              "type": "webhook",
+              "label": "Reply received",
+              "detail": "POST /reply-received"
+            },
+            {
+              "id": "booker",
+              "type": "ai_agent",
+              "label": "Sort reply and book",
+              "detail": "Classify, pick a time, create event"
+            },
+            {
+              "id": "crm-update",
+              "type": "http_request",
+              "label": "Update CRM, pause sequence",
+              "detail": "{{lead.id}} meeting booked"
+            },
+            {
+              "id": "brief-team",
+              "type": "http_request",
+              "label": "Brief your team",
+              "detail": "Background, signals, full thread"
+            }
+          ],
+          "edges": [
+            {
+              "from": "reply-in",
+              "to": "booker"
+            },
+            {
+              "from": "booker",
+              "to": "crm-update"
+            },
+            {
+              "from": "crm-update",
+              "to": "brief-team"
+            }
+          ],
+          "runOrder": [
+            "reply-in",
+            "booker",
+            "crm-update",
+            "brief-team"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Reply",
+                "value": "Wants a meeting"
+              },
+              {
+                "label": "Event",
+                "value": "{{meet.id}}"
+              }
+            ],
+            "states": [
+              "Reply received",
+              "Event created on retry",
+              "Sequence paused",
+              "Team briefed"
+            ]
+          },
+          "related": [
+            {
+              "title": "Failure alerts",
+              "detail": "Sent with the run ID when retries run out"
+            }
+          ]
+        },
+        "aiNodes": [
+          {
+            "id": "booking-model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Reply sorting and scheduling"
+          },
+          {
+            "id": "free-slots",
+            "type": "http_request_tool",
+            "label": "Check calendar availability",
+            "detail": "Wed and Thu mornings"
+          },
+          {
+            "id": "make-event",
+            "type": "http_request_tool",
+            "label": "Create calendar event",
+            "detail": "Retry on fail, 3 tries"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "booking-model",
+            "to": "booker",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "free-slots",
+            "to": "booker",
+            "type": "ai_tool"
+          },
+          {
+            "from": "make-event",
+            "to": "booker",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "reply-in",
+            "input": [
+              {
+                "label": "from",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "prospectId",
+                "value": "{{lead.id}}"
+              },
+              {
+                "label": "reply",
+                "value": "Could we talk Wednesday or Thursday morning?"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "reply-received"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "booker",
+            "input": [
+              {
+                "label": "reply",
+                "value": "Could we talk Wednesday or Thursday morning?"
+              }
+            ],
+            "output": [
+              {
+                "label": "category",
+                "value": "Wants a meeting"
+              },
+              {
+                "label": "eventId",
+                "value": "{{meet.id}}"
+              },
+              {
+                "label": "time",
+                "value": "{{meet.when}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "Sort this reply. If it asks for a meeting, offer open times and book the one the prospect accepts."
+              },
+              {
+                "label": "System Message",
+                "value": "Never book outside the allowed hours. Report only event IDs returned by the calendar tool. If a tool fails after its retries, stop and raise an alert."
+              }
+            ]
+          },
+          {
+            "node": "booking-model",
+            "input": [
+              {
+                "label": "reply",
+                "value": "Could we talk Wednesday or Thursday morning?"
+              }
+            ],
+            "output": [
+              {
+                "label": "response",
+                "value": "Meeting request. Check availability first."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1"
+              },
+              {
+                "label": "Sampling Temperature",
+                "value": "0.2"
+              }
+            ]
+          },
+          {
+            "node": "free-slots",
+            "input": [
+              {
+                "label": "window",
+                "value": "Wed 4 Nov and Thu 5 Nov, mornings"
+              }
+            ],
+            "output": [
+              {
+                "label": "openSlot",
+                "value": "{{meet.when}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://calendar.example.com/api/availability?days=2026-11-04,2026-11-05"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              }
+            ]
+          },
+          {
+            "node": "make-event",
+            "input": [
+              {
+                "label": "time",
+                "value": "{{meet.when}}"
+              },
+              {
+                "label": "guest",
+                "value": "{{lead.email}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "attempt1",
+                "value": "Timed out after 10s"
+              },
+              {
+                "label": "attempt2",
+                "value": "Created"
+              },
+              {
+                "label": "eventId",
+                "value": "{{meet.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://calendar.example.com/api/events"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"start\": \"2026-11-05T10:00:00-06:00\", \"minutes\": 30, \"guest\": \"rosalind.achterberg@example.com\"}"
+              },
+              {
+                "label": "Retry On Fail",
+                "value": "On, 3 tries, 2s apart"
+              }
+            ]
+          },
+          {
+            "node": "crm-update",
+            "input": [
+              {
+                "label": "prospectId",
+                "value": "{{lead.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "stage",
+                "value": "Meeting booked"
+              },
+              {
+                "label": "sequence",
+                "value": "Paused"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://crm.example.com/api/prospects/PRS-2041"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"stage\": \"meeting_booked\", \"sequence\": \"paused\", \"eventId\": \"EVT-5512\"}"
+              }
+            ]
+          },
+          {
+            "node": "brief-team",
+            "input": [
+              {
+                "label": "eventId",
+                "value": "{{meet.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "delivered",
+                "value": "Briefing sent to your team"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://alerts.example.com/api/team-briefing"
+              },
+              {
+                "label": "Authentication",
+                "value": "Generic Credential Type"
+              },
+              {
+                "label": "JSON",
+                "value": "{\"eventId\": \"EVT-5512\", \"prospect\": \"PRS-2041\"}"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "make-event"
+      },
+      "statuses": [
+        "Reply received",
+        "Event created on the second try",
+        "CRM updated, sequence paused",
+        "Team briefed"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "Your first campaign",
+    "title": "What we would",
+    "accent": "measure together.",
+    "caption": "Start with one target market, measure it, then widen the agent's limits.",
+    "metrics": [
+      {
+        "name": "Qualified meetings booked",
+        "direction": "up",
+        "aim": "Book more calls with good-fit buyers",
+        "definition": "Meetings held with prospects the agent scored high priority, per month."
+      },
+      {
+        "name": "Positive reply rate",
+        "direction": "up",
+        "aim": "Get more interested replies",
+        "definition": "Replies sorted as interested or wanting a meeting, divided by prospects contacted."
+      },
+      {
+        "name": "Team time per meeting",
+        "direction": "down",
+        "aim": "Spend less of your time on each booked call",
+        "definition": "Minutes your team spends on research, writing, approvals and scheduling for each booked meeting."
+      }
+    ],
+    "baselineNote": "Directional goals. We'll agree the baseline using your current sales process.",
+    "ctaTitle": "Pick your first target market.",
+    "ctaCopy": "Reply here and I'll send times for a 15-minute call.",
+    "beat": "Reply here and I'll send times for a 15-minute call, and we'll pick your first target market."
+  }
+}

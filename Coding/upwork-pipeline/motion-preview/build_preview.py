@@ -14,6 +14,13 @@ def main(cinematic=False):
  data=json.loads(spec.read_text());state=verify_lock()
  compile_job(spec,out/'base',state)
  text=(out/'base/page.html').read_text()
+ if cinematic and 'window.MotionConfig=' in text:
+  # The approved cinematic shell is now compiled normally. Do not inject it twice.
+  atomic_text(out/'index.html',text)
+  atomic_text(out/'recording-script.txt',(out/'base/recording-script.txt').read_text())
+  atomic_text(out/'motion-build-report.json',json.dumps({'status':'compiled_cinematic_fixture_pending_review','baseTemplateHash':state['templateHash'],'pageHash':hashlib.sha256(text.encode()).hexdigest(),'queueModified':False,'productionAssetsModified':False,'fixture':'Invented native GHL fixture; not a saved job'},indent=2)+'\n')
+  print(out/'index.html')
+  return
  original="""    chapterIndex = index;
     render();
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });

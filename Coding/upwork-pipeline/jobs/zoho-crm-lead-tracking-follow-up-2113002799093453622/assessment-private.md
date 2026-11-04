@@ -1,0 +1,7 @@
+# Private assessment, Zoho CRM Setup & Automations (job 12, urgent batch 2026-10-21, U-022)
+- Client is an agency/consultant (reviews mention AI SEO, plumbing client, GEO audit tool) setting up THEIR client who is switching to Zoho.
+- Personalization (U-006): "Scott" appears in 2 separate client reviews: "Great experience working with Scott" (AI SEO Work for Plumbing Client, ended 2026-09-30) and "Lovely to ship code with Scott" (AI Search Visibility Audit Tool, ended 2026-09-03). firstName Scott, source client_reviews, reviewCount 2. Contact only; not called owner. Lorenzo should confirm.
+- No required keyword or first word. "*** No placeholder bids **" in post: deck is a sample build, proposal must not be a placeholder bid; Lorenzo fills [N]/[LOOMURL] after recording.
+- Adapter: no Zoho/RingCentral adapter. Shown on workbench (Custom project workspace) only: architecture, record (optional), messages, outcome. Post does not name n8n/Make/GHL, so none used. Not requires_adapter: post asks for a setup + walkthrough, not a native Zoho screen.
+- Approved facts gap: Zoho CRM projects, RingCentral SMS experience, Zoho Flow, Meta lead form integrations are NOT approved facts. Placeholders only.
+- Limitations worth raising (general, not claims of experience): Zoho edition limits on workflow rules/cadences; RingCentral plan and SMS registration (A2P 10DLC in US numbers / carrier registration) before texting; Google Ads lead form vs website UTM capture; purchase signal source (how a sale is recorded) is needed for the stop rule.

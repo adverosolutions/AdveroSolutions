@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 1,
+  "id": "make-airtable-clickup-systems-architect-2114752359636532933",
+  "title": "Connect ZEAL's partner handoff across Pipedrive, Make, Airtable and ClickUp",
+  "systemName": "ZEAL partner handoff system",
+  "account": {
+    "name": "ZEAL",
+    "initials": "ZL",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114752359636532933",
+    "facts": [
+      "Upwork post: Senior AI Automation & Systems Architect: Make, Airtable, ClickUp, APIs (ZEAL travel marketplace, Milestone 1 internal operating system).",
+      "Stack named in the post: ClickUp, Make.com, Airtable, Pipedrive, OpenAI API, BigQuery, Sigma, Amplitude, Google Workspace, Slack.",
+      "Milestone 1 asks: consistent data models, record identifiers, source-of-truth rules, automated handoffs, error handling, monitoring, logging and documentation.",
+      "Personalization: Eric named in two separate client reviews (2024-02-28 and 2022-11-28)."
+    ]
+  },
+  "personalization": {
+    "firstName": "Eric",
+    "source": "client_reviews",
+    "reviewCount": 2
+  },
+  "entities": {
+    "client": {
+      "name": "ZEAL"
+    },
+    "partner": {
+      "name": "Casa Lumbre Tours",
+      "city": "Oaxaca",
+      "type": "Tour operator",
+      "contact": "Ines Calderon",
+      "zealId": "ZP-0417"
+    },
+    "deal": {
+      "id": "PD-2291",
+      "stage": "Partner signed"
+    },
+    "owner": {
+      "name": "Dana Ruiz",
+      "team": "Partner operations"
+    },
+    "task": {
+      "name": "Onboard Casa Lumbre Tours",
+      "due": "Due in 5 business days"
+    },
+    "channel": {
+      "name": "#partner-ops"
+    }
+  },
+  "cover": {
+    "eyebrow": "{{client.name}} internal operating system",
+    "title": "From a signed partner",
+    "accent": "to an assigned task.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Milestone 1 system map",
+      "Make handoff scenario",
+      "One record per partner"
+    ],
+    "previewSteps": [
+      {
+        "title": "Map",
+        "detail": "See which tool owns each piece of partner data."
+      },
+      {
+        "title": "Run",
+        "detail": "Follow one signed partner through the Make scenario."
+      },
+      {
+        "title": "Check",
+        "detail": "See the record, the task and what happens on a repeat run."
+      }
+    ],
+    "footer": "Illustrative sample data · no live accounts connected",
+    "beat": "This is the first piece of {{client.name}}'s operating system. When a partner deal is signed in Pipedrive, it becomes one Airtable record and an assigned ClickUp task, without anyone copying data between tools."
+  },
+  "scenes": [
+    {
+      "id": "system-map",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Here's how your tools connect for Milestone 1.",
+      "caption": "Each tool owns one job, and one partner ID ties them together.",
+      "beat": "Pipedrive owns the deal, Airtable owns the partner record, and ClickUp owns the work. Make sits in the middle and moves the data. Every partner gets one ID, {{partner.zealId}}, and that ID is how each tool finds the same partner.",
+      "details": [
+        "Sample partner: {{partner.name}}, {{partner.city}}",
+        "Airtable is the source of truth for partner data",
+        "Failed steps retry, then post an alert in Slack"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Milestone 1 operating map",
+        "subtitle": "How partner data moves between your tools",
+        "nodes": [
+          {
+            "id": "pipedrive",
+            "label": "Pipedrive deal",
+            "detail": "{{deal.id}} moves to {{deal.stage}}"
+          },
+          {
+            "id": "make",
+            "label": "Make scenario",
+            "detail": "Checks the partner ID, then picks a route"
+          },
+          {
+            "id": "airtable",
+            "label": "Airtable partner record",
+            "detail": "{{partner.zealId}} is the one source of truth"
+          },
+          {
+            "id": "openai",
+            "label": "OpenAI partner summary",
+            "detail": "A short brief written from the deal notes"
+          },
+          {
+            "id": "clickup",
+            "label": "ClickUp onboarding task",
+            "detail": "Owner, due date and dependencies set"
+          },
+          {
+            "id": "slack",
+            "label": "Slack ops channel",
+            "detail": "Handoff note, or an alert if a step fails"
+          }
+        ],
+        "edges": [
+          {
+            "from": "pipedrive",
+            "to": "make"
+          },
+          {
+            "from": "make",
+            "to": "airtable"
+          },
+          {
+            "from": "airtable",
+            "to": "openai"
+          },
+          {
+            "from": "openai",
+            "to": "clickup"
+          },
+          {
+            "from": "clickup",
+            "to": "slack"
+          }
+        ],
+        "runOrder": [
+          "pipedrive",
+          "make",
+          "airtable",
+          "openai",
+          "clickup",
+          "slack"
+        ],
+        "context": {
+          "name": "{{partner.name}}",
+          "subtitle": "Illustrative sample partner",
+          "fields": [
+            {
+              "label": "Partner type",
+              "value": "{{partner.type}}"
+            },
+            {
+              "label": "Partner ID",
+              "value": "{{partner.zealId}}"
+            },
+            {
+              "label": "Deal",
+              "value": "{{deal.id}}"
+            }
+          ],
+          "states": [
+            "Deal {{deal.id}} signed in Pipedrive",
+            "Make picks up the signed deal",
+            "Airtable record {{partner.zealId}} is the source of truth",
+            "Partner summary written",
+            "Onboarding task assigned to {{owner.name}}",
+            "Handoff posted in {{channel.name}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Who owns what",
+            "detail": "Pipedrive keeps the deal, Airtable keeps the partner, ClickUp keeps the work."
+          },
+          {
+            "title": "When something fails",
+            "detail": "Make retries the step, logs the run, then alerts {{channel.name}} with the partner ID."
+          }
+        ]
+      },
+      "statuses": [
+        "Deal signed in Pipedrive",
+        "Make picks up the deal",
+        "Partner record is the source of truth",
+        "Partner summary written",
+        "Onboarding task assigned",
+        "Handoff posted in Slack"
+      ]
+    },
+    {
+      "id": "make-handoff",
+      "kind": "workflow",
+      "platform": "make",
+      "title": "Follow one signed partner through Make.",
+      "caption": "Make looks for the partner ID before it creates anything.",
+      "beat": "The signed deal comes into Make. Before it creates anything, it searches Airtable for {{partner.zealId}}. This is a new partner, so it creates the record, writes the summary, opens the ClickUp task for {{owner.name}} and posts the handoff. If the partner already existed, the same record gets updated instead. If the ID is missing, ops gets an alert.",
+      "details": [
+        "New partner route taken for {{partner.name}}",
+        "Repeat deliveries take the update route, so no second record",
+        "HTTP request modules stand in for the Airtable, OpenAI and ClickUp calls; field IDs are set during the build"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Partner signed handoff",
+        "nodes": [
+          {
+            "id": "deal-webhook",
+            "type": "custom_webhook",
+            "label": "Pipedrive deal signed",
+            "detail": "{{deal.id}} · stage {{deal.stage}}"
+          },
+          {
+            "id": "find-partner",
+            "type": "http_request",
+            "label": "Search Airtable by partner ID",
+            "detail": "Looks up {{partner.zealId}} in the Partners table"
+          },
+          {
+            "id": "match-router",
+            "type": "router",
+            "label": "Route by search result",
+            "detail": "New, existing or missing ID"
+          },
+          {
+            "id": "create-partner",
+            "type": "http_request",
+            "label": "Create Airtable partner",
+            "detail": "No match found: new record {{partner.zealId}}"
+          },
+          {
+            "id": "update-partner",
+            "type": "http_request",
+            "label": "Update Airtable partner",
+            "detail": "Match found: updates the same record"
+          },
+          {
+            "id": "missing-id",
+            "type": "slack_create_message",
+            "label": "Alert ops: missing partner ID",
+            "detail": "Run held until the deal has an ID"
+          },
+          {
+            "id": "summarize",
+            "type": "http_request",
+            "label": "OpenAI partner summary",
+            "detail": "Short brief from the deal notes, saved to the record"
+          },
+          {
+            "id": "clickup-task",
+            "type": "http_request",
+            "label": "Create or update ClickUp task",
+            "detail": "{{task.name}} for {{owner.name}}, tagged {{partner.zealId}}"
+          },
+          {
+            "id": "post-handoff",
+            "type": "slack_create_message",
+            "label": "Post handoff to partner ops",
+            "detail": "{{channel.name}} gets the task link and summary"
+          }
+        ],
+        "edges": [
+          {
+            "from": "deal-webhook",
+            "to": "find-partner"
+          },
+          {
+            "from": "find-partner",
+            "to": "match-router"
+          },
+          {
+            "from": "match-router",
+            "to": "create-partner",
+            "label": "New partner"
+          },
+          {
+            "from": "match-router",
+            "to": "update-partner",
+            "label": "Already in Airtable"
+          },
+          {
+            "from": "match-router",
+            "to": "missing-id",
+            "label": "No partner ID"
+          },
+          {
+            "from": "create-partner",
+            "to": "summarize"
+          },
+          {
+            "from": "update-partner",
+            "to": "summarize"
+          },
+          {
+            "from": "summarize",
+            "to": "clickup-task"
+          },
+          {
+            "from": "clickup-task",
+            "to": "post-handoff"
+          }
+        ],
+        "runOrder": [
+          "deal-webhook",
+          "find-partner",
+          "match-router",
+          "create-partner",
+          "summarize",
+          "clickup-task",
+          "post-handoff"
+        ],
+        "context": {
+          "name": "{{partner.name}}",
+          "subtitle": "{{partner.type}}, {{partner.city}} · illustrative sample",
+          "fields": [
+            {
+              "label": "Deal",
+              "value": "{{deal.id}}"
+            },
+            {
+              "label": "Partner ID",
+              "value": "{{partner.zealId}}"
+            },
+            {
+              "label": "Contact",
+              "value": "{{partner.contact}}"
+            },
+            {
+              "label": "Owner",
+              "value": "{{owner.name}}"
+            }
+          ],
+          "states": [
+            "Signed deal received",
+            "No Airtable record found for {{partner.zealId}}",
+            "New partner route selected",
+            "Airtable record {{partner.zealId}} created",
+            "Partner summary saved to the record",
+            "Task assigned to {{owner.name}}",
+            "Handoff posted in {{channel.name}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Update route",
+            "detail": "A repeat delivery of {{deal.id}} finds {{partner.zealId}} and updates it."
+          },
+          {
+            "title": "Run log",
+            "detail": "Every run is logged with the deal and partner ID, so a failed step can be re-run."
+          }
+        ]
+      },
+      "statuses": [
+        "Signed deal received",
+        "Searched Airtable for the partner ID",
+        "New partner route selected",
+        "Airtable record created",
+        "Partner summary written",
+        "ClickUp task assigned",
+        "Handoff posted in Slack"
+      ]
+    },
+    {
+      "id": "handoff-result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "One partner, one record, one task.",
+      "caption": "The same deal was sent twice, and Make updated the record instead of copying it.",
+      "beat": "Here's the result for {{partner.name}}. There's one Airtable record and one ClickUp task assigned to {{owner.name}}. The same deal came through a second time, matched {{partner.zealId}}, and updated the record instead of creating a duplicate.",
+      "details": [
+        "Result for {{partner.zealId}}",
+        "Counts are illustrative"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{partner.name}}",
+        "subtitle": "{{partner.zealId}} · handoff result",
+        "fields": [
+          {
+            "label": "Pipedrive deal",
+            "value": "{{deal.id}}, {{deal.stage}}"
+          },
+          {
+            "label": "Airtable record",
+            "value": "{{partner.zealId}}"
+          },
+          {
+            "label": "ClickUp task",
+            "value": "{{task.name}}, {{task.due}}"
+          },
+          {
+            "label": "Assigned to",
+            "value": "{{owner.name}}"
+          },
+          {
+            "label": "Slack",
+            "value": "Handoff posted in {{channel.name}}"
+          }
+        ],
+        "stages": [
+          "Deal signed",
+          "Record created",
+          "Task assigned",
+          "Repeat run matched"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "metrics": [
+          {
+            "label": "Airtable records for this partner",
+            "value": "1",
+            "note": "After two deliveries of the same deal"
+          },
+          {
+            "label": "ClickUp tasks",
+            "value": "1",
+            "note": "Assigned to {{owner.name}}"
+          },
+          {
+            "label": "Steps copied by hand",
+            "value": "0",
+            "note": "In this sample run"
+          }
+        ],
+        "note": "Illustrative sample. No live Pipedrive, Airtable, ClickUp or Slack account is connected.",
+        "proof": {
+          "label": "Run log",
+          "value": "2 runs, 1 record",
+          "description": "Run 1 created {{partner.zealId}} and the task. Run 2, the same deal sent again, matched {{partner.zealId}} and updated it.",
+          "sourceNote": "Illustrative sample run log"
+        }
+      },
+      "statuses": [
+        "Deal signed in Pipedrive",
+        "Airtable record created",
+        "ClickUp task assigned",
+        "Repeat run matched the same record"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Fewer handoffs by hand,",
+    "accent": "one record per partner.",
+    "caption": "We'd start from how your team hands off partners today.",
+    "metrics": [
+      {
+        "name": "Handoffs done by hand",
+        "direction": "down",
+        "aim": "Fewer handoffs your team does by hand",
+        "definition": "Steps between Pipedrive, Airtable and ClickUp that someone completes by hand for each new partner."
+      },
+      {
+        "name": "Duplicate partner records",
+        "direction": "down",
+        "aim": "Fewer duplicate partner records",
+        "definition": "Partners with more than one Airtable record, divided by all partners."
+      },
+      {
+        "name": "Handoffs that finish on the first run",
+        "direction": "up",
+        "aim": "More handoffs finish without a failed step",
+        "definition": "Signed partner deals that reach an assigned ClickUp task without a failed step, divided by all signed deals."
+      }
+    ],
+    "baselineNote": "We'd agree the starting numbers from your current tools before setting any targets.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "I'd start by reviewing the tools and docs you already have with you, then lock the partner ID and source-of-truth rules. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

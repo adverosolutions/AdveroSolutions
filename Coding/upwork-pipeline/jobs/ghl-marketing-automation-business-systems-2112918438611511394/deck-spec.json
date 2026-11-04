@@ -1,0 +1,455 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-marketing-automation-business-systems-2112918438611511394",
+  "title": "A new lead from your form.",
+  "systemName": "Lead capture, follow-up and pipeline.",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112918438611511394",
+    "facts": [
+      "Original post retained in jd.txt. Synthetic illustrative sample. GoHighLevel uses the native candidate adapter. Microsoft 365, DNS, phone and other scope items are not depicted."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Marcus Bell",
+      "email": "marcus.bell@example.com",
+      "phone": "(555) 018-4471"
+    },
+    "owner": {
+      "name": "Ana Torres"
+    },
+    "deal": {
+      "value": "$1,500.00"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Every new lead gets a reply",
+    "accent": "and lands in your pipeline.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "GoHighLevel form, follow-up and pipeline, connected."
+    ],
+    "previewSteps": [
+      {
+        "title": "Capture",
+        "detail": "A lead fills out your form."
+      },
+      {
+        "title": "Follow up",
+        "detail": "A text and an email go out from GoHighLevel."
+      },
+      {
+        "title": "Track",
+        "detail": "The lead lands in your pipeline with an owner."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "Your first workflow",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "We'll compare the setup with how your team handles new leads today.",
+    "metrics": [
+      {
+        "name": "Time to first reply",
+        "direction": "down",
+        "aim": "Reach new leads sooner",
+        "definition": "Time from a form submission to the first text or email."
+      },
+      {
+        "name": "Leads with no follow-up",
+        "direction": "down",
+        "aim": "No lead left waiting",
+        "definition": "New leads with no text, email or call logged within one business day."
+      },
+      {
+        "name": "Review calls booked",
+        "direction": "up",
+        "aim": "Turn more leads into calls",
+        "definition": "Booked review calls divided by new leads."
+      }
+    ],
+    "baselineNote": "We'll measure the current process first, then compare results after launch.",
+    "ctaTitle": "Map out your first workflow.",
+    "ctaCopy": "Reply here and I'll send times for a 15-minute call.",
+    "beat": "Reply here and I'll send times for a 15-minute call. We'll map out your GoHighLevel setup and the first workflow to build."
+  },
+  "scenes": [
+    {
+      "id": "lead-workflow",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "One workflow handles every new lead.",
+      "caption": "A form lead is assigned, texted, emailed and added to your pipeline.",
+      "beat": "When someone fills out your lead form, this workflow runs. It assigns the lead to Ana, sends a text and an email, and creates the opportunity in your pipeline.",
+      "details": [
+        "Open Text the new lead to show the message and the opt-out line.",
+        "The form records SMS consent before any text goes out."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New lead follow-up",
+        "subtitle": "Illustrative sample",
+        "surface": "builder",
+        "graph": {
+          "name": "New lead follow-up",
+          "nodes": [
+            {
+              "id": "capture",
+              "type": "facebook_lead",
+              "label": "Free financial review form",
+              "detail": "New lead received"
+            },
+            {
+              "id": "assign",
+              "type": "assign_user",
+              "label": "Assign Ana Torres",
+              "detail": "Owner: Ana Torres"
+            },
+            {
+              "id": "sms",
+              "type": "sms",
+              "label": "Text the new lead",
+              "detail": "{{lead.phone}}"
+            },
+            {
+              "id": "email",
+              "type": "email",
+              "label": "Confirm the request by email",
+              "detail": "{{lead.email}}"
+            },
+            {
+              "id": "deal",
+              "type": "opportunity",
+              "label": "Create opportunity in Contacted",
+              "detail": "New clients · Contacted · {{deal.value}}"
+            }
+          ],
+          "edges": [
+            {
+              "from": "capture",
+              "to": "assign"
+            },
+            {
+              "from": "assign",
+              "to": "sms"
+            },
+            {
+              "from": "sms",
+              "to": "email"
+            },
+            {
+              "from": "email",
+              "to": "deal"
+            }
+          ],
+          "runOrder": [
+            "capture",
+            "assign",
+            "sms",
+            "email",
+            "deal"
+          ],
+          "context": {
+            "name": "{{lead.name}}",
+            "subtitle": "Free financial review · Illustrative sample",
+            "fields": [
+              {
+                "label": "Source",
+                "value": "Facebook lead form"
+              },
+              {
+                "label": "Owner",
+                "value": "{{owner.name}}"
+              }
+            ],
+            "states": [
+              "New lead received",
+              "Owner: Ana Torres",
+              "Text sent to Marcus",
+              "Confirmation email sent",
+              "Opportunity in Contacted"
+            ]
+          },
+          "related": []
+        },
+        "inspectors": [
+          {
+            "node": "capture",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "phone",
+                "value": "{{lead.phone}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "phone",
+                "value": "{{lead.phone}}"
+              },
+              {
+                "label": "email",
+                "value": "{{lead.email}}"
+              },
+              {
+                "label": "smsConsent",
+                "value": "Yes, checked on the form"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Workflow Trigger",
+                "value": "Facebook Lead Form Submitted"
+              },
+              {
+                "label": "Form",
+                "value": "Free financial review"
+              }
+            ]
+          },
+          {
+            "node": "assign",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "phone",
+                "value": "{{lead.phone}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "result",
+                "value": "Owner: Ana Torres"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Assign To User",
+                "value": "Ana Torres"
+              },
+              {
+                "label": "Only apply to unassigned contacts",
+                "value": "On"
+              }
+            ]
+          },
+          {
+            "node": "sms",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "phone",
+                "value": "{{lead.phone}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "result",
+                "value": "Text sent to Marcus"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Message",
+                "value": "Hi Marcus, this is Ana. Thanks for requesting a free financial review. What time works for a quick call tomorrow? Reply STOP to opt out."
+              }
+            ]
+          },
+          {
+            "node": "email",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "phone",
+                "value": "{{lead.phone}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "result",
+                "value": "Confirmation email sent"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Subject",
+                "value": "Your free financial review request"
+              },
+              {
+                "label": "Message",
+                "value": "Hi Marcus, thanks for your request. Ana will text you to find a time for your review call."
+              }
+            ]
+          },
+          {
+            "node": "deal",
+            "input": [
+              {
+                "label": "name",
+                "value": "{{lead.name}}"
+              },
+              {
+                "label": "phone",
+                "value": "{{lead.phone}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "result",
+                "value": "New clients · Contacted · {{deal.value}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "In pipeline",
+                "value": "New clients"
+              },
+              {
+                "label": "In pipeline stage",
+                "value": "Contacted"
+              },
+              {
+                "label": "Opportunity name",
+                "value": "{{lead.name}}, financial review"
+              },
+              {
+                "label": "Lead value",
+                "value": "{{deal.value}}"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "capture"
+      },
+      "statuses": [
+        "New lead received",
+        "Owner: Ana Torres",
+        "Text sent to Marcus",
+        "Confirmation email sent",
+        "Opportunity in Contacted"
+      ]
+    },
+    {
+      "id": "lead-messages",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "Marcus gets a text and an email.",
+      "caption": "The text and the email are on his contact in Conversations.",
+      "beat": "Here's Marcus in Conversations. He got a text from Ana asking for a good time to talk, and an email confirming his request.",
+      "details": [
+        "Read the text, including the opt-out line.",
+        "The email confirms the request; it does not book a call."
+      ],
+      "optional": false,
+      "content": {
+        "name": "Conversations",
+        "subtitle": "Illustrative sample",
+        "surface": "conversations",
+        "contact": "{{lead.name}}",
+        "fields": [
+          {
+            "label": "Email",
+            "value": "{{lead.email}}"
+          },
+          {
+            "label": "Phone",
+            "value": "{{lead.phone}}"
+          },
+          {
+            "label": "Assigned to",
+            "value": "{{owner.name}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "Ana Torres",
+            "time": "10:02 AM",
+            "body": "Hi Marcus, this is Ana. Thanks for requesting a free financial review. What time works for a quick call tomorrow? Reply STOP to opt out."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Ana Torres",
+            "time": "10:02 AM",
+            "subject": "Your free financial review request",
+            "body": "Hi Marcus, thanks for your request. Ana will text you to find a time for your review call."
+          }
+        ]
+      },
+      "statuses": [
+        "Text sent; awaiting Marcus's reply",
+        "Confirmation email delivered"
+      ]
+    },
+    {
+      "id": "lead-pipeline",
+      "kind": "native",
+      "platform": "ghl",
+      "title": "Ana sees the lead in your pipeline.",
+      "caption": "Marcus is in Contacted, assigned to Ana, with the next step set.",
+      "beat": "And here's the pipeline. Marcus is in Contacted, assigned to Ana, and the next step is booking his review call.",
+      "details": [
+        "Point to Contacted, Ana Torres and the next step.",
+        "The opportunity is created in Contacted; no later stage move is claimed."
+      ],
+      "optional": false,
+      "content": {
+        "name": "New clients",
+        "subtitle": "Free financial review",
+        "surface": "pipeline",
+        "contact": "{{lead.name}}",
+        "value": "{{deal.value}}",
+        "owner": "{{owner.name}}",
+        "fields": [
+          {
+            "label": "Source",
+            "value": "Facebook lead form"
+          },
+          {
+            "label": "Next step",
+            "value": "Book the review call"
+          }
+        ],
+        "stages": [
+          "New lead",
+          "Contacted",
+          "Review booked",
+          "Client"
+        ],
+        "stageSequence": [
+          1
+        ]
+      },
+      "statuses": [
+        "Created in Contacted · {{deal.value}}"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 1,
+  "id": "hubspot-luxury-flooring-crm-2114780242165759685",
+  "title": "HubSpot CRM Specialist for Luxury Flooring",
+  "systemName": "Your HubSpot lead flow for in-home measures",
+  "account": {
+    "name": "Hardwood flooring sales team",
+    "initials": "HF",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114780242165759685",
+    "facts": [
+      "Post: HubSpot CRM specialist for a luxury hardwood flooring company. Manage lead flow, improve CRM processes, keep customer data organized and accurate, streamline outreach, improve follow-up, support customer communication.",
+      "No client name in the post and no reviews; personalization omitted (U-006).",
+      "HubSpot has no deck adapter; all scenes use the custom workbench workspace."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Claire Whitman",
+      "first": "Claire",
+      "email": "claire.whitman@example.com",
+      "phone": "(555) 014-2290",
+      "town": "Montclair"
+    },
+    "project": {
+      "floor": "White oak wide-plank",
+      "rooms": "living room, dining room and hallway",
+      "size": "about 1,100 sq ft"
+    },
+    "measure": {
+      "date": "Thu, Oct 29",
+      "time": "10:00 AM",
+      "window": "Thu, Oct 29 at 10:00 AM"
+    },
+    "rep": {
+      "name": "Marcus Hale",
+      "role": "Design consultant"
+    },
+    "ref": {
+      "id": "LEAD-2207"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your HubSpot lead flow for in-home measures",
+    "title": "Every flooring enquiry",
+    "accent": "gets an owner and a next step.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Lead routing",
+      "Follow-up plan",
+      "Clean contact record"
+    ],
+    "previewSteps": [
+      {
+        "title": "Route the enquiry",
+        "detail": "Match the contact, tidy the details and hand it to the right consultant."
+      },
+      {
+        "title": "Follow up on time",
+        "detail": "Confirmation, reminder and next tasks are scheduled for the team."
+      },
+      {
+        "title": "Keep data clean",
+        "detail": "One contact, complete fields and a clear deal stage."
+      }
+    ],
+    "footer": "Illustrative sample data. No live HubSpot account connected.",
+    "beat": "This is how a new flooring enquiry moves through your HubSpot setup, from the first form to a booked in-home measure."
+  },
+  "scenes": [
+    {
+      "id": "lead-routing",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "One enquiry, routed to the right consultant.",
+      "caption": "{{lead.name}} asks for an in-home measure. She already visited the showroom last spring, so she is matched, not duplicated.",
+      "beat": "Claire fills in the measure request on your website. HubSpot finds her existing contact from her showroom visit, tidies her phone and project details, sees she wants an in-home measure, and assigns her to Marcus, the design consultant for her area. The showroom walk-in route stays idle for this one.",
+      "details": [
+        "Matching uses email first, then phone, so a returning customer keeps one contact",
+        "Routing rules by enquiry type and area are agreed with your team",
+        "Click Show result to light the full path"
+      ],
+      "optional": false,
+      "content": {
+        "name": "Enquiry routing for {{ref.id}}",
+        "subtitle": "How a measure request moves from your website to a consultant",
+        "nodes": [
+          {
+            "id": "enquiry",
+            "label": "Website measure request",
+            "detail": "{{lead.name}}, {{lead.town}}. {{project.floor}}, {{project.rooms}}."
+          },
+          {
+            "id": "match",
+            "label": "Find her showroom visit contact",
+            "detail": "Found her showroom visit contact by email. Updated it instead of creating a second one."
+          },
+          {
+            "id": "tidy",
+            "label": "Fill in phone, source and size",
+            "detail": "Phone set to {{lead.phone}}, lead source set to Website, project size noted as {{project.size}}."
+          },
+          {
+            "id": "route",
+            "label": "Route by enquiry type",
+            "detail": "In-home measure request for her area goes to {{rep.name}}."
+          },
+          {
+            "id": "consultant",
+            "label": "Assign design consultant",
+            "detail": "Owner set to {{rep.name}}. Deal created at Measure requested."
+          },
+          {
+            "id": "showroom",
+            "label": "Showroom team queue",
+            "detail": "Walk-in and sample requests. Not used for this enquiry."
+          }
+        ],
+        "edges": [
+          {
+            "from": "enquiry",
+            "to": "match"
+          },
+          {
+            "from": "match",
+            "to": "tidy"
+          },
+          {
+            "from": "tidy",
+            "to": "route"
+          },
+          {
+            "from": "route",
+            "to": "consultant",
+            "label": "In-home measure"
+          },
+          {
+            "from": "route",
+            "to": "showroom",
+            "label": "Showroom visit"
+          }
+        ],
+        "runOrder": [
+          "enquiry",
+          "match",
+          "tidy",
+          "route",
+          "consultant"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Illustrative sample contact",
+          "fields": [
+            {
+              "label": "Enquiry",
+              "value": "In-home measure"
+            },
+            {
+              "label": "Project",
+              "value": "{{project.floor}}, {{project.size}}"
+            },
+            {
+              "label": "Reference",
+              "value": "{{ref.id}}"
+            }
+          ],
+          "states": [
+            "New measure request received",
+            "Matched to her existing contact",
+            "Phone, source and project size filled in",
+            "Enquiry type: in-home measure",
+            "Owner: {{rep.name}}, deal at Measure requested"
+          ]
+        },
+        "related": [
+          {
+            "title": "Contact",
+            "detail": "One record for {{lead.name}}, showroom visit and web request together"
+          },
+          {
+            "title": "Deal",
+            "detail": "{{project.floor}} for {{project.rooms}}"
+          }
+        ]
+      },
+      "statuses": [
+        "Request received",
+        "Existing contact matched",
+        "Details cleaned up",
+        "Measure request routed",
+        "Consultant assigned"
+      ]
+    },
+    {
+      "id": "follow-up",
+      "kind": "messages",
+      "platform": "workbench",
+      "title": "The follow-up is planned the moment she is assigned.",
+      "caption": "{{rep.name}} gets a task, {{lead.first}} gets her confirmation and reminder, and the next step after the measure is already on the calendar.",
+      "beat": "Once Claire is assigned, Marcus gets a task to call her. After the call books the measure, she gets a confirmation email and a reminder text the day before. And when the measure is done, Marcus already has a task to send her design proposal.",
+      "details": [
+        "Email and text wording is agreed with your team before anything goes live",
+        "Texts go only to customers who agreed to receive them",
+        "Click Replay to step through each message"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Follow-up for {{ref.id}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{rep.name}}, {{rep.role}}"
+          },
+          {
+            "label": "In-home measure",
+            "value": "{{measure.window}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Task for {{rep.name}}",
+            "time": "Mon, 9:12 AM",
+            "body": "Call {{lead.name}} today to book her in-home measure. {{project.floor}}, {{project.rooms}}."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "{{rep.name}}",
+            "time": "Mon, 11:40 AM",
+            "subject": "Your in-home measure on {{measure.date}}",
+            "body": "Hi {{lead.first}}, thanks for the call. {{rep.name}} will see you on {{measure.window}} to measure your {{project.rooms}} and bring white oak samples."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "Flooring team",
+            "time": "Wed, 10:00 AM",
+            "body": "Hi {{lead.first}}, a reminder that {{rep.name}} is coming tomorrow at {{measure.time}} for your floor measure. Reply here if you need a new time."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Task for {{rep.name}}",
+            "time": "Thu, after the measure",
+            "body": "Send {{lead.first}} her design proposal within two days and log her sample choices on the deal."
+          }
+        ],
+        "notice": "Illustrative sample. Drafted messages and tasks in a custom project workspace; nothing is sent."
+      },
+      "statuses": [
+        "Call task created",
+        "Confirmation email ready",
+        "Reminder text scheduled",
+        "Next task waiting"
+      ]
+    },
+    {
+      "id": "clean-record",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "One clean contact your whole team can trust.",
+      "caption": "{{lead.name}} has one record, every key field filled in, and a deal that shows exactly where she is.",
+      "beat": "Here is where it ends up. Claire has one contact, not two. Her phone, source, project and owner are all filled in, the deal shows Measure booked, and the next two tasks are already scheduled.",
+      "details": [
+        "Counts are illustrative for this one sample",
+        "Required fields and deal stages are agreed with your team"
+      ],
+      "optional": false,
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Deal for {{ref.id}}",
+        "fields": [
+          {
+            "label": "Owner",
+            "value": "{{rep.name}}"
+          },
+          {
+            "label": "Lead source",
+            "value": "Website, earlier showroom visit"
+          },
+          {
+            "label": "Next step",
+            "value": "In-home measure {{measure.window}}"
+          }
+        ],
+        "stages": [
+          "Measure requested",
+          "Measure booked",
+          "Measure done",
+          "Design proposal sent"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          1
+        ],
+        "metrics": [
+          {
+            "label": "Contact records",
+            "value": "1",
+            "note": "Showroom visit and web request merged"
+          },
+          {
+            "label": "Key fields missing",
+            "value": "0",
+            "note": "Phone, source, project and owner filled in"
+          },
+          {
+            "label": "Follow-ups scheduled",
+            "value": "2",
+            "note": "Reminder text and proposal task"
+          }
+        ],
+        "note": "Illustrative sample result in a custom project workspace. No live HubSpot account is connected."
+      },
+      "statuses": [
+        "Deal at Measure requested",
+        "Measure booked",
+        "Follow-ups scheduled"
+      ]
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Faster follow-up,",
+    "accent": "cleaner records.",
+    "caption": "We'd agree a starting point for each of these with your team first.",
+    "metrics": [
+      {
+        "name": "Time to the consultant's first call",
+        "direction": "down",
+        "aim": "Reach new enquiries sooner",
+        "definition": "Time between an enquiry arriving and the consultant's first call."
+      },
+      {
+        "name": "Enquiries with a booked measure",
+        "direction": "up",
+        "aim": "Book more in-home measures",
+        "definition": "Measure requests that reach Measure booked, divided by all measure requests."
+      },
+      {
+        "name": "Clean single contact per customer",
+        "direction": "up",
+        "aim": "Keep more records complete",
+        "definition": "Contacts with no duplicate and with phone, source, project and owner filled in, divided by all new contacts."
+      }
+    ],
+    "baselineNote": "We'd measure where things stand today, then agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd go through your current pipeline and lead sources with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  }
+}

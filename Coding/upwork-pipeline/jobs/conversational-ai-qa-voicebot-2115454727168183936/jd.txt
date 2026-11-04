@@ -1,0 +1,57 @@
+Title: Conversational AI QA Specialist
+URL: https://www.upwork.com/jobs/~022115454727168183936
+Job id: 2115454727168183936
+Category: Web, Mobile & Software Dev / QA Testing
+Contract: HOURLY, INTERMEDIATE, FULL_TIME, $10-$20/hr, persons to hire 1
+Status: ACTIVE (open check 2026-10-28 11:07 CT: ACTIVE, can_apply true, 0 hired)
+Client: state IL, timezone America/Sao_Paulo, spend $243,317.63, hire rate 36%, feedback 5 (5 reviews), jobs posted 14
+Activity: invites 0, hired 0, offered 0
+Connects: 21 (+70 boost)
+Screening questions: none listed separately. Application instruction in the description (HOW TO APPLY).
+Source: user-Upwork find_jobs get, raw at ~/advero/upwork/runs/raw_get_saved_20261028/2115454727168183936.txt (box)
+
+Description (verbatim):
+We are a financial services business looking for a dedicated quality owner for our conversational AI voicebot and chatbot. This is a remote, independent contractor role working US time zones.
+
+ABOUT US
+We are a financial services business adding conversational AI to our voice and digital channels so consumers can get answers, set up payment plans, and pay at any hour. Because we operate under the FDCPA, Regulation F, the TCPA, and state collection laws, every conversation our AI has must be accurate, compliant, and respectful. This role is how we make sure it is.
+
+THE ROLE
+You will test our voicebot and chatbot before changes go live, review real conversations once they are live, and turn what you find into clear defects and fixes. The job is part hands-on tester, part analyst, and part builder of the test assets that let us catch problems faster over time. You will work with Digital Operations, Compliance, our voicebot/chatbot vendor, and our engineering team.
+
+WHAT YOU WILL DO
+• Test before release: Run scripted test calls and chats against every new flow, prompt change, and vendor release. Cover happy paths, edge cases, and adversarial inputs, and sign off or block with clear reasons.
+• Review live conversations: Sample and score real call recordings and chat transcripts against our internal rubric covering accuracy, compliance, resolution, and consumer experience. Flag anything that needs immediate escalation.
+• Check compliance in every conversation: Confirm the bot verifies identity before discussing the account, delivers required disclosures, does not disclose debt details to third parties, honors cease-communication and attorney-representation requests, and correctly handles disputes, bankruptcy, hardship, and consumers who say they are active-duty military (SCRA). Partner with Compliance on the rules and anything ambiguous.
+• Catch AI-specific failures: Find hallucinated balances, dates, or offers; settlement or payment plan terms outside what the bot is allowed to offer; misheard numbers and names; looping, dead ends, and failed handoffs to a live agent.
+• Test voice quality: Evaluate speech recognition across accents, background noise, and speaking styles; interruptions and talk-over; latency and silence handling; and how the bot reads back amounts, dates, and confirmation numbers.
+• Test payment and data handling: Confirm payment flows post correctly end to end and that sensitive data such as card and bank numbers is never repeated, logged, or exposed in transcripts.
+• Check the automated scoring: Where the bot platform grades conversations automatically, spot-check those grades against the actual calls and chats and log where the scoring is wrong.
+• Build the test library: Create and maintain test scripts, consumer personas, and a regression suite of known tricky conversations. Where it saves time, set up light automation such as simulated callers, batch chat tests, or evaluation sets that can be re-run after every change.
+• Log and track defects: Write reproducible defect tickets with recordings or transcripts, severity, and expected behavior. Track them with the vendor and engineering through fix and retest.
+• Report what you see: Deliver a weekly quality summary (volume reviewed, pass rates by category, top defects, compliance flags, and trends) written so a non-technical leader can act on it.
+
+WHAT SUCCESS LOOKS LIKE
+• First 30 days: Learn our flows and compliance rules; complete a baseline audit of current voicebot and chatbot quality; agree on a QA rubric with Digital Operations and Compliance.
+• By 60 days: Pre-release test checklist in use for every change; regression suite covering the core flows; weekly quality report running.
+• By 90 days: Some regression testing automated; defect turnaround with the vendor measured and improving; no compliance defect reaches production without being caught in testing or early review.
+
+WHAT YOU BRING
+• QA experience: 3+ years in software or contact center QA, including at least 1 year testing chatbots, voicebots, IVR, or other conversational AI.
+• A tester's instinct: You enjoy trying to break things, think in edge cases, and can explain exactly how to reproduce a problem.
+• Understanding of how LLM-based bots fail: Familiarity with hallucination, prompt sensitivity, inconsistent answers, and why the same input can produce different outputs.
+• Some technical range: Comfortable with spreadsheets and test case management, and able to set up simple automation (scripted test runs, API calls, or a conversational AI testing tool). You do not need to be a software engineer.
+• Clear writing: Defect tickets engineers can act on, and summaries leadership can read in two minutes.
+• Judgment with sensitive conversations: Consumers reaching out about past-due accounts are often stressed. You can tell when a bot is technically correct but still handling the person badly.
+
+NICE TO HAVE
+• Regulated industry background: Collections, lending, banking, insurance, or healthcare, especially working knowledge of the FDCPA, Regulation F, or the TCPA.
+• Conversational AI platform exposure: Voice AI or chatbot platforms, contact center software, or conversation analytics tools.
+• Voice agent testing tools: Platforms that run simulated callers against a voicebot, such as Hamming, Cekura, or Coval.
+• Bilingual English and Spanish: Ability to test Spanish-language conversations.
+• Evaluation experience: Building scoring rubrics, labeled test sets, or automated evals for AI output.
+
+HOW TO APPLY
+In your proposal, describe a conversational AI or IVR defect you found that others missed: what it was, how you found it, and what happened next. Proposals without this will not be reviewed.
+
+Contractors will be asked to sign a confidentiality agreement and complete compliance training before accessing consumer data or recordings. We are an equal opportunity employer.

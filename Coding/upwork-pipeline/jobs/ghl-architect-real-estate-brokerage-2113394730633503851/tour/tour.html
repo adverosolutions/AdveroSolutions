@@ -1,0 +1,699 @@
+<!doctype html>
+<!-- Live tour (U-017, U-021): Brokerage OS for a California real estate brokerage. Frame from templates/live-tour; inner app custom. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brokerage OS, a prototype for your brokerage</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%225%22 fill=%22%235b4cf0%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font:"Geist","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ink:#15151d;--ink2:#4a4b5a;--ink3:#8a8b9c;--line:#e6e6ee;--line2:#d9d9e4;
+  --bg:#f6f6f9;--panel:#fff;
+  --acc:#5b4cf0;--acc2:#7c6ff7;--accbg:#efedff;
+  --green:#14915f;--greenbg:#e5f6ee;--amber:#b86e0b;--amberbg:#fdf1de;
+  --ease:cubic-bezier(.2,.9,.25,1);
+  --cam:1s;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased;background:#05070c}
+.wall{position:fixed;inset:0;background:
+  radial-gradient(900px 700px at 12% 18%,rgba(47,116,245,.62),transparent 60%),
+  radial-gradient(800px 600px at 88% 10%,rgba(31,95,214,.42),transparent 62%),
+  radial-gradient(900px 700px at 85% 95%,rgba(47,116,245,.40),transparent 60%),
+  radial-gradient(800px 700px at 8% 100%,rgba(31,95,214,.30),transparent 60%),
+  linear-gradient(160deg,#0a1630,#05070c 60%,#081226)}
+.wall::after{content:"";position:absolute;inset:0;opacity:.18;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* page chrome */
+.top{position:fixed;top:0;left:0;right:0;height:52px;background:linear-gradient(180deg,rgba(5,8,16,.92),rgba(5,8,16,.72));border-bottom:1px solid rgba(255,255,255,.1);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 clamp(14px,2.4vw,32px);z-index:20;color:#fff;transition:opacity .3s}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;white-space:nowrap}
+.brand i{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#8fb6ff,#2f74f5);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset}
+.brand span{opacity:.7;font-weight:500}
+.badge{font-size:12px;font-weight:600;color:#fff;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);white-space:nowrap}
+.badge b{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffc46b;margin-right:7px;vertical-align:1px}
+
+/* camera */
+.viewport{position:fixed;inset:0;overflow:hidden}
+.app{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;border-radius:16px;background:var(--bg);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.5),0 60px 120px -30px rgba(0,3,12,.75),0 30px 60px -30px rgba(0,3,12,.6);
+  transition:transform var(--cam) var(--ease);font-size:14px}
+
+/* title bar */
+.tb{height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;background:#fbfbfd;border-bottom:1px solid var(--line)}
+.lights{display:flex;gap:7px}.lights i{width:12px;height:12px;border-radius:50%;background:#ff5f57}.lights i:nth-child(2){background:#febc2e}.lights i:nth-child(3){background:#28c840}
+.tb .ttl{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--ink2)}
+.tb .ttl span{color:var(--ink3);font-weight:500}
+.proto{font-size:11.5px;font-weight:600;color:var(--amber);background:var(--amberbg);border:1px solid #f3d7a8;padding:4px 10px;border-radius:99px;white-space:nowrap}
+
+.body{position:absolute;top:44px;left:0;right:0;bottom:0;display:grid;grid-template-columns:232px 1fr}
+
+/* sidebar */
+.side{position:relative;background:#fbfbfd;border-right:1px solid var(--line);padding:16px 14px;display:flex;flex-direction:column;gap:16px}
+.ws{display:flex;align-items:center;gap:10px;padding:4px 6px}
+.ws i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#8b7dfb,#5b4cf0);display:grid;place-items:center;color:#fff;font-style:normal;font-weight:700;font-size:13px}
+.ws b{display:block;font-size:14.5px}.ws small{display:block;font-size:12px;color:var(--ink3)}
+.navl{position:relative;display:flex;flex-direction:column;gap:2px}
+.navl .ind{position:absolute;left:0;right:0;top:0;height:38px;border-radius:10px;background:var(--accbg);transition:transform .6s var(--ease)}
+.navl a{position:relative;display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border-radius:10px;font-weight:600;font-size:14px;color:var(--ink2);text-decoration:none}
+.navl a svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.navl a .ct{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:99px;background:#ececf3;color:var(--ink2);font-size:12px;font-weight:700;display:grid;place-items:center;position:relative}
+.navl a .ct span{grid-area:1/1;transition:opacity .3s,transform .4s var(--ease)}
+.ct .c1{opacity:0}.app.r2 .ct .c0{opacity:0}.app.r2 .ct .c1{opacity:1;transition-delay:.5s}
+.app.v-inbox .navl a.n1,.app.v-approve .navl a.n2,.app.v-outcomes .navl a.n3{color:var(--acc)}
+.app.v-approve .navl .ind{transform:translateY(40px)}
+.app.v-outcomes .navl .ind{transform:translateY(80px)}
+.goals{border:1px solid var(--line);background:#fff;border-radius:14px;padding:13px 13px 6px}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3)}
+.goals ol{list-style:none;margin-top:8px}
+.goals li{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px;line-height:1.35;font-weight:500}
+.goals li:first-child{border-top:0}
+.goals li i{font-style:normal;width:22px;height:22px;border-radius:7px;background:var(--accbg);color:var(--acc);font-size:11.5px;font-weight:700;display:grid;place-items:center}
+.stack{margin-top:auto;padding:4px 6px}
+.stack .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;font-weight:600;padding:5px 9px;border-radius:8px;background:#fff;border:1px solid var(--line2);color:var(--ink2);white-space:nowrap}
+
+/* main */
+.main{position:relative;padding:0 18px 18px}
+.mh{height:62px;display:flex;align-items:center;gap:12px}
+.mh h3{font-size:19px;font-weight:700;letter-spacing:-.02em;position:relative;min-width:120px;height:26px}
+.mh h3 span{position:absolute;left:0;top:0;white-space:nowrap;transition:opacity .4s,transform .5s var(--ease)}
+.mh h3 span:not(.on){opacity:0;transform:translateY(6px)}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;width:240px;height:34px;padding:0 12px;border-radius:10px;background:#fff;border:1px solid var(--line2);color:var(--ink3);font-size:13px}
+.av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#f59e8b,#e0607e)}
+.views{position:absolute;left:18px;right:18px;top:62px;bottom:18px}
+.view{position:absolute;inset:0;transition:opacity .5s,transform .7s var(--ease);opacity:0;transform:translateX(24px);pointer-events:none}
+.app.v-inbox .view.vi,.app.v-approve .view.va,.app.v-outcomes .view.vo{opacity:1;transform:none}
+
+.panel{position:absolute;top:0;bottom:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(20,20,40,.04);overflow:hidden}
+.ph{display:flex;align-items:center;gap:8px;height:48px;padding:0 16px;border-bottom:1px solid var(--line)}
+.ph h4{font-size:14.5px;font-weight:700}
+.ph .r{margin-left:auto}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;background:#f0f0f5;color:var(--ink2);white-space:nowrap}
+.pill.acc{background:var(--accbg);color:var(--acc)}
+.pill.green{background:var(--greenbg);color:var(--green)}
+.pill.amber{background:var(--amberbg);color:var(--amber)}
+.pill .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.swap{display:inline-grid;vertical-align:middle}
+.swap > *{grid-area:1/1;transition:opacity .35s,transform .45s var(--ease)}
+.av.c2{background:linear-gradient(135deg,#7dd3c0,#3b9e8a)}.av.c3{background:linear-gradient(135deg,#9db4ff,#5b74e0)}.av.c4{background:linear-gradient(135deg,#f5c56b,#e08f3a)}
+/* ---- Brokerage OS inner app (custom for this job) ---- */
+.body{grid-template-rows:minmax(0,1fr)}
+.side{gap:10px;min-height:0}
+.app.v-fun .navl a.n1,.app.v-pipe .navl a.n2,.app.v-flow .navl a.n3,.app.v-more .navl a.n4,.app.v-res .navl a.n5{color:var(--acc)}
+.app.v-pipe .navl .ind{transform:translateY(40px)}
+.app.v-flow .navl .ind{transform:translateY(80px)}
+.app.v-more .navl .ind{transform:translateY(120px)}
+.app.v-res .navl .ind{transform:translateY(160px)}
+.scope{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 12px 8px}
+.scope ul{list-style:none;margin-top:6px}
+.scope li{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;line-height:1.25;font-weight:500;color:var(--ink2);border-top:1px solid var(--line)}
+.scope li:first-child{border-top:0}
+.scope li i{flex:none;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line2);transition:background .4s,border-color .4s}
+.app.r1 .scope li i{border-color:var(--acc)}
+.app.r2 .scope li.k1 i,.app.r3 .scope li.k3 i,.app.r4 .scope li.k8 i,.app.r5 .scope li.k4 i,.app.r5 .scope li.k5 i,.app.r5 .scope li.k6 i,.app.r6 .scope li.k2 i,.app.r6 .scope li.k7 i,.app.r6 .scope li.k9 i{background:var(--acc)}
+.scope .sn{margin-top:6px;font-size:11.5px;color:var(--ink3)}
+.selp{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:#fff;font-size:13px;font-weight:600;color:var(--ink2)}
+.app.v-fun .view.vf,.app.v-pipe .view.vp,.app.v-flow .view.vw,.app.v-more .view.vr,.app.v-res .view.vo{opacity:1;transform:none}
+.pnote{position:absolute;left:16px;right:16px;bottom:12px;font-size:12px;color:var(--ink3)}
+/* funnels */
+#fPage{left:0;width:400px}
+.lp{margin:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.lp .hero{padding:18px 18px 16px;background:linear-gradient(135deg,#123a2e,#1f5f4a);color:#fff}
+.lp .hero small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;font-weight:600}
+.lp .hero b{display:block;font-size:22px;letter-spacing:-.02em;margin-top:6px;line-height:1.2}
+.lp .hero p{font-size:13px;opacity:.85;margin-top:6px;line-height:1.4}
+.lp form{padding:14px 16px 16px;display:grid;gap:9px}
+.fld{display:grid;gap:4px}
+.fld span{font-size:11.5px;font-weight:600;color:var(--ink3)}
+.fld div{height:32px;border:1px solid var(--line2);border-radius:8px;padding:0 10px;display:flex;align-items:center;font-size:13px;color:var(--ink2);background:#fff}
+.fld div.fill{color:var(--ink);transition:background .5s}
+.app.r2 .fld div.fill{background:#f2f8f5}
+.go{height:36px;border-radius:9px;background:#1f5f4a;color:#fff;font-weight:600;font-size:13.5px;display:grid;place-items:center;margin-top:2px}
+.steps2{display:flex;gap:6px;padding:0 14px}
+.steps2 span{flex:1;height:4px;border-radius:9px;background:var(--line2)}
+.steps2 span.on{background:#1f5f4a}
+#fFeed{left:412px;width:320px}
+.sub{display:grid;grid-template-columns:34px 1fr;gap:2px 10px;padding:11px 14px;border-bottom:1px solid var(--line);transition:transform .6s var(--ease),background .4s}
+.sub .av{width:34px;height:34px;grid-row:1/span 2;font-size:12px}
+.sub b{font-size:13.5px;font-weight:600}
+.sub small{font-size:12px;color:var(--ink3)}
+.subs{position:relative}
+.subs .sub.old{transform:translateY(-58px)}
+.app.r2 .subs .sub.old{transform:none}
+#fNew{opacity:0;transition:opacity .5s .3s,background .4s}
+.app.r2 #fNew{opacity:1;background:#f3f7ff;box-shadow:inset 3px 0 0 var(--acc)}
+#fSrc{left:744px;right:0}
+.route{margin:10px 14px 0;padding:10px 12px;border:1px solid var(--line);border-radius:11px;display:grid;gap:4px}
+.route b{font-size:13px;font-weight:600}
+.route small{font-size:12px;color:var(--ink2)}
+.route small em{font-style:normal;color:var(--acc);font-weight:600}
+.app.r2 .route.on{border-color:var(--acc);background:var(--accbg)}
+/* pipeline board */
+#board{left:0;width:640px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px;position:absolute;top:48px;bottom:36px;left:0;right:0}
+.col{background:#f4f4f8;border-radius:11px;padding:8px;display:flex;flex-direction:column;gap:7px}
+.col h6{font-size:12px;font-weight:700;color:var(--ink2);display:flex;justify-content:space-between;padding:2px 2px 4px}
+.col.hot h6{color:#c2410c}
+.kc{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12px;color:var(--ink3);display:grid;gap:3px}
+.kc b{font-size:13px;color:var(--ink);font-weight:600}
+.kc.el{border-color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
+#kNew,#kHot{opacity:0;transform:translateY(-6px);transition:opacity .45s,transform .5s var(--ease)}
+.app.r3 #kNew{opacity:1;transform:none}
+.app.r4 #kNew{opacity:0;transform:translateX(20px)}
+.app.r4 #kHot{opacity:1;transform:none;transition-delay:1.6s}
+#card{left:652px;right:0}
+.oh{display:flex;align-items:center;gap:11px;padding:14px 16px 10px}
+.oh .av{width:40px;height:40px;font-size:13px}
+.oh h5{font-size:16px;font-weight:700}
+.oh small{display:block;font-size:12px;color:var(--ink3)}
+.ans{padding:0 16px}
+.ans .f{display:grid;grid-template-columns:122px 1fr;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.ans .f span{color:var(--ink3)}
+#aiBox{margin:10px 16px 0;border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.aih{display:flex;align-items:center;gap:8px}
+.aih b{font-size:13px}
+.aih .swap{margin-left:auto}
+.sc0,.sc1{transition:opacity .35s}
+.sc1{opacity:0}
+.app.r4 .sc0{opacity:0;transition-delay:1.2s}
+.app.r4 .sc1{opacity:1;transition-delay:1.3s}
+.why{list-style:none;margin-top:6px}
+.why li{font-size:12.5px;color:var(--ink2);padding:5px 0 5px 18px;position:relative;opacity:0;transform:translateY(5px);transition:opacity .4s,transform .5s var(--ease)}
+.why li::before{content:"";position:absolute;left:2px;top:11px;width:7px;height:7px;border-radius:2px;background:var(--acc)}
+.app.r4 .why li{opacity:1;transform:none;transition-delay:calc(.2s + var(--i) * .35s)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 16px 0;opacity:0;transition:opacity .4s}
+.app.r4 .tags{opacity:1;transition-delay:1.8s}
+.pill.hot{background:#fff1e8;color:#c2410c}
+/* workflow */
+#flow{left:0;width:440px}
+.nodes{padding:10px 14px}
+.nd2{display:grid;grid-template-columns:28px 1fr;gap:2px 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;transition:border-color .4s,background .4s}
+.nd2 .ic{grid-row:1/span 2;width:28px;height:28px;border-radius:8px;background:#f0f0f5;color:var(--ink2);display:grid;place-items:center;font-size:11px;font-weight:700}
+.nd2 b{font-size:13px;font-weight:600}
+.nd2 small{font-size:11.5px;color:var(--ink3)}
+.lnk{width:2px;height:10px;background:var(--line2);margin-left:23px}
+.br{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.br .lbl{margin:2px 0 4px 2px}
+.br .nd2{margin-bottom:6px}
+.app.r5 .nd2.w{border-color:var(--acc);background:#f6f9ff;transition-delay:calc(var(--i) * .3s)}
+.app.r5 .nd2.w .ic{background:var(--accbg);color:var(--acc)}
+#phone{left:452px;width:260px}
+.thr{padding:12px;display:grid;gap:8px}
+.bub{max-width:88%;padding:9px 11px;border-radius:14px;font-size:12.5px;line-height:1.4;opacity:0;transform:translateY(6px);transition:opacity .4s,transform .5s var(--ease)}
+.bub.out{justify-self:end;background:var(--acc);color:#fff;border-bottom-right-radius:4px}
+.bub.in{justify-self:start;background:#f0f0f5;border-bottom-left-radius:4px}
+.bub small{display:block;font-size:10.5px;opacity:.7;margin-top:3px}
+.app.r5 .bub{opacity:1;transform:none;transition-delay:calc(.8s + var(--i) * .6s)}
+#cal{left:724px;right:0}
+.wk{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 12px}
+.dy{border:1px solid var(--line);border-radius:9px;padding:6px;display:grid;gap:5px;align-content:start;min-height:190px}
+.dy h6{font-size:11.5px;font-weight:700;color:var(--ink3)}
+.sl{font-size:11px;padding:5px 6px;border-radius:6px;background:#f4f4f8;color:var(--ink3)}
+.sl.bk{background:#eef3ff;color:var(--ink2)}
+#slot{background:var(--acc);color:#fff;opacity:0;transform:scale(.96);transition:opacity .4s,transform .5s var(--ease)}
+.app.r5 #slot{opacity:1;transform:none;transition-delay:2.4s}
+.rem{margin:4px 12px 0;padding:10px 12px;border-radius:10px;background:#f7f7fa;border:1px solid var(--line);font-size:12px;color:var(--ink2);line-height:1.6}
+.rem b{display:block;font-size:12.5px;color:var(--ink);margin-bottom:2px}
+/* webinar + recruiting */
+#web{left:0;width:506px}
+.wrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px 4px}
+.wst{border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:12px;color:var(--ink2);line-height:1.4}
+.wst b{display:block;font-size:13px;color:var(--ink);margin-bottom:3px}
+.forks{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 14px}
+.fork{border-radius:11px;padding:11px 12px;font-size:12.5px;line-height:1.45;color:var(--ink2)}
+.fork b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:4px}
+.fork.a{background:var(--greenbg)}
+.fork.b{background:var(--amberbg)}
+.wmsg{margin:6px 14px 0;padding:11px 12px;border:1.5px dashed var(--line2);border-radius:11px;font-size:12.5px;line-height:1.5;color:var(--ink2)}
+#rec{left:518px;right:0}
+.rcols{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:10px 12px}
+.rc{background:#f4f4f8;border-radius:10px;padding:7px;display:grid;gap:6px;align-content:start;min-height:200px}
+.rc h6{font-size:11.5px;font-weight:700;color:var(--ink2)}
+.rk{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:11px;color:var(--ink3)}
+.rk b{display:block;font-size:12px;color:var(--ink);font-weight:600}
+.rq{margin:6px 12px 0;padding:10px 12px;border-radius:11px;border:1px solid var(--line);font-size:12.5px;color:var(--ink2);line-height:1.5}
+.rq b{color:var(--ink)}
+/* outcomes */
+#metrics{left:0;width:500px;bottom:auto;padding:0;border:0;background:none;box-shadow:none;overflow:visible}
+.mc{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;display:grid;grid-template-columns:38px 1fr;gap:2px 12px;opacity:0;transform:translateY(10px);transition:opacity .45s,transform .6s var(--ease)}
+.mc + .mc{margin-top:10px}
+.app.r7 .mc{opacity:1;transform:none;transition-delay:calc(.3s + var(--i) * .2s)}
+.arr{grid-row:1/span 4;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:18px;font-weight:700}
+.arr.dn{background:var(--accbg);color:var(--acc)}.arr.up{background:var(--greenbg);color:var(--green)}
+.mc h5{font-size:15px;font-weight:700}
+.mc .def{font-size:12.5px;color:var(--ink2);line-height:1.4}
+.bar{margin-top:6px;height:24px;border-radius:7px;border:1px dashed var(--line2);background:repeating-linear-gradient(135deg,#f6f6f9 0 8px,#fff 8px 16px);display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:600;color:var(--ink3)}
+#plan{left:512px;right:0;padding:16px 18px}
+.tlv{margin-top:14px;position:relative;padding-left:26px}
+.tlv::before{content:"";position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:var(--line2)}
+.tlv div.s{position:relative;padding:4px 0 18px}
+.tlv div.s::before{content:"";position:absolute;left:-23px;top:7px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--acc)}
+.tlv b{display:block;font-size:14.5px;font-weight:700}
+.tlv small{display:block;font-size:13px;color:var(--ink2);line-height:1.45;margin-top:2px}
+.honest{margin-top:10px;padding:12px 13px;border-radius:12px;background:var(--amberbg);color:#7a4a08;font-size:13px;line-height:1.45;font-weight:500}
+
+/* close modal */
+.scrim{position:absolute;inset:0;background:rgba(21,21,29,.38);opacity:0;transition:opacity .5s;pointer-events:none;z-index:5}
+.app.r8 .scrim{opacity:1}
+#modal{position:absolute;left:350px;top:170px;width:580px;background:#fff;border-radius:18px;box-shadow:0 40px 90px -30px rgba(20,16,50,.6),0 0 0 1px rgba(20,20,40,.06);padding:28px 28px 24px;z-index:6;opacity:0;transform:translateY(16px) scale(.97);transition:opacity .45s,transform .6s var(--ease);pointer-events:none}
+.app.r8 #modal{opacity:1;transform:none;transition-delay:.5s}
+#modal h5{font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:8px}
+.wfs{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wfs div{padding:12px 14px;border-radius:12px;border:1px solid var(--line2);font-size:16px;font-weight:600;line-height:1.3}
+.wfs div small{display:block;font-size:13px;color:var(--ink3);font-weight:500;margin-top:2px}
+.wfs div.on{border-color:var(--acc);background:var(--accbg);box-shadow:inset 0 0 0 1px var(--acc)}
+.wfs div.on small{color:var(--acc)}
+.ctab{margin-top:14px;padding:15px 16px;border-radius:14px;background:linear-gradient(135deg,#2f74f5,#1f5fd6);color:#fff}
+.ctab b{display:block;font-size:20px;font-weight:700;line-height:1.3}
+.ctab small{display:block;font-size:14.5px;opacity:.85;margin-top:3px}
+.proof{margin-top:16px;list-style:none;font-size:14.5px;color:var(--ink2);line-height:1.45}
+.proof li{position:relative;padding-left:16px;margin-top:4px}
+.proof li::before{content:"";position:absolute;left:2px;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.sig{margin-top:14px;font-size:14.5px;color:var(--ink3)}.sig b{color:var(--ink)}
+
+/* spotlight */
+.spot{position:absolute;left:0;top:0;width:1280px;height:800px;border-radius:16px;pointer-events:none;z-index:9;opacity:0;
+  box-shadow:0 0 0 3px rgba(79,141,255,.9),0 0 0 9px rgba(79,141,255,.24),0 0 0 3000px rgba(3,6,14,.50);
+  transition:transform var(--cam) var(--ease),width var(--cam) var(--ease),height var(--cam) var(--ease),opacity .5s}
+.spot.on{opacity:1}
+
+/* dock */
+.dock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(1120px,calc(100vw - 32px));z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px 24px;padding:16px 18px 16px 22px;border-radius:20px;color:#fff;
+  background:rgba(6,10,20,.80);border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 60px -20px rgba(0,0,0,.55);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);transition:opacity .3s}
+.cap{min-width:0}
+.cap.in{animation:capin .45s var(--ease) both}
+@keyframes capin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.kick{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#a9c8ff}
+.kick em{font-style:normal;letter-spacing:0;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.55);text-transform:none;font-weight:500}
+.cap h2{font-size:clamp(20px,2vw,27px);font-weight:700;letter-spacing:-.025em;line-height:1.15;margin-top:5px;text-wrap:balance}
+.cap p{font-size:clamp(14px,1.15vw,16px);line-height:1.45;color:rgba(255,255,255,.78);margin-top:5px;text-wrap:pretty;max-width:58em}
+.ctl{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.dots{display:flex;gap:6px}
+.dots button{width:22px;height:5px;border-radius:99px;border:0;padding:0;background:rgba(255,255,255,.22);cursor:pointer;transition:background .3s,width .4s var(--ease)}
+.dots button.done{background:rgba(169,200,255,.6)}
+.dots button.cur{background:#fff;width:34px}
+.btnrow{display:flex;gap:8px}
+.nb{font:600 14px var(--font);color:#fff;padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);cursor:pointer;white-space:nowrap}
+.nb.next{background:#fff;color:#0b1426;border-color:#fff}
+.nb:disabled{opacity:.35;cursor:default}
+.nb:focus-visible,.dots button:focus-visible{outline:2px solid #a9c8ff;outline-offset:2px}
+body.clean .dock,body.clean .top{opacity:0;pointer-events:none}
+
+.notes{position:fixed;right:16px;top:60px;width:min(420px,calc(100vw - 32px));max-height:50vh;overflow:auto;padding:16px 18px;border-radius:16px;background:rgba(4,7,15,.96);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:15px;line-height:1.5;z-index:30;display:none}
+.notes.show{display:block}
+.notes .lbl{color:#a9c8ff;margin-bottom:6px}
+
+@media (max-width:820px){
+  .top{height:46px}
+  .brand{font-size:13px}.brand span{display:none}
+  .badge{font-size:11px;padding:5px 10px}
+  .dock{left:10px;right:10px;bottom:10px;transform:none;width:auto;grid-template-columns:1fr;gap:12px;padding:14px 14px 12px 16px;border-radius:18px}
+  .cap h2{font-size:21px}
+  .cap p{font-size:14.5px}
+  .ctl{flex-direction:row;align-items:center;justify-content:space-between}
+  .dots button{width:14px}.dots button.cur{width:24px}
+  .nb{padding:9px 14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wall" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand"><i></i>AdveroSolutions <span>· prepared for your brokerage</span></div>
+  <div class="badge"><b></b>Illustrative prototype · made-up data</div>
+</header>
+
+<div class="viewport" id="vp">
+<div class="app" id="app" aria-label="Illustrative prototype of Brokerage OS for your brokerage">
+  <div class="tb">
+    <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="ttl">Brokerage OS <span>· your brokerage</span></div>
+    <div class="proto">Illustrative prototype, not a GoHighLevel screen</div>
+  </div>
+
+  <div class="body">
+    <aside class="side" id="side">
+      <div class="ws"><i>YB</i><div><b>Your brokerage</b><small>Brokerage OS</small></div></div>
+      <nav class="navl" aria-hidden="true">
+        <div class="ind"></div>
+        <a class="n1"><svg viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg>Funnels</a>
+        <a class="n2"><svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v6h-4z"/></svg>Pipelines</a>
+        <a class="n3"><svg viewBox="0 0 24 24"><path d="M6 3v6M6 15v6M18 9v6M6 9a3 3 0 0 0 0 6M6 12h9a3 3 0 0 0 3-3"/></svg>Workflows</a>
+        <a class="n4"><svg viewBox="0 0 24 24"><path d="M3 5h18v11H3zM8 20h8M12 16v4"/></svg>Webinars, recruiting</a>
+        <a class="n5"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Results</a>
+      </nav>
+      <div class="scope" id="scope">
+        <div class="lbl">Scope · from your post</div>
+        <ul>
+          <li class="k1"><i></i>Seller lead funnels</li>
+          <li class="k2"><i></i>Buyer lead funnels</li>
+          <li class="k3"><i></i>Opportunity pipelines</li>
+          <li class="k4"><i></i>Advanced workflows and automations</li>
+          <li class="k5"><i></i>SMS and email nurturing</li>
+          <li class="k6"><i></i>Calendar booking systems</li>
+          <li class="k7"><i></i>Webinar registration and follow-up</li>
+          <li class="k8"><i></i>AI lead qualification</li>
+          <li class="k9"><i></i>Recruiting funnels for agents</li>
+        </ul>
+      </div>
+      <div class="stack">
+        <div class="lbl">Planned stack</div>
+        <div class="chips"><span class="chip">GoHighLevel</span><span class="chip">Make</span><span class="chip">AI model</span></div>
+      </div>
+    </aside>
+
+    <section class="main">
+      <div class="mh">
+        <h3><span class="t-fun on">Funnels</span><span class="t-pipe">Seller pipeline</span><span class="t-flow">Seller workflow</span><span class="t-more">Webinars and recruiting</span><span class="t-res">Results</span></h3>
+        <div class="selp" style="margin-left:auto">Sub-account · Your brokerage</div>
+        <div class="av c3">DR</div>
+      </div>
+      <div class="views">
+
+        <div class="view vf">
+          <div class="panel" id="fPage">
+            <div class="ph"><h4>Seller funnel</h4><span class="pill r">Page 1 of 2</span></div>
+            <div class="lp">
+              <div class="hero"><small>Free home value report</small><b>What is your home worth right now?</b><p>Get a local value range from an agent who knows your street.</p></div>
+              <form>
+                <div class="fld"><span>Property address</span><div class="fill">Sample address, Orange County</div></div>
+                <div class="fld"><span>When are you thinking of selling?</span><div class="fill">Within 60 days</div></div>
+                <div class="fld"><span>Already working with an agent?</span><div class="fill">Not yet</div></div>
+                <div class="fld"><span>Mobile number</span><div class="fill">(555) 010 0142</div></div>
+                <div class="go">Send me my home value</div>
+              </form>
+            </div>
+            <div class="steps2"><span class="on"></span><span></span></div>
+            <div class="pnote">Sample page and made-up answers.</div>
+          </div>
+
+          <div class="panel" id="fFeed">
+            <div class="ph"><h4>Funnel submissions</h4><span class="pill r">Sample data</span></div>
+            <div class="subs">
+              <div class="sub" id="fNew"><div class="av">EM</div><b>Elena Marsh</b><small>Seller funnel · just now</small></div>
+              <div class="sub old"><div class="av c2">KT</div><b>Kai Tran</b><small>Buyer funnel · first home</small></div>
+              <div class="sub old"><div class="av c4">RD</div><b>Rosa Delgado</b><small>Buyer webinar sign up</small></div>
+              <div class="sub old"><div class="av c3">MH</div><b>Marcus Hill</b><small>Agent recruiting funnel</small></div>
+              <div class="sub old"><div class="av c2">JN</div><b>June Novak</b><small>Seller funnel · page 1 only</small></div>
+            </div>
+            <div class="pnote">Made-up people.</div>
+          </div>
+
+          <div class="panel" id="fSrc">
+            <div class="ph"><h4>Where each funnel goes</h4></div>
+            <div class="route on"><b>Seller funnel</b><small>Into <em>Seller pipeline</em>, AI check, seller workflow</small></div>
+            <div class="route"><b>Buyer funnel</b><small>Into <em>Buyer pipeline</em>, buyer nurture</small></div>
+            <div class="route"><b>Webinar sign up</b><small>Into <em>Webinar workflow</em>, reminders, replay</small></div>
+            <div class="route"><b>Agent recruiting</b><small>Into <em>Recruiting pipeline</em>, interview booking</small></div>
+            <div class="pnote">One contact record per person, tagged by source.</div>
+          </div>
+        </div>
+
+        <div class="view vp">
+          <div class="panel" id="board">
+            <div class="ph"><h4>Opportunities · Seller pipeline</h4><span class="pill r">Sample data</span></div>
+            <div class="cols">
+              <div class="col"><h6>New lead</h6>
+                <div class="kc"><b>June Novak</b>Page 1 only</div>
+                <div class="kc el" id="kNew"><b>Elena Marsh</b>Seller funnel · just now</div>
+              </div>
+              <div class="col"><h6>Nurture</h6>
+                <div class="kc"><b>Tom Ashby</b>Selling next spring</div>
+                <div class="kc"><b>Lena Ortiz</b>Just curious on value</div>
+              </div>
+              <div class="col hot"><h6>Hot · call now</h6>
+                <div class="kc el" id="kHot"><b>Elena Marsh</b>AI: hot · Dana R.</div>
+              </div>
+              <div class="col"><h6>Consult booked</h6>
+                <div class="kc"><b>Sam Whitlock</b>Listing consult Tue</div>
+              </div>
+            </div>
+            <div class="pnote">Made-up names. Stages are a starting point we shape together.</div>
+          </div>
+
+          <div class="panel" id="card">
+            <div class="ph"><h4>Opportunity</h4><span class="pill r">Seller</span></div>
+            <div class="oh" id="cardHead"><div class="av">EM</div><div><h5>Elena Marsh</h5><small>Sample address, Orange County</small></div></div>
+            <div class="ans">
+              <div class="f"><span>Source</span><div>Seller funnel</div></div>
+              <div class="f"><span>Timeline</span><div>Within 60 days</div></div>
+              <div class="f"><span>Has an agent</span><div>Not yet</div></div>
+              <div class="f"><span>Page 2 note</span><div>"We'd buy something bigger nearby."</div></div>
+            </div>
+            <div id="aiBox">
+              <div class="aih"><b>AI lead qualification</b><span class="swap"><span class="pill sc0">Not scored yet</span><span class="pill hot sc1">Hot seller, also a buyer</span></span></div>
+              <ul class="why">
+                <li style="--i:0">Wants to sell within 60 days</li>
+                <li style="--i:1">Not working with another agent</li>
+                <li style="--i:2">Plans to buy nearby, so a buyer lead too</li>
+              </ul>
+            </div>
+            <div class="tags"><span class="pill acc">seller hot</span><span class="pill acc">also buying</span><span class="pill">Owner: Dana R.</span></div>
+            <div class="pnote">Illustrative run. Nothing here ran in your GoHighLevel.</div>
+          </div>
+        </div>
+
+        <div class="view vw">
+          <div class="panel" id="flow">
+            <div class="ph"><h4>Seller workflow</h4><span class="pill r">Draft</span></div>
+            <div class="nodes">
+              <div class="nd2 w" style="--i:0"><div class="ic">1</div><b>Trigger: seller funnel submitted</b><small>Creates the opportunity in New lead</small></div>
+              <div class="lnk"></div>
+              <div class="nd2 w" style="--i:1"><div class="ic">AI</div><b>AI qualification</b><small>Scores timeline, agent status, intent; tags and moves stage</small></div>
+              <div class="lnk"></div>
+              <div class="br">
+                <div><div class="lbl">If hot</div>
+                  <div class="nd2 w" style="--i:2"><div class="ic">S</div><b>Text within minutes</b><small>From the assigned agent</small></div>
+                  <div class="nd2 w" style="--i:3"><div class="ic">C</div><b>Booking link</b><small>Listing consult calendar</small></div>
+                  <div class="nd2 w" style="--i:4"><div class="ic">!</div><b>Alert Dana</b><small>App push and SMS</small></div>
+                </div>
+                <div><div class="lbl">If not yet</div>
+                  <div class="nd2"><div class="ic">E</div><b>Long nurture</b><small>Market updates by email, check in texts</small></div>
+                  <div class="nd2"><div class="ic">R</div><b>Rescore on reply</b><small>Any reply runs the AI check again</small></div>
+                  <div class="nd2"><div class="ic">P</div><b>Quiet stop</b><small>Stops texting on STOP or a booking</small></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="phone">
+            <div class="ph"><h4>Conversation</h4><span class="pill r">SMS</span></div>
+            <div class="thr">
+              <div class="bub out" style="--i:0">Hi Elena, Dana here with your brokerage. Got your home value request. Want 15 minutes this week to walk through it? Pick a time: booking link<small>Sent by the workflow</small></div>
+              <div class="bub in" style="--i:1">Thursday afternoon works</div>
+              <div class="bub out" style="--i:2">You're set for Thursday at 4. You'll get a reminder the day before.<small>Sent when she booked</small></div>
+            </div>
+            <div class="pnote">Sample text, made-up contact.</div>
+          </div>
+
+          <div class="panel" id="cal">
+            <div class="ph"><h4>Listing consults</h4><span class="pill r">Dana R.</span></div>
+            <div class="wk">
+              <div class="dy"><h6>Tue</h6><div class="sl bk">10:00 Sam W.</div><div class="sl">1:00 open</div><div class="sl">4:00 open</div></div>
+              <div class="dy"><h6>Wed</h6><div class="sl">9:30 open</div><div class="sl bk">2:00 Buyer tour</div><div class="sl">5:00 open</div></div>
+              <div class="dy"><h6>Thu</h6><div class="sl">11:00 open</div><div class="sl">2:00 open</div><div class="sl" id="slot">4:00 Elena M.</div></div>
+            </div>
+            <div class="rem"><b>Reminders on every booking</b>Email confirmation right away<br>Text the day before<br>Text one hour before</div>
+          </div>
+        </div>
+
+        <div class="view vr">
+          <div class="panel" id="web">
+            <div class="ph"><h4>Buyer webinar follow up</h4><span class="pill r">Sample event</span></div>
+            <div class="wrow">
+              <div class="wst"><b>Register</b>Buyer funnel page, one form</div>
+              <div class="wst"><b>Remind</b>Email now, text the morning of, text 10 minutes before</div>
+              <div class="wst"><b>Live</b>Attendance syncs back to the contact</div>
+            </div>
+            <div class="forks">
+              <div class="fork a"><b>Attended</b>Replay plus a link to book a buyer consult. Moves to Buyer pipeline.</div>
+              <div class="fork b"><b>No show</b>Replay by email, a check in text next day, then the buyer nurture.</div>
+            </div>
+            <div class="wmsg">"Sorry we missed you, Rosa. Here's the replay. Want help getting pre approved? Reply YES." <span class="lbl" style="display:block;margin-top:6px">Draft text, sample contact</span></div>
+          </div>
+
+          <div class="panel" id="rec">
+            <div class="ph"><h4>Agent recruiting pipeline</h4><span class="pill r">Sample data</span></div>
+            <div class="rcols">
+              <div class="rc"><h6>Applied</h6><div class="rk"><b>Marcus Hill</b>Licensed 3 yrs</div><div class="rk"><b>Ava Chen</b>New licensee</div></div>
+              <div class="rc"><h6>Phone screen</h6><div class="rk"><b>Leo Park</b>Booked Fri</div></div>
+              <div class="rc"><h6>Interview</h6><div class="rk"><b>Nina Shah</b>With broker</div></div>
+              <div class="rc"><h6>Onboarding</h6><div class="rk"><b>Omar Reyes</b>Docs sent</div></div>
+            </div>
+            <div class="rq"><b>Same AI step, your criteria.</b> Applicants answer a few questions, the AI sorts them against what you look for in an agent, and good fits get an interview booking link.</div>
+            <div class="pnote">Made-up applicants.</div>
+          </div>
+        </div>
+
+        <div class="view vo">
+          <div class="panel" id="metrics">
+            <div class="mc" style="--i:0"><div class="arr dn">↓</div><h5>Time to first text</h5><div class="def">From a funnel form to the first SMS a lead gets.</div><div class="bar">Baseline not measured yet</div></div>
+            <div class="mc" style="--i:1"><div class="arr up">↑</div><h5>Consults booked from funnels</h5><div class="def">Seller and buyer consults booked on the calendars.</div><div class="bar">Baseline not measured yet</div></div>
+            <div class="mc" style="--i:2"><div class="arr up">↑</div><h5>Leads with a stage and an owner</h5><div class="def">Opportunities that have a next step, not sitting in New lead.</div><div class="bar">Baseline not measured yet</div></div>
+            <div class="mc" style="--i:3"><div class="arr up">↑</div><h5>Agent applicants interviewed</h5><div class="def">Recruiting funnel applicants who reach an interview.</div><div class="bar">Baseline not measured yet</div></div>
+          </div>
+          <div class="panel" id="plan">
+            <div class="lbl">How we'll measure</div>
+            <div class="tlv">
+              <div class="s"><b>Today</b><small>We look at how leads, consults and recruits move through your current setup.</small></div>
+              <div class="s"><b>Pipeline first</b><small>Seller pipeline and workflow go live, then buyer, webinar and recruiting.</small></div>
+              <div class="s"><b>Compare</b><small>Same four numbers, side by side with today.</small></div>
+            </div>
+            <div class="honest">These are goals, not results. The numbers stay empty until we measure your brokerage.</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <div class="scrim"></div>
+  <div id="modal" role="dialog" aria-label="Your next step">
+    <div class="lbl">Your next step</div>
+    <h5>Pipeline first. Pick where we start.</h5>
+    <div class="wfs">
+      <div class="on">Seller pipeline<small>Shown today</small></div>
+      <div>Buyer funnel<small>From your post</small></div>
+      <div>Webinar follow up<small>From your post</small></div>
+      <div>Agent recruiting<small>From your post</small></div>
+    </div>
+    <div class="ctab"><b>Reply here and I'll send times for a 15-minute call.</b><small>We'll map your stages and pick the first funnel.</small></div>
+    <ul class="proof">
+      <li>I set up GoHighLevel accounts all the time.</li>
+      <li>I work daily in n8n, Make and Claude Code.</li>
+    </ul>
+    <div class="sig"><b>Lorenzo</b> · AdveroSolutions</div>
+  </div>
+
+
+  <div class="spot" id="spot" aria-hidden="true"></div>
+</div>
+</div>
+
+<div class="dock" id="dock">
+  <div class="cap" id="cap" aria-live="polite">
+    <div class="kick"><span id="kick"></span><em id="count"></em></div>
+    <h2 id="head"></h2>
+    <p id="sub"></p>
+  </div>
+  <div class="ctl">
+    <div class="dots" id="dots"></div>
+    <div class="btnrow">
+      <button class="nb" id="prev" type="button" aria-label="Previous step">Back</button>
+      <button class="nb next" id="next" type="button" aria-label="Next step">Next →</button>
+    </div>
+  </div>
+</div>
+
+<aside class="notes" id="notes"><div class="lbl">Say this</div><div id="notesText"></div></aside>
+
+<script>
+(function(){
+  var S=[
+    {k:"Prepared for your brokerage",h:"Pipeline first. This is your lead system.",p:"A prototype of the GoHighLevel setup from your post. One seller lead, start to finish.",
+     v:"fun",cd:["#app"],cm:[".lights","#side"],sp:null,
+     n:"Hi, I'm Lorenzo. Pipeline first. I read your post and built a prototype of the lead system your brokerage would run in GoHighLevel. It's not a GoHighLevel screen, it's the build seen from your side. Let's follow one seller lead through it."},
+    {k:"Your scope",h:"Everything you listed, pinned on the left.",p:"Nine pieces, word for word from your post. Each one fills in as the tour reaches it.",
+     v:"fun",cd:["#side"],cm:["#scope"],sp:["#scope"],
+     n:"Here's your scope, word for word from your post. Seller and buyer funnels, pipelines, workflows, nurture, calendars, webinars, AI qualification and agent recruiting. Each box fills in as we get to it."},
+    {k:"Seller funnel",h:"A homeowner asks what her place is worth.",p:"Elena fills out the home value funnel. Every funnel feeds one contact record, tagged by source.",
+     v:"fun",cd:["#fPage","#fFeed","#fSrc"],cm:["#fPage"],sp:["#fFeed .ph","#fNew"],spm:["#fPage form"],
+     n:"Say Elena fills out your home value funnel. She wants to sell within 60 days and doesn't have an agent. She lands in submissions, and on the right you can see where each funnel routes."},
+    {k:"Opportunity pipeline",h:"She lands in your seller pipeline.",p:"A new opportunity in New lead, with her funnel answers on the record.",
+     v:"pipe",cd:["#board","#card"],cm:["#board"],sp:["#kNew","#board .cols .col:first-child h6"],spm:["#board .cols"],
+     n:"She shows up in the seller pipeline as a new opportunity, with her answers saved on the record so the agent never has to ask twice."},
+    {k:"AI lead qualification",h:"The AI scores her and moves the card.",p:"It reads her answers, tags her hot seller and also buying, and moves her to Hot with an owner.",
+     v:"pipe",cd:["#board","#card"],cm:["#card"],sp:["#aiBox"],
+     n:"Now the AI qualification step reads her answers. Selling in 60 days, no agent, and she's buying nearby, so she's a buyer lead too. It tags her, assigns Dana, and moves the card to Hot."},
+    {k:"Workflow and calendar",h:"A text in minutes and a booked consult.",p:"Hot leads get a text from their agent and a booking link. Everyone else goes into a longer nurture.",
+     v:"flow",cd:["#flow","#phone","#cal"],cm:["#phone","#cal"],sp:["#phone","#cal"],
+     n:"The workflow texts her from Dana within minutes with a booking link, and alerts Dana. She picks Thursday at 4 on the listing consult calendar, and reminders go out by email and text. Leads that aren't ready go into a longer nurture and get rescored when they reply."},
+    {k:"Webinars and recruiting",h:"The same pattern runs your webinars and recruiting.",p:"Webinar sign ups get reminders, then a replay or a consult link. Agent applicants move through their own pipeline.",
+     v:"more",cd:["#web","#rec"],cm:["#web"],sp:null,
+     n:"Same pattern for your buyer webinars. Reminders before, then attendees get a consult link and no shows get the replay. Agent recruiting gets its own pipeline, with the same AI step sorting applicants against what you look for."},
+    {k:"Results",h:"Goals first. Numbers after we measure.",p:"These are goals, not results. We measure how your brokerage runs today, then compare after launch.",
+     v:"res",cd:["#metrics","#plan"],cm:["#metrics"],sp:["#metrics"],
+     n:"Results start empty on purpose. First we measure how things run today. Then we track time to first text, consults booked, leads with an owner, and applicants interviewed."},
+    {k:"Your next step",h:"A quick 15-minute call.",p:"Reply here and I'll send times. We'll map your stages and pick the first funnel.",
+     v:"res",cd:["#app"],cm:["#modal"],sp:["#modal"],
+     n:"Pipeline first is where I'd start, then buyer funnels, webinars and recruiting. Reply here and I'll send times for a quick 15-minute call."}
+  ];
+
+  var app=document.getElementById('app'),spot=document.getElementById('spot'),dock=document.getElementById('dock'),top=document.querySelector('.top');
+  var cap=document.getElementById('cap'),kick=document.getElementById('kick'),head=document.getElementById('head'),sub=document.getElementById('sub'),count=document.getElementById('count');
+  var prev=document.getElementById('prev'),next=document.getElementById('next'),dots=document.getElementById('dots');
+  var notes=document.getElementById('notes'),notesText=document.getElementById('notesText');
+  var titles={fun:'.t-fun',pipe:'.t-pipe',flow:'.t-flow',more:'.t-more',res:'.t-res'};
+  var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cur=-1,first=true;
+  S.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Go to step '+(i+1));b.addEventListener('click',function(){go(i)});dots.appendChild(b)});
+  var bars=[].slice.call(dots.children);
+
+  function rectOf(el){var x=0,y=0,e=el;while(e&&e!==app){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}
+    if(el===app)return{x:0,y:0,w:1280,h:800};return{x:x,y:y,w:el.offsetWidth,h:el.offsetHeight}}
+  function union(sels){var a=null;sels.forEach(function(q){var r=rectOf(document.querySelector(q));
+    if(!a)a={x:r.x,y:r.y,r:r.x+r.w,b:r.y+r.h};else{a.x=Math.min(a.x,r.x);a.y=Math.min(a.y,r.y);a.r=Math.max(a.r,r.x+r.w);a.b=Math.max(a.b,r.y+r.h)}});
+    return{x:a.x,y:a.y,w:a.r-a.x,h:a.b-a.y}}
+  function layout(){
+    if(cur<0)return;
+    var s=S[cur],mob=innerWidth<=820;
+    var clean=document.body.classList.contains('clean');
+    var t=clean?0:top.getBoundingClientRect().bottom, b=clean?innerHeight:dock.getBoundingClientRect().top;
+    var pad=mob?10:28,full=(mob?s.cm:s.cd)[0]==='#app';
+    var r=union(mob?s.cm:s.cd);
+    var ext=full?0:(mob?10:22);
+    r={x:r.x-ext,y:r.y-ext,w:r.w+ext*2,h:r.h+ext*2};
+    var aw=innerWidth-pad*2,ah=b-t-pad*2;
+    var sc=Math.min(aw/r.w,ah/r.h,mob?1.25:1.55);
+    var tx=pad+(aw-r.w*sc)/2-r.x*sc, ty=t+pad+(ah-r.h*sc)/2-r.y*sc;
+    app.style.transform='translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+sc.toFixed(4)+')';
+    var spx=(mob&&s.spm)?s.spm:s.sp;if(spx){var q=union(spx),e=8;
+      spot.style.transform='translate('+(q.x-e)+'px,'+(q.y-e)+'px)';spot.style.width=(q.w+e*2)+'px';spot.style.height=(q.h+e*2)+'px';spot.style.borderRadius='18px';spot.classList.add('on');
+    }else{spot.classList.remove('on')}
+  }
+  function setCap(s,i){kick.textContent=s.k;count.textContent=(i+1)+' of '+S.length;head.textContent=s.h;sub.textContent=s.p;notesText.textContent=s.n}
+  function go(i){
+    i=Math.max(0,Math.min(S.length-1,i));if(i===cur)return;
+    cur=i;var s=S[i];
+    var cls=['app','v-'+s.v,'s'+i];for(var k=1;k<=i;k++)cls.push('r'+k);
+    app.className=cls.join(' ');
+    for(var v in titles){document.querySelector(titles[v]).classList.toggle('on',v===s.v)}
+    bars.forEach(function(b,j){b.className=j<i?'done':(j===i?'cur':'');if(j===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
+    prev.disabled=i===0;next.disabled=i===S.length-1;
+    setCap(s,i);if(!first&&!rm){cap.classList.remove('in');void cap.offsetWidth;cap.classList.add('in')}
+    if(first){app.style.transition='none';spot.style.transition='none';layout();void app.offsetWidth;app.style.transition='';spot.style.transition='';first=false}else layout();
+    if(history.replaceState)history.replaceState(null,'','#'+(i+1));
+  }
+  prev.addEventListener('click',function(){go(cur-1)});
+  next.addEventListener('click',function(){go(cur+1)});
+  document.addEventListener('keydown',function(e){
+    if(e.metaKey||e.ctrlKey||e.altKey)return;var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){e.preventDefault();go(cur+1)}
+    else if(k==='Enter'){if(document.activeElement&&document.activeElement.tagName==='BUTTON')return;e.preventDefault();go(cur+1)}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();go(cur-1)}
+    else if(k==='Home'){go(0)}else if(k==='End'){go(S.length-1)}
+    else if(k==='n'||k==='N'){notes.classList.toggle('show')}
+    else if(k==='h'||k==='H'){document.body.classList.toggle('clean');layout()}
+  });
+  var tx0=null;
+  document.addEventListener('touchstart',function(e){tx0=e.touches[0].clientX},{passive:true});
+  document.addEventListener('touchend',function(e){if(tx0===null)return;var dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)go(cur+(dx<0?1:-1));tx0=null},{passive:true});
+  window.addEventListener('resize',layout);
+  var h=parseInt((location.hash||'').slice(1),10);
+  go(isNaN(h)?0:h-1);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(layout);
+})();
+</script>
+</body>
+</html>

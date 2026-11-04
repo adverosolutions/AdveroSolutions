@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "id": "n8n-support-email-rag-workflow-2113396734814561387",
+  "title": "n8n support email workflow: Gmail, AI check, Pinecone answers, reply in thread",
+  "systemName": "Your n8n support email workflow",
+  "account": {
+    "name": "Your support team",
+    "initials": "ST",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022113396734814561387",
+    "facts": [
+      "Post: n8n AI Automation Specialist, Customer Support Email Workflow. Fixed price, client in Texas. Green lit by Lorenzo 2026-10-22 7:00 PM CT, rebuilt on legacy sales-deck template per Lorenzo 7:33 PM CT.",
+      "Required flow from post: Gmail trigger, OpenAI classification, Pinecone RAG with OpenAI embeddings, OpenAI reply, Gmail reply in thread, human escalation, retries, no hard-coded keys, 7 test scenarios, 5 handover documents.",
+      "Same content as tour/tour.html. All people, businesses, IDs and scores are invented sample data."
+    ]
+  },
+  "entities": {
+    "customer": {
+      "name": "Tessa Moreno",
+      "first": "Tessa",
+      "business": "Brightline Pilates",
+      "email": "tessa@brightline.example"
+    },
+    "mail": {
+      "thread": "thr-18c4f2a9e1",
+      "message": "msg-18c4f2b07d",
+      "subject": "Can't find last month's ad report",
+      "inbox": "support@youragency.example",
+      "received": "9:12 AM",
+      "body": "Hi, I can't find our September ad report in the portal. Where is it, and can I get a copy by email?"
+    },
+    "kb": {
+      "bar": "0.75",
+      "top": "0.88",
+      "second": "0.83",
+      "low": "0.41"
+    },
+    "weak": {
+      "name": "Jonah Pierce",
+      "business": "Okafor Roofing",
+      "score": "0.52"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your n8n support email workflow",
+    "title": "From a support email",
+    "accent": "to an answer in the same thread.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "n8n workflow",
+      "Pinecone answers",
+      "Reply in the same Gmail thread"
+    ],
+    "previewSteps": [
+      {
+        "title": "Check",
+        "detail": "Is this email a support request?"
+      },
+      {
+        "title": "Look up",
+        "detail": "Find the answer in your Pinecone index."
+      },
+      {
+        "title": "Reply or hand off",
+        "detail": "Answer in the thread, or send it to a person."
+      }
+    ],
+    "footer": "Sample emails and data · nothing here ran in your n8n or Gmail",
+    "beat": "Hi, I'm Lorenzo. I read your post and put together the support email workflow you described. Let's follow one support email from your inbox to the reply in the same thread. Everything here is sample data."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "n8n",
+      "title": "One support email, start to finish.",
+      "caption": "It checks if it's support, looks up the answer in Pinecone, and replies in the same thread.",
+      "beat": "Say Tessa from a pilates studio emails your support inbox. The workflow keeps her sender, subject, body, message ID and thread ID. OpenAI checks if it's a support request, and anything else leaves with no reply. Her question goes to your Pinecone index as an OpenAI embedding. The best match clears the bar, so OpenAI writes the reply from those articles and it goes back in her thread. A weak match goes to a person instead.",
+      "details": [
+        "0:10 to 0:55. Point at each lit node in order, then at the two branches that stay grey.",
+        "Your build starts on the n8n Gmail Trigger. This sample run starts by hand with Tessa's email.",
+        "The {{kb.bar}} score bar is a sample setting we agree together. Keys stay in n8n credentials, never in the workflow JSON."
+      ],
+      "content": {
+        "name": "Support email: Gmail to reply in thread",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "manual_trigger",
+            "label": "New email",
+            "detail": "Gmail Trigger in your build."
+          },
+          {
+            "id": "classify",
+            "type": "http_request",
+            "label": "OpenAI: is this support?",
+            "detail": "An OpenAI model tags the email as a support request or not."
+          },
+          {
+            "id": "is-support",
+            "type": "if",
+            "label": "Support request?",
+            "detail": "Only support requests continue."
+          },
+          {
+            "id": "skip",
+            "type": "edit_fields",
+            "label": "Not support: no reply",
+            "detail": "Newsletters and pitches leave the flow without a reply."
+          },
+          {
+            "id": "search",
+            "type": "http_request",
+            "label": "Pinecone: search your index",
+            "detail": "The question goes in as an OpenAI embedding. Top matches come back with scores."
+          },
+          {
+            "id": "strong",
+            "type": "if",
+            "label": "Best match clears the bar?",
+            "detail": "Replies only when the best match is {{kb.bar}} or higher."
+          },
+          {
+            "id": "escalate",
+            "type": "gmail",
+            "label": "Send to your support lead",
+            "detail": "Labeled Needs a person, with the closest matches attached. No AI reply goes out."
+          },
+          {
+            "id": "write",
+            "type": "http_request",
+            "label": "OpenAI: write reply from matches",
+            "detail": "Writes the answer only from the matching articles."
+          },
+          {
+            "id": "reply",
+            "type": "http_request",
+            "label": "Gmail: reply in the same thread",
+            "detail": "Sends the answer with thread ID {{mail.thread}} so it lands under the original email."
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "classify"
+          },
+          {
+            "from": "classify",
+            "to": "is-support"
+          },
+          {
+            "from": "is-support",
+            "to": "search",
+            "label": "true"
+          },
+          {
+            "from": "is-support",
+            "to": "skip",
+            "label": "false"
+          },
+          {
+            "from": "search",
+            "to": "strong"
+          },
+          {
+            "from": "strong",
+            "to": "write",
+            "label": "true"
+          },
+          {
+            "from": "strong",
+            "to": "escalate",
+            "label": "false"
+          },
+          {
+            "from": "write",
+            "to": "reply"
+          }
+        ],
+        "runOrder": [
+          "start",
+          "classify",
+          "is-support",
+          "search",
+          "strong",
+          "write",
+          "reply"
+        ],
+        "context": {
+          "name": "{{customer.name}}",
+          "subtitle": "{{customer.business}} · sample email",
+          "fields": [
+            {
+              "label": "Subject",
+              "value": "{{mail.subject}}"
+            },
+            {
+              "label": "Thread ID",
+              "value": "{{mail.thread}}"
+            },
+            {
+              "label": "Best match",
+              "value": "{{kb.top}} (bar {{kb.bar}})"
+            }
+          ],
+          "states": [
+            "Email from {{customer.name}} picked up, sender, subject, body and both IDs kept",
+            "OpenAI tagged it a support request",
+            "Support request, so it continues",
+            "Pinecone found 2 good matches: {{kb.top}} and {{kb.second}}",
+            "Best match {{kb.top}} clears the {{kb.bar}} bar",
+            "Reply written from the 2 matching articles",
+            "Reply sent in thread {{mail.thread}}"
+          ]
+        },
+        "related": [
+          {
+            "title": "Not support",
+            "detail": "Leaves the flow with no reply, so nobody gets an unnecessary answer."
+          },
+          {
+            "title": "Weak match",
+            "detail": "Goes to your support lead instead of guessing."
+          }
+        ]
+      },
+      "statuses": [
+        "Email picked up, fields kept",
+        "Support check done",
+        "Support path taken",
+        "Knowledge matches found",
+        "Match clears the bar",
+        "Reply written",
+        "Replied in thread"
+      ],
+      "optional": false
+    },
+    {
+      "id": "thread",
+      "kind": "gmail",
+      "platform": "gmail",
+      "title": "The answer lands in Tessa's own thread.",
+      "caption": "The reply sits right under her email, written from the two matching articles.",
+      "beat": "Here's what Tessa sees. Her question is on top, and the answer is right under it in the same thread. It tells her where monthly reports live and how to get a copy by email, and both facts come from your knowledge base.",
+      "details": [
+        "0:55 to 1:25. Point at her question, then at the reply under it.",
+        "Shown unsent here so nothing goes out during the demo. In your build the workflow sends it as a reply on thread {{mail.thread}}."
+      ],
+      "content": {
+        "name": "Support reply in thread",
+        "subtitle": "Sample email · made-up sender and business",
+        "surface": "thread",
+        "thread": {
+          "id": "{{mail.thread}}",
+          "subject": "{{mail.subject}}",
+          "fromName": "{{customer.name}}",
+          "fromEmail": "{{customer.email}}",
+          "toEmail": "{{mail.inbox}}",
+          "received": "{{mail.received}}",
+          "body": "{{mail.body}}",
+          "label": "Support"
+        },
+        "draft": {
+          "id": "reply-18c4f2b2aa",
+          "recipient": "{{customer.email}}",
+          "body": "Hi {{customer.first}},\n\nMonthly reports are in your portal under Reports, then Monthly, filed by month. If you'd like a copy by email, reply here and the team will send it over.\n\nThanks,\nYour support team",
+          "status": "draft"
+        }
+      },
+      "statuses": [
+        "Tessa's email in the thread",
+        "Answer ready under her email"
+      ],
+      "optional": false
+    },
+    {
+      "id": "triage",
+      "kind": "outcome",
+      "platform": "workbench",
+      "title": "Every email ends up in the right place.",
+      "caption": "Support gets answered, everything else is left alone, and weak matches go to a person.",
+      "beat": "Here's a sample day. Tessa got her answer. A vendor newsletter left with no reply. Jonah asked something your knowledge base doesn't cover, so his best match was low, no AI reply went out, and your support lead got it. And when Gmail failed on Rita's reply, it retried and then sent.",
+      "details": [
+        "1:25 to 1:50. Point at the four rows, then at Jonah's.",
+        "Gmail or OpenAI errors retry, then hand the email to a person. Who gets escalations is something we confirm before starting."
+      ],
+      "content": {
+        "name": "Triage log",
+        "subtitle": "Sample day · made-up senders",
+        "fields": [
+          {
+            "label": "{{customer.name}}",
+            "value": "Support · match {{kb.top}} · replied in thread"
+          },
+          {
+            "label": "Vendor newsletter",
+            "value": "Not support · left the flow, no reply"
+          },
+          {
+            "label": "{{weak.name}}, {{weak.business}}",
+            "value": "Support · match {{weak.score}} · sent to your support lead"
+          },
+          {
+            "label": "Rita Alvarez, Cedar Vet Clinic",
+            "value": "Support · match 0.86 · Gmail error retried, then sent"
+          }
+        ],
+        "stages": [
+          "Received",
+          "Checked",
+          "Answered or handed off"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2
+        ],
+        "metrics": [
+          {
+            "label": "Replied in thread",
+            "value": "2",
+            "note": "Sample day"
+          },
+          {
+            "label": "Left with no reply",
+            "value": "1",
+            "note": "Sample day"
+          },
+          {
+            "label": "Sent to a person",
+            "value": "1",
+            "note": "Sample day"
+          }
+        ],
+        "note": "Illustrative log, not a real run. Nothing here ran in your n8n or Gmail."
+      },
+      "statuses": [
+        "Emails received",
+        "Each one checked",
+        "Answered or handed off"
+      ],
+      "optional": false
+    },
+    {
+      "id": "handover",
+      "kind": "record",
+      "platform": "workbench",
+      "title": "How it gets tested and handed over.",
+      "caption": "Your seven test scenarios, then the five handover pieces from your post.",
+      "beat": "Before handover, I run your seven test scenarios and write up the results in a validation checklist. You get the design and mapping, the flow diagram, the test notes, the handover summary and the importable workflow JSON.",
+      "details": [
+        "Detailed route only. All tests show Planned. None have been run."
+      ],
+      "content": {
+        "name": "Tests and handover",
+        "subtitle": "Planned, not run yet",
+        "sourceTitle": "Test plan from your post",
+        "sourceFields": [
+          {
+            "label": "Support and non-support emails",
+            "value": "Planned"
+          },
+          {
+            "label": "Relevant and irrelevant matches",
+            "value": "Planned"
+          },
+          {
+            "label": "AI reply quality",
+            "value": "Planned"
+          },
+          {
+            "label": "Missing or weak knowledge",
+            "value": "Planned"
+          },
+          {
+            "label": "Gmail thread continuity",
+            "value": "Planned"
+          },
+          {
+            "label": "Credential or integration failures",
+            "value": "Planned"
+          },
+          {
+            "label": "End to end run",
+            "value": "Planned"
+          }
+        ],
+        "fields": [
+          {
+            "label": "Design and integration mapping",
+            "value": "At handover"
+          },
+          {
+            "label": "Process flow diagram",
+            "value": "At handover"
+          },
+          {
+            "label": "Testing notes and checklist",
+            "value": "At handover"
+          },
+          {
+            "label": "Handover summary",
+            "value": "At handover"
+          },
+          {
+            "label": "Importable n8n workflow JSON",
+            "value": "At handover"
+          }
+        ],
+        "events": [
+          {
+            "title": "To confirm before starting",
+            "detail": "Who gets escalations, the score bar for replies, and how your Pinecone index is set up."
+          }
+        ],
+        "notice": "Plan only. Each test gets a result line in the checklist at handover."
+      },
+      "statuses": [
+        "Test plan",
+        "Handover pieces"
+      ],
+      "optional": true
+    }
+  ],
+  "close": {
+    "eyebrow": "What we'd measure",
+    "title": "More answers from your knowledge base,",
+    "accent": "fewer replies nobody needed.",
+    "caption": "We measure your inbox today, then compare after launch.",
+    "metrics": [
+      {
+        "name": "Answered from the knowledge base",
+        "direction": "up",
+        "aim": "Answer more support emails without a person",
+        "definition": "Support emails replied to from Pinecone matches, divided by all support emails."
+      },
+      {
+        "name": "Replies to non-support emails",
+        "direction": "down",
+        "aim": "Stop unnecessary replies",
+        "definition": "AI replies sent to emails that weren't support requests."
+      },
+      {
+        "name": "Time to first reply",
+        "direction": "down",
+        "aim": "Answer support emails sooner",
+        "definition": "Time from a support email arriving to the first reply in its thread."
+      }
+    ],
+    "baselineNote": "Baseline not measured yet. We agree it together before launch.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send times.",
+    "beat": "Before launch we'd measure your inbox today, then compare these three after. A few things to confirm first: who gets escalations, the score bar, and how your Pinecone index is set up. Worth a quick 15-minute call? Reply here and I'll send times."
+  }
+}

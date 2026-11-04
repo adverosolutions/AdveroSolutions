@@ -53,7 +53,7 @@ Pipeline root: `/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-p
 9. He loads one at a time with `./job <partial>` (n8n or Make, warms n8n),
    `./job <partial> flow` (chart) or `./job <partial> ghl` (import files to
    `~/Desktop/GHL-Imports/`, imported with the Backup & Audit extension).
-10. After he records: `cd <tool root> && python3 -m upwork_gen.finalize <job dir> --loom ...`
+10. After he records: `cd <tool root> && /usr/bin/python3 -m upwork_gen.finalize <job dir> --loom ...`
    fills the proposal and logs the row in `proposals.csv`.
 11. Weekly: outcome sync per SKILL.md "After he records" and `OUTCOMES.md`.
 

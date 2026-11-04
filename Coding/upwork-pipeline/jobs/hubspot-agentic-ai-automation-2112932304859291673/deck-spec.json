@@ -1,0 +1,891 @@
+{
+  "schemaVersion": 1,
+  "id": "hubspot-agentic-ai-automation-2112932304859291673",
+  "title": "A new HubSpot lead.",
+  "systemName": "A qualified lead and a rep task.",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112932304859291673",
+    "facts": [
+      "Original post retained in jd.txt. Synthetic illustrative sample. HubSpot appears through its API inside n8n; no native HubSpot screen is shown because no HubSpot adapter exists yet."
+    ]
+  },
+  "entities": {
+    "contact": {
+      "id": "48213",
+      "name": "Leah Moreno",
+      "company": "Kestrel Freight",
+      "message": "We need quotes routed faster. Can we start within 30 days?"
+    },
+    "result": {
+      "stage": "Sales qualified lead",
+      "reason": "Asked for a quote and gave a 30-day start"
+    },
+    "task": {
+      "id": "7731",
+      "subject": "Approve reply to Leah Moreno",
+      "due": "22 October 2026",
+      "draft": "Hi Leah, thanks for reaching out. Can we book a short call this week?"
+    },
+    "owner": {
+      "name": "Jordan Lee",
+      "id": "84120"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "Qualify every new HubSpot lead",
+    "accent": "and hand your rep a ready reply.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "HubSpot + OpenAI agent in n8n, with a rep approving every reply."
+    ],
+    "previewSteps": [
+      {
+        "title": "Receive",
+        "detail": "A new lead from your HubSpot form."
+      },
+      {
+        "title": "Qualify",
+        "detail": "The agent reads the record and saves its reason."
+      },
+      {
+        "title": "Approve",
+        "detail": "Your rep checks the drafted reply first."
+      }
+    ],
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "footer": "Illustrative sample"
+  },
+  "close": {
+    "eyebrow": "Your first workflow",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "We'll compare the agent with how your team handles new leads today.",
+    "metrics": [
+      {
+        "name": "Time to first reply",
+        "direction": "down",
+        "aim": "Answer new leads sooner",
+        "definition": "Time from a lead entering HubSpot to the approved reply being sent."
+      },
+      {
+        "name": "Manual CRM updates",
+        "direction": "down",
+        "aim": "Cut the record updates your team types by hand",
+        "definition": "Lifecycle stage and reason fields your team edits by hand per new lead."
+      },
+      {
+        "name": "Leads qualified correctly",
+        "direction": "up",
+        "aim": "Keep the agent's calls accurate",
+        "definition": "Agent decisions your reps agree with, divided by leads the agent reviewed."
+      }
+    ],
+    "baselineNote": "We'll measure the current process first, then compare results after launch.",
+    "ctaTitle": "Pick the first workflow.",
+    "ctaCopy": "Reply here and I'll send times for a 15-minute call.",
+    "beat": "Reply here and I'll send times for a 15-minute call. We'll pick the first HubSpot workflow you want the agent to handle."
+  },
+  "scenes": [
+    {
+      "id": "lead-path",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Give the agent your HubSpot tools.",
+      "caption": "HubSpot sends each new lead here. OpenAI qualifies it with three HubSpot tools.",
+      "beat": "When a new lead comes into HubSpot, a HubSpot workflow sends it here. The agent reads the contact, updates the record, and creates a task for your rep, using these three HubSpot tools.",
+      "content": {
+        "name": "HubSpot lead qualification",
+        "subtitle": "Illustrative sample",
+        "surface": "editor",
+        "graph": {
+          "name": "HubSpot lead qualification",
+          "nodes": [
+            {
+              "id": "receive",
+              "type": "webhook",
+              "label": "New HubSpot lead",
+              "detail": "POST /hubspot-new-lead"
+            },
+            {
+              "id": "agent",
+              "type": "ai_agent",
+              "label": "Qualify lead",
+              "detail": "Read, update, then hand to a rep"
+            }
+          ],
+          "edges": [
+            {
+              "from": "receive",
+              "to": "agent"
+            }
+          ],
+          "runOrder": [
+            "receive",
+            "agent"
+          ],
+          "context": {
+            "name": "{{contact.name}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Company",
+                "value": "{{contact.company}}"
+              },
+              {
+                "label": "HubSpot contact",
+                "value": "{{contact.id}}"
+              }
+            ],
+            "states": [
+              "New lead received",
+              "{{task.id}} assigned to {{owner.name}}"
+            ]
+          },
+          "related": []
+        },
+        "aiNodes": [
+          {
+            "id": "model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Model for lead qualification"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request_tool",
+            "label": "Get HubSpot contact",
+            "detail": "Read the contact record"
+          },
+          {
+            "id": "update",
+            "type": "http_request_tool",
+            "label": "Update HubSpot contact",
+            "detail": "Write stage and reason"
+          },
+          {
+            "id": "task",
+            "type": "http_request_tool",
+            "label": "Create HubSpot task",
+            "detail": "Rep approves the reply"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "model",
+            "to": "agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "lookup",
+            "to": "agent",
+            "type": "ai_tool"
+          },
+          {
+            "from": "update",
+            "to": "agent",
+            "type": "ai_tool"
+          },
+          {
+            "from": "task",
+            "to": "agent",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "receive",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "message",
+                "value": "{{contact.message}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "hubspot-new-lead"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "agent",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "message",
+                "value": "{{contact.message}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "contact",
+                "value": "{{contact.name}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "reason",
+                "value": "{{result.reason}}"
+              },
+              {
+                "label": "taskId",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}} ({{owner.id}})"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "New lead {{contact.id}}: {{contact.message}}"
+              },
+              {
+                "label": "System Message",
+                "value": "Read the HubSpot contact first. Qualify only from the record and message. Save the stage and a one-line reason. Draft a reply but never send it: create a task for the owner to approve. Report only IDs HubSpot returns. If a tool fails, stop."
+              }
+            ]
+          },
+          {
+            "node": "model",
+            "input": [
+              {
+                "label": "message",
+                "value": "{{contact.message}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "response",
+                "value": "Read the contact first, then update it, then create the task."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Use Responses API",
+                "value": "Off"
+              }
+            ]
+          },
+          {
+            "node": "lookup",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "firstname",
+                "value": "Leah"
+              },
+              {
+                "label": "company",
+                "value": "{{contact.company}}"
+              },
+              {
+                "label": "hubspot_owner_id",
+                "value": "{{owner.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://api.hubapi.com/crm/v3/objects/contacts/48213?properties=firstname,company,message,hubspot_owner_id"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "HubSpot App Token API"
+              }
+            ]
+          },
+          {
+            "node": "update",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "ai_qualification_reason",
+                "value": "{{result.reason}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "ai_qualification_reason",
+                "value": "{{result.reason}}"
+              },
+              {
+                "label": "updatedAt",
+                "value": "2026-10-21T16:42:10Z"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://api.hubapi.com/crm/v3/objects/contacts/48213"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "HubSpot App Token API"
+              },
+              {
+                "label": "JSON",
+                "value": "{ \"properties\": { \"lifecyclestage\": \"salesqualifiedlead\", \"ai_qualification_reason\": \"Asked for a quote and gave a 30-day start\" } }"
+              }
+            ]
+          },
+          {
+            "node": "task",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "ai_qualification_reason",
+                "value": "{{result.reason}}"
+              },
+              {
+                "label": "hubspot_owner_id",
+                "value": "{{owner.id}} ({{owner.name}})"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "hs_task_subject",
+                "value": "{{task.subject}}"
+              },
+              {
+                "label": "hs_task_body",
+                "value": "{{task.draft}}"
+              },
+              {
+                "label": "hs_task_status",
+                "value": "NOT_STARTED"
+              },
+              {
+                "label": "hs_timestamp",
+                "value": "2026-10-22T15:00:00Z"
+              },
+              {
+                "label": "hubspot_owner_id",
+                "value": "{{owner.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://api.hubapi.com/crm/v3/objects/tasks"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "HubSpot App Token API"
+              },
+              {
+                "label": "JSON",
+                "value": "{ \"properties\": { \"hs_task_subject\": \"Approve reply to Leah Moreno\", \"hs_task_body\": \"Hi Leah, thanks for reaching out. Can we book a short call this week?\", \"hubspot_owner_id\": \"84120\", \"hs_timestamp\": \"2026-10-22T15:00:00Z\" } }"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "agent"
+      },
+      "statuses": [
+        "New lead received",
+        "Agent tools inspected"
+      ],
+      "details": [
+        "Point to the Chat Model and the three tool connections.",
+        "Click a tool only if more detail is useful."
+      ],
+      "optional": false
+    },
+    {
+      "id": "lead-result",
+      "kind": "native",
+      "platform": "n8n",
+      "title": "Leah is qualified. Jordan approves the reply.",
+      "caption": "Her record now says sales qualified lead, with the reason. Jordan gets the drafted reply as a task.",
+      "beat": "Here's what came back from HubSpot. On the left, Leah is now a sales qualified lead, with the reason saved. On the right is Jordan's task, due on 22 October, with the drafted reply inside. Nothing goes to Leah until Jordan approves it.",
+      "content": {
+        "name": "HubSpot lead qualification",
+        "subtitle": "Illustrative sample",
+        "surface": "node",
+        "graph": {
+          "name": "HubSpot lead qualification",
+          "nodes": [
+            {
+              "id": "receive",
+              "type": "webhook",
+              "label": "New HubSpot lead",
+              "detail": "POST /hubspot-new-lead"
+            },
+            {
+              "id": "agent",
+              "type": "ai_agent",
+              "label": "Qualify lead",
+              "detail": "Read, update, then hand to a rep"
+            }
+          ],
+          "edges": [
+            {
+              "from": "receive",
+              "to": "agent"
+            }
+          ],
+          "runOrder": [
+            "receive",
+            "agent"
+          ],
+          "context": {
+            "name": "{{contact.name}}",
+            "subtitle": "Illustrative sample",
+            "fields": [
+              {
+                "label": "Company",
+                "value": "{{contact.company}}"
+              },
+              {
+                "label": "HubSpot contact",
+                "value": "{{contact.id}}"
+              }
+            ],
+            "states": [
+              "New lead received",
+              "{{task.id}} assigned to {{owner.name}}"
+            ]
+          },
+          "related": []
+        },
+        "aiNodes": [
+          {
+            "id": "model",
+            "type": "openai_chat_model",
+            "label": "OpenAI Chat Model",
+            "detail": "Model for lead qualification"
+          },
+          {
+            "id": "lookup",
+            "type": "http_request_tool",
+            "label": "Get HubSpot contact",
+            "detail": "Read the contact record"
+          },
+          {
+            "id": "update",
+            "type": "http_request_tool",
+            "label": "Update HubSpot contact",
+            "detail": "Write stage and reason"
+          },
+          {
+            "id": "task",
+            "type": "http_request_tool",
+            "label": "Create HubSpot task",
+            "detail": "Rep approves the reply"
+          }
+        ],
+        "aiConnections": [
+          {
+            "from": "model",
+            "to": "agent",
+            "type": "ai_languageModel"
+          },
+          {
+            "from": "lookup",
+            "to": "agent",
+            "type": "ai_tool"
+          },
+          {
+            "from": "update",
+            "to": "agent",
+            "type": "ai_tool"
+          },
+          {
+            "from": "task",
+            "to": "agent",
+            "type": "ai_tool"
+          }
+        ],
+        "inspectors": [
+          {
+            "node": "receive",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "message",
+                "value": "{{contact.message}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "HTTP Method",
+                "value": "POST"
+              },
+              {
+                "label": "Path",
+                "value": "hubspot-new-lead"
+              },
+              {
+                "label": "Authentication",
+                "value": "Header Auth"
+              },
+              {
+                "label": "Respond",
+                "value": "When Last Node Finishes"
+              }
+            ]
+          },
+          {
+            "node": "agent",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "message",
+                "value": "{{contact.message}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "contact",
+                "value": "{{contact.name}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "reason",
+                "value": "{{result.reason}}"
+              },
+              {
+                "label": "taskId",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "owner",
+                "value": "{{owner.name}} ({{owner.id}})"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Prompt (User Message)",
+                "value": "New lead {{contact.id}}: {{contact.message}}"
+              },
+              {
+                "label": "System Message",
+                "value": "Read the HubSpot contact first. Qualify only from the record and message. Save the stage and a one-line reason. Draft a reply but never send it: create a task for the owner to approve. Report only IDs HubSpot returns. If a tool fails, stop."
+              }
+            ]
+          },
+          {
+            "node": "model",
+            "input": [
+              {
+                "label": "message",
+                "value": "{{contact.message}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "response",
+                "value": "Read the contact first, then update it, then create the task."
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Model",
+                "value": "gpt-4.1-mini"
+              },
+              {
+                "label": "Use Responses API",
+                "value": "Off"
+              }
+            ]
+          },
+          {
+            "node": "lookup",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "firstname",
+                "value": "Leah"
+              },
+              {
+                "label": "company",
+                "value": "{{contact.company}}"
+              },
+              {
+                "label": "hubspot_owner_id",
+                "value": "{{owner.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "GET"
+              },
+              {
+                "label": "URL",
+                "value": "https://api.hubapi.com/crm/v3/objects/contacts/48213?properties=firstname,company,message,hubspot_owner_id"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "HubSpot App Token API"
+              }
+            ]
+          },
+          {
+            "node": "update",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "ai_qualification_reason",
+                "value": "{{result.reason}}"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "ai_qualification_reason",
+                "value": "{{result.reason}}"
+              },
+              {
+                "label": "updatedAt",
+                "value": "2026-10-21T16:42:10Z"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "PATCH"
+              },
+              {
+                "label": "URL",
+                "value": "https://api.hubapi.com/crm/v3/objects/contacts/48213"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "HubSpot App Token API"
+              },
+              {
+                "label": "JSON",
+                "value": "{ \"properties\": { \"lifecyclestage\": \"salesqualifiedlead\", \"ai_qualification_reason\": \"Asked for a quote and gave a 30-day start\" } }"
+              }
+            ]
+          },
+          {
+            "node": "task",
+            "input": [
+              {
+                "label": "contactId",
+                "value": "{{contact.id}}"
+              },
+              {
+                "label": "lifecyclestage",
+                "value": "salesqualifiedlead"
+              },
+              {
+                "label": "ai_qualification_reason",
+                "value": "{{result.reason}}"
+              },
+              {
+                "label": "hubspot_owner_id",
+                "value": "{{owner.id}} ({{owner.name}})"
+              }
+            ],
+            "output": [
+              {
+                "label": "id",
+                "value": "{{task.id}}"
+              },
+              {
+                "label": "hs_task_subject",
+                "value": "{{task.subject}}"
+              },
+              {
+                "label": "hs_task_body",
+                "value": "{{task.draft}}"
+              },
+              {
+                "label": "hs_task_status",
+                "value": "NOT_STARTED"
+              },
+              {
+                "label": "hs_timestamp",
+                "value": "2026-10-22T15:00:00Z"
+              },
+              {
+                "label": "hubspot_owner_id",
+                "value": "{{owner.id}}"
+              }
+            ],
+            "parameters": [
+              {
+                "label": "Method",
+                "value": "POST"
+              },
+              {
+                "label": "URL",
+                "value": "https://api.hubapi.com/crm/v3/objects/tasks"
+              },
+              {
+                "label": "Authentication",
+                "value": "Predefined Credential Type"
+              },
+              {
+                "label": "Credential Type",
+                "value": "HubSpot App Token API"
+              },
+              {
+                "label": "JSON",
+                "value": "{ \"properties\": { \"hs_task_subject\": \"Approve reply to Leah Moreno\", \"hs_task_body\": \"Hi Leah, thanks for reaching out. Can we book a short call this week?\", \"hubspot_owner_id\": \"84120\", \"hs_timestamp\": \"2026-10-22T15:00:00Z\" } }"
+              }
+            ]
+          }
+        ],
+        "selectedNode": "task"
+      },
+      "statuses": [
+        "New lead received",
+        "Record and task visible"
+      ],
+      "details": [
+        "INPUT: the stage and reason saved on Leah's record.",
+        "OUTPUT: HubSpot's task ID, the drafted reply in hs_task_body, status and due time.",
+        "Optional: close the panel and click Update HubSpot contact to show the record update itself."
+      ],
+      "optional": false
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Independent page review
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014. The review checklist itself still applies in full; Demo Builder performs it.
+
 Read `SALES_ACCEPTANCE.md` before authoring or reviewing any demo. Its whole-walkthrough sales gate applies to every future generation; visual-only approval is insufficient.
 
 Final review agent: explicitly select `gpt-6-astra` at `high`, using a generic/default Codex agent and `fork_turns: none`. Run one bounded final review with the original requirements, exact artifact paths, matching current reference images, and completed mechanical checks. Follow `OPERATING_POLICY.md`. Reuse unchanged reference evidence, and review a correction against the precise defect rather than repeating unrelated work. Review independently from the builder. Main collects the verdict and records its hash-bound receipt. Report when a tool cannot verify the requested speed mode instead of claiming a Standard setting was enforced.

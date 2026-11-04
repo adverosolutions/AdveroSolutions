@@ -39,3 +39,20 @@
 .ns-n8n .ns-inspector.ns-result-detail .ns-node-panes{grid-template-columns:minmax(170px,.7fr) minmax(190px,.7fr) minmax(0,2.6fr)}.ns-result-detail [data-ns-pane="output"] .ns-data-table{font-size:11px}
 
 .ns-result-detail [data-ns-pane="output"] .ns-data-table{table-layout:fixed;width:100%}.ns-result-detail [data-ns-pane="output"] .ns-data-table th,.ns-result-detail [data-ns-pane="output"] .ns-data-table td{min-width:0;white-space:normal;overflow-wrap:anywhere;padding:10px 7px}
+/* Workflow AI Agent cluster: root main ports and typed bottom subnode ports. */
+.ns-n8n .ns-agent-root .ns-node-icon{left:0;width:230px;height:88px;border-radius:10px;display:flex;align-items:center;padding-left:20px;color:#32353b}
+.ns-n8n .ns-agent-root .ns-node-icon>svg{width:32px;height:32px}
+.ns-n8n .ns-agent-root .ns-node-label{left:65px;top:19px;width:150px;text-align:left;pointer-events:none}
+.ns-n8n .ns-agent-root .ns-node-label b{font-size:14px}
+.ns-n8n .ns-agent-root .ns-node-label small{font-size:10px;margin-top:5px}
+.ns-n8n .ns-agent-root .ns-input-port{left:-5px;top:32px;display:block}
+.ns-n8n .ns-agent-root .ns-output-port{left:225px;top:32px}
+.ns-ai-root-port{position:absolute;top:82px;font-size:9px;color:#6d6f78;white-space:nowrap;transform:translateX(-50%);padding-top:14px}
+.ns-ai-root-port.model{left:45px}.ns-ai-root-port.memory{left:118px}.ns-ai-root-port.tool{left:190px}
+.ns-ai-root-port>i{position:absolute;top:0;left:calc(50% - 5px);width:10px;height:10px;border:1.5px solid #8f929d;background:#f6f6f8;transform:rotate(45deg)}
+.ns-ai-root-port>span{color:#e46a56;margin-left:2px}.ns-ai-wire{stroke-dasharray:5 5!important;stroke:#8f929d!important}
+.ns-n8n .ns-ai-subnode .ns-node-icon{border-radius:50%;display:grid;place-items:center}
+.ns-n8n .ns-ai-subport{position:absolute;left:70px;top:-5px;width:10px;height:10px;border:1.5px solid #8f929d;background:#f6f6f8;transform:rotate(45deg)}
+.ns-ai-graph{min-width:940px}.ns-n8n .ns-agent-root .ns-node-check{right:8px;bottom:8px}
+
+.ns-publish-draft{border:1px solid #ea785a;background:#ea785a;color:#fff;border-radius:5px;padding:6px 13px;font-size:11px;opacity:1;cursor:default}

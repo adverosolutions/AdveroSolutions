@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-landing-calendar-funnel-2112504919683362216",
+  "title": "GoHighLevel Landing Page Designer & Funnel Builder Needed | Calendar Integration",
+  "systemName": "Landing page to confirmed appointment",
+  "account": {
+    "name": "your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022112504919683362216",
+    "facts": [
+      "Original post preserved in jd.txt. No business, industry, offer, staff, calendar provider or meeting duration is stated.",
+      "GoHighLevel native calendar chosen for the requested calendar integration. Sam, Jamie, online meeting, 30-minute duration and America/Chicago timezone are illustrative only.",
+      "No invented client logo, claim, testimonial, conversion percentage, commercial result or past GHL funnel link.",
+      "Page CTA → Neo Calendar element → next funnel step is based on official GHL documentation in preparation.md. Current exact widget/form references remain qualified; no production parity claim.",
+      "Architecture is custom overview, not a GHL Funnel Builder. Public pages are sample customer-facing page content, not an admin screen."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Jamie Reed",
+      "email": "jamie.reed@example.com",
+      "phone": "+1 202-555-0148"
+    },
+    "appointment": {
+      "service": "Introductory call",
+      "location": "Online appointment",
+      "staff": "Sam"
+    }
+  },
+  "cover": {
+    "eyebrow": "Prepared for your team",
+    "title": "From the landing page",
+    "accent": "to a confirmed appointment.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Clean conversion-focused layout",
+      "Native GHL calendar",
+      "Booking confirmation"
+    ],
+    "previewSteps": [
+      {
+        "title": "The setup",
+        "detail": "Connect the page CTA to the calendar and thank-you step."
+      },
+      {
+        "title": "The booking",
+        "detail": "Landing page, available time and appointment confirmation."
+      }
+    ],
+    "footer": "Sample data · Illustrative booking",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "scenes": [
+    {
+      "id": "funnel-flow",
+      "kind": "architecture",
+      "platform": "workbench",
+      "title": "Connect the page to the calendar.",
+      "caption": "Visitors open the calendar from the page. A completed booking takes them to their confirmation.",
+      "beat": "The page has one main booking button. It opens the GoHighLevel calendar, and a completed booking takes the visitor to the confirmation page.",
+      "content": {
+        "name": "Landing page to appointment confirmation",
+        "subtitle": "Custom overview of the planned GoHighLevel funnel",
+        "nodes": [
+          {
+            "id": "page",
+            "label": "One clear next step",
+            "detail": "Offer and primary CTA lead to the booking step."
+          },
+          {
+            "id": "calendar",
+            "label": "Native GHL calendar",
+            "detail": "Choose an available time and enter contact details."
+          },
+          {
+            "id": "confirm",
+            "label": "Thank-you page",
+            "detail": "Show the confirmed service, staff, time and meeting location."
+          }
+        ],
+        "edges": [
+          {
+            "from": "page",
+            "to": "calendar"
+          },
+          {
+            "from": "calendar",
+            "to": "confirm"
+          }
+        ],
+        "runOrder": [
+          "page",
+          "calendar",
+          "confirm"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "Illustrative sample",
+          "fields": [
+            {
+              "label": "Sample visitor",
+              "value": "{{lead.name}}"
+            },
+            {
+              "label": "Appointment",
+              "value": "30-minute introductory call"
+            }
+          ],
+          "states": [
+            "One clear next step",
+            "Native GHL calendar",
+            "Thank-you page"
+          ]
+        },
+        "related": [
+          {
+            "title": "Before launch",
+            "detail": "Test mobile layout, calendar availability, submission and next-step redirect."
+          }
+        ]
+      },
+      "statuses": [
+        "One clear next step",
+        "Native GHL calendar",
+        "Thank-you page"
+      ],
+      "details": [
+        "One CTA leads to the calendar; submitting the booking opens the thank-you step."
+      ],
+      "optional": false
+    },
+    {
+      "id": "landing",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Give the visitor one next step.",
+      "caption": "The page introduces the appointment and points to available times.",
+      "beat": "The page has one primary action. The visitor can see what they are booking before opening the calendar.",
+      "content": {
+        "surface": "landing",
+        "name": "Your booking funnel",
+        "subtitle": "Customer-facing page",
+        "brand": "your team",
+        "heading": "Talk through what you need.",
+        "body": "Choose a time to discuss your enquiry with our team.",
+        "cta": "Find an available time",
+        "booking": {
+          "service": "{{appointment.service}}",
+          "durationMinutes": 30,
+          "location": "{{appointment.location}}",
+          "staff": "{{appointment.staff}}",
+          "staffOptions": [
+            "Sam"
+          ],
+          "dateISO": "2026-10-22",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "CT",
+          "slots": [
+            "13:00",
+            "13:30",
+            "14:00",
+            "14:30",
+            "15:00"
+          ],
+          "selectedSlot": "14:00",
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          },
+          "smsConsent": false
+        }
+      },
+      "statuses": [
+        "Page displayed",
+        "Sample view ready"
+      ],
+      "details": [
+        "The page introduces the appointment and points to available times."
+      ],
+      "optional": false
+    },
+    {
+      "id": "booking",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Let visitors book inside the funnel.",
+      "caption": "Visitors can see the date, available times and time zone while they book.",
+      "beat": "Jamie picks Thursday at 2 PM. Clicking Select opens the contact form. Clicking Schedule meeting confirms the appointment.",
+      "content": {
+        "surface": "booking",
+        "name": "Your booking funnel",
+        "subtitle": "Customer-facing page",
+        "brand": "your team",
+        "heading": "Choose your appointment time.",
+        "body": "Select an available time, then enter your contact details.",
+        "cta": "Continue",
+        "booking": {
+          "service": "{{appointment.service}}",
+          "durationMinutes": 30,
+          "location": "{{appointment.location}}",
+          "staff": "{{appointment.staff}}",
+          "staffOptions": [
+            "Sam"
+          ],
+          "dateISO": "2026-10-22",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "CT",
+          "slots": [
+            "13:00",
+            "13:30",
+            "14:00",
+            "14:30",
+            "15:00"
+          ],
+          "selectedSlot": "14:00",
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          },
+          "smsConsent": false
+        }
+      },
+      "statuses": [
+        "Page displayed",
+        "Sample view ready"
+      ],
+      "details": [
+        "Date, available times and timezone stay visible together."
+      ],
+      "optional": false
+    },
+    {
+      "id": "confirmation",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Confirm the appointment details.",
+      "caption": "The thank-you step displays the same contact, service and selected time.",
+      "beat": "The confirmation shows Jamie, the introductory call, Sam and Thursday at 2 PM. I would check this flow on mobile before launch.",
+      "content": {
+        "surface": "confirmation",
+        "name": "Your booking funnel",
+        "subtitle": "Customer-facing page",
+        "brand": "your team",
+        "heading": "Your appointment is confirmed.",
+        "body": "Your appointment details are listed below.",
+        "cta": "Appointment confirmed",
+        "booking": {
+          "service": "{{appointment.service}}",
+          "durationMinutes": 30,
+          "location": "{{appointment.location}}",
+          "staff": "{{appointment.staff}}",
+          "staffOptions": [
+            "Sam"
+          ],
+          "dateISO": "2026-10-22",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "CT",
+          "slots": [
+            "13:00",
+            "13:30",
+            "14:00",
+            "14:30",
+            "15:00"
+          ],
+          "selectedSlot": "14:00",
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          },
+          "smsConsent": false
+        }
+      },
+      "statuses": [
+        "Page displayed",
+        "Sample view ready"
+      ],
+      "details": [
+        "The thank-you step displays the same contact, service and selected time."
+      ],
+      "optional": false
+    }
+  ],
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Here's what",
+    "accent": "I'd measure.",
+    "caption": "We’ll compare how many visitors start a booking and how many finish it.",
+    "metrics": [
+      {
+        "name": "Booking completion",
+        "direction": "up",
+        "aim": "Complete more appointments",
+        "definition": "Confirmed appointments divided by booking-step starts in the same period."
+      },
+      {
+        "name": "Booking abandonment",
+        "direction": "down",
+        "aim": "Reduce unfinished bookings",
+        "definition": "Visitors who enter the booking step without completing, divided by booking-step starts."
+      },
+      {
+        "name": "Mobile completion",
+        "direction": "up",
+        "aim": "Complete more mobile bookings",
+        "definition": "Confirmed appointments from mobile visitors divided by mobile booking-step starts."
+      }
+    ],
+    "baselineNote": "We’ll measure the current process first, then compare results after launch.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply on Upwork and I'll send three times for a 15-minute call.",
+    "beat": "Reply on Upwork and I'll send three times for a 15-minute call. We'll go over your offer and which calendar the page should use."
+  }
+}

@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 1,
+  "id": "ghl-home-service-account-setup-2114783796038158034",
+  "title": "Need a go high level specialist for seting up my account,automations,workflow",
+  "systemName": "Your home service account",
+  "account": {
+    "name": "{{biz.name}}",
+    "initials": "SH",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114783796038158034",
+    "facts": [
+      "Post (verbatim): Go high level specialist need it to set up the account for a home service business.",
+      "Client: United States, Central time zone, new client. No name in post.",
+      "Sample business, homeowner, tech and appointment are invented for the demo."
+    ]
+  },
+  "entities": {
+    "biz": {
+      "name": "Sample Home Services"
+    },
+    "lead": {
+      "name": "Maria Lopez",
+      "first": "Maria",
+      "email": "maria.lopez@example.com",
+      "phone": "(555) 010-4417"
+    },
+    "tech": {
+      "name": "Chris"
+    },
+    "visit": {
+      "service": "Free estimate visit",
+      "topic": "Water heater replacement",
+      "day": "Thu 29 Oct",
+      "time": "10:00 AM CT"
+    },
+    "owner": {
+      "name": "Office team"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your GoHighLevel account",
+    "title": "From quote request",
+    "accent": "to booked visit.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Booking page for free estimates",
+      "Workflow that runs on every booking",
+      "Pipeline your office can see"
+    ],
+    "previewSteps": [
+      {
+        "title": "The homeowner books",
+        "detail": "They pick an estimate time on your booking page."
+      },
+      {
+        "title": "The workflow follows up",
+        "detail": "It assigns a tech and sends the confirmation and reminder texts."
+      },
+      {
+        "title": "Your office sees it",
+        "detail": "The job shows up in the right pipeline stage."
+      }
+    ],
+    "footer": "Illustrative sample · Sample Home Services is an invented business",
+    "beat": "I've already put this workflow together for you. Let me walk you through how it works."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Book more estimates.",
+    "accent": "Lose fewer visits.",
+    "caption": "I'd track how fast requests get booked, how many booked visits happen, and how much office time each request takes.",
+    "metrics": [
+      {
+        "name": "Time to a booked visit",
+        "direction": "down",
+        "aim": "Get requests booked sooner",
+        "definition": "Time from a homeowner's first quote request to a booked estimate visit, measured across all new requests in the same period."
+      },
+      {
+        "name": "Visits that happen",
+        "direction": "up",
+        "aim": "Fewer no-shows on booked estimates",
+        "definition": "Booked estimate visits marked as completed, divided by all booked estimate visits due in the same period. Cancellations made ahead of the agreed cutoff are counted separately."
+      },
+      {
+        "name": "Office time per request",
+        "direction": "down",
+        "aim": "Less office time on each new request",
+        "definition": "Staff minutes spent on calls, texts and calendar updates for each new request until the visit is booked, excluding the visit itself and the initial account setup."
+      }
+    ],
+    "baselineNote": "We'll measure where you are today and agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "I'd track how fast requests get booked, how many booked visits happen, and the office time each one takes, against where you are today. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "workflow",
+      "kind": "workflow",
+      "platform": "ghl",
+      "title": "Every booked estimate runs the same steps.",
+      "caption": "When a homeowner books, the workflow assigns a tech, updates the pipeline and sends the texts.",
+      "beat": "Here's the workflow in your account. Maria books a free estimate for Thursday at 10. Chris gets assigned, the job moves to Estimate booked, Maria gets a confirmation text and Chris gets an alert. The day before, she gets a reminder.",
+      "details": [
+        "Trigger: Appointment Status, booked on the Free estimate calendar",
+        "Maria Lopez · Water heater replacement · Thu 29 Oct, 10:00 AM CT"
+      ],
+      "content": {
+        "name": "Estimate booked follow-up",
+        "nodes": [
+          {
+            "id": "booked",
+            "type": "appointment_status",
+            "label": "Estimate visit booked",
+            "detail": "Free estimate calendar · status Booked"
+          },
+          {
+            "id": "assign",
+            "type": "assign_user",
+            "label": "Assign the field tech",
+            "detail": "{{tech.name}} covers this service area"
+          },
+          {
+            "id": "stage",
+            "type": "opportunity",
+            "label": "Move to Estimate booked",
+            "detail": "Pipeline: Home service jobs"
+          },
+          {
+            "id": "confirm",
+            "type": "sms",
+            "label": "Text the booking confirmation",
+            "detail": "{{visit.day}}, {{visit.time}} with {{tech.name}}"
+          },
+          {
+            "id": "alert",
+            "type": "notification",
+            "label": "Send {{tech.name}} the job details",
+            "detail": "New estimate: {{lead.name}}"
+          },
+          {
+            "id": "wait",
+            "type": "wait",
+            "label": "Wait until the day before",
+            "detail": "Wed 28 Oct, 9:00 AM CT"
+          },
+          {
+            "id": "remind",
+            "type": "sms",
+            "label": "Text the visit reminder",
+            "detail": "Reply C to confirm or R to reschedule"
+          }
+        ],
+        "edges": [
+          {
+            "from": "booked",
+            "to": "assign"
+          },
+          {
+            "from": "assign",
+            "to": "stage"
+          },
+          {
+            "from": "stage",
+            "to": "confirm"
+          },
+          {
+            "from": "confirm",
+            "to": "alert"
+          },
+          {
+            "from": "alert",
+            "to": "wait"
+          },
+          {
+            "from": "wait",
+            "to": "remind"
+          }
+        ],
+        "runOrder": [
+          "booked",
+          "assign",
+          "stage",
+          "confirm",
+          "alert",
+          "wait",
+          "remind"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{visit.topic}} · {{visit.day}}, {{visit.time}}",
+          "fields": [
+            {
+              "label": "Phone",
+              "value": "{{lead.phone}}"
+            },
+            {
+              "label": "Status",
+              "value": "Illustrative sample"
+            }
+          ],
+          "states": [
+            "Estimate booked · Thu 29 Oct, 10:00 AM",
+            "Assigned to {{tech.name}}",
+            "Pipeline: Estimate booked",
+            "Confirmation text sent",
+            "{{tech.name}} alerted",
+            "Waiting until Wed 28 Oct, 9:00 AM",
+            "Reminder text sent"
+          ]
+        },
+        "related": [
+          {
+            "title": "Booking page",
+            "detail": "Free estimate calendar linked to this workflow"
+          },
+          {
+            "title": "Pipeline",
+            "detail": "Home service jobs: New request, Estimate booked, Estimate done, Job won"
+          }
+        ]
+      },
+      "statuses": [
+        "Estimate booked · Thu 29 Oct, 10:00 AM",
+        "Assigned to {{tech.name}}",
+        "Pipeline: Estimate booked",
+        "Confirmation text sent",
+        "{{tech.name}} alerted",
+        "Waiting until Wed 28 Oct, 9:00 AM",
+        "Reminder text sent"
+      ],
+      "optional": false
+    },
+    {
+      "id": "booking",
+      "kind": "funnel",
+      "platform": "ghl",
+      "title": "Maria books her estimate online.",
+      "caption": "Your booking page shows open times, so homeowners can book a visit without calling the office.",
+      "beat": "This is what Maria sees. She picks the free estimate, chooses Thursday at 10 with Chris, and agrees to get texts. That booking is what starts the workflow we just saw.",
+      "details": [
+        "Free estimate visit · 60 minutes · at the home",
+        "SMS consent given on the form"
+      ],
+      "content": {
+        "surface": "booking",
+        "name": "Free estimate booking page",
+        "subtitle": "Public booking page · sample",
+        "brand": "{{biz.name}}",
+        "heading": "Book a free estimate",
+        "body": "Pick a time that works and a tech will come out to look at the job.",
+        "cta": "Book my visit",
+        "booking": {
+          "service": "{{visit.service}}",
+          "durationMinutes": 60,
+          "location": "At your home",
+          "staff": "{{tech.name}}",
+          "staffOptions": [
+            "{{tech.name}}",
+            "Dana"
+          ],
+          "slots": [
+            "08:00",
+            "10:00",
+            "13:00",
+            "15:00"
+          ],
+          "dateISO": "2026-10-29",
+          "timezone": "America/Chicago",
+          "timezoneLabel": "Central Time (CT)",
+          "selectedSlot": "10:00",
+          "smsConsent": true,
+          "contact": {
+            "name": "{{lead.name}}",
+            "email": "{{lead.email}}",
+            "phone": "{{lead.phone}}"
+          }
+        }
+      },
+      "statuses": [
+        "Choosing a time",
+        "Visit booked · Thu 29 Oct, 10:00 AM CT"
+      ],
+      "optional": false
+    },
+    {
+      "id": "messages",
+      "kind": "messages",
+      "platform": "ghl",
+      "title": "The texts Maria and Chris get.",
+      "caption": "The confirmation goes out right away, Chris gets the alert, and the reminder goes out the day before.",
+      "beat": "Here are the sample texts. Maria gets her confirmation, Chris gets the job details, and on Wednesday morning Maria gets a reminder and replies C to confirm.",
+      "details": [
+        "All three messages come from the workflow",
+        "Maria's reply lands in Conversations"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "{{lead.phone}}",
+        "fields": [
+          {
+            "label": "Visit",
+            "value": "{{visit.day}}, {{visit.time}}"
+          },
+          {
+            "label": "Tech",
+            "value": "{{tech.name}}"
+          }
+        ],
+        "items": [
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{biz.name}}",
+            "time": "Mon 3:20 PM",
+            "body": "Hi {{lead.first}}, your free estimate is booked for {{visit.day}} at 10:00 AM. {{tech.name}} will come to your home. Reply STOP to opt out."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Workflow",
+            "time": "Mon 3:20 PM",
+            "body": "New estimate for {{tech.name}}: {{lead.name}}, water heater replacement, {{visit.day}} at 10:00 AM."
+          },
+          {
+            "channel": "sms",
+            "direction": "outgoing",
+            "sender": "{{biz.name}}",
+            "time": "Wed 9:00 AM",
+            "body": "Hi {{lead.first}}, reminder: {{tech.name}} is coming tomorrow at 10:00 AM. Reply C to confirm or R to reschedule."
+          },
+          {
+            "channel": "sms",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "Wed 9:14 AM",
+            "body": "C"
+          }
+        ],
+        "notice": "Sample texts only. Nothing is sent from this page."
+      },
+      "statuses": [
+        "Confirmation sent",
+        "Tech alerted",
+        "Reminder sent",
+        "Maria confirmed"
+      ],
+      "optional": true
+    },
+    {
+      "id": "pipeline",
+      "kind": "outcome",
+      "platform": "ghl",
+      "title": "Your office sees the booked job.",
+      "caption": "Maria's estimate sits in the right stage, assigned to Chris, with both texts sent.",
+      "beat": "And this is what your office sees. Maria's water heater estimate is in Estimate booked, assigned to Chris, and both texts went out.",
+      "details": [
+        "Pipeline: Home service jobs",
+        "Opportunity: Maria Lopez · Water heater replacement"
+      ],
+      "content": {
+        "name": "{{lead.name}} · {{visit.topic}}",
+        "subtitle": "Pipeline: Home service jobs",
+        "fields": [
+          {
+            "label": "Assigned to",
+            "value": "{{tech.name}}"
+          },
+          {
+            "label": "Visit",
+            "value": "{{visit.day}}, {{visit.time}}"
+          },
+          {
+            "label": "Source",
+            "value": "Free estimate booking page"
+          }
+        ],
+        "stages": [
+          "New request",
+          "Estimate booked",
+          "Estimate done",
+          "Job won"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          1
+        ],
+        "metrics": [
+          {
+            "label": "Visit booked",
+            "value": "Thu 10:00 AM",
+            "note": "Picked on the booking page"
+          },
+          {
+            "label": "Tech assigned",
+            "value": "Chris",
+            "note": "Set by the workflow"
+          },
+          {
+            "label": "Texts sent",
+            "value": "2 of 2",
+            "note": "Confirmation and reminder"
+          }
+        ],
+        "note": "Illustrative sample with an invented business and homeowner."
+      },
+      "statuses": [
+        "Request came in",
+        "Estimate booked and assigned",
+        "Confirmation and reminder sent"
+      ],
+      "optional": false
+    }
+  ]
+}

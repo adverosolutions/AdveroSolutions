@@ -1,0 +1,536 @@
+{
+  "schemaVersion": 1,
+  "id": "claude-code-n8n-ai-lead-website-2114800979886936372",
+  "title": "Build AI-Powered Website with Claude Code + n8n Lead Automation, AI Chatbot & Email Follow-Ups",
+  "systemName": "Your Claude Code website and n8n lead system",
+  "account": {
+    "name": "Your team",
+    "initials": "YT",
+    "operatorInitials": "LV"
+  },
+  "source": {
+    "jobUrl": "https://www.upwork.com/jobs/~022114800979886936372",
+    "facts": [
+      "Saved-jobs batch 2026-10-26, job 1. Post fetched read-only 3:09 PM CT (ACTIVE, can_apply true, 0 hired).",
+      "Post asks for: Claude Code built Next.js site (4 to 5 pages, lead form, AI chat widget, basic SEO, deployed), n8n lead capture from website plus Facebook/Instagram Lead Ads and DMs with dedupe into Sheets/Airtable/CRM and instant team alert, Claude chatbot trained on services/pricing/FAQs that qualifies and hands to a human, Day 0/2/5 AI-written email follow-up that stops on reply or booking, error alerts.",
+      "No client name, business name or industry stated in the post. Personalization omitted (U-006 fallback: your team).",
+      "Meta (Facebook/Instagram) has no supported adapter, so it is described as an entry point, not shown as a native screen. Chat transcript and result shown on the custom workbench."
+    ]
+  },
+  "entities": {
+    "lead": {
+      "name": "Maya Ortiz",
+      "first": "Maya",
+      "email": "maya.ortiz@example.com",
+      "city": "Tampa",
+      "need": "A new website and lead follow-up",
+      "timing": "Next month",
+      "row": "14"
+    },
+    "chat": {
+      "day": "Tuesday",
+      "time": "Tue 7:42 PM"
+    },
+    "reply": {
+      "time": "Wed 9:15 AM"
+    }
+  },
+  "cover": {
+    "eyebrow": "Your website and AI lead system",
+    "title": "Every new lead captured,",
+    "accent": "answered and followed up.",
+    "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+    "anchors": [
+      "Claude Code website",
+      "n8n lead capture",
+      "Claude chatbot and email follow-up"
+    ],
+    "previewSteps": [
+      {
+        "title": "Build",
+        "detail": "Claude Code builds the site with a lead form and a chat widget."
+      },
+      {
+        "title": "Capture",
+        "detail": "n8n saves each lead once and alerts your team."
+      },
+      {
+        "title": "Follow up",
+        "detail": "A Day 0 email goes out, and a reply stops the rest."
+      }
+    ],
+    "footer": "Illustrative sample · invented lead, no live accounts connected",
+    "beat": "Here's the website, the lead flow behind it and the follow-up emails, using one sample lead called {{lead.name}}."
+  },
+  "close": {
+    "eyebrow": "What I would measure",
+    "title": "Answer every lead fast",
+    "accent": "and follow up until they reply.",
+    "caption": "We'd agree the starting numbers for replies, clean records and booked calls.",
+    "metrics": [
+      {
+        "name": "Minutes to a first answer",
+        "direction": "down",
+        "aim": "Reply to every new lead sooner",
+        "definition": "Minutes from a lead's first chat message or form submission to the first reply they get."
+      },
+      {
+        "name": "Leads saved once",
+        "direction": "up",
+        "aim": "Keep one clean row per lead",
+        "definition": "New leads with exactly one row in the Leads sheet, divided by all new leads."
+      },
+      {
+        "name": "Calls from follow-up",
+        "direction": "up",
+        "aim": "Book more calls from new leads",
+        "definition": "Leads who reply or book a call during the Day 0 to Day 5 emails, divided by all new leads."
+      }
+    ],
+    "baselineNote": "We'd measure where things stand in week one, then agree the targets together.",
+    "ctaTitle": "Worth a quick 15-minute call?",
+    "ctaCopy": "Reply here and I'll send over three times.",
+    "beat": "Those are the three numbers I'd track with you. Worth a quick 15-minute call? Reply here and I'll send over three times."
+  },
+  "scenes": [
+    {
+      "id": "site-build",
+      "kind": "workflow",
+      "platform": "claude-code",
+      "optional": false,
+      "title": "Claude Code builds your website.",
+      "caption": "Four pages, a lead form and a chat widget, checked for mobile and search before launch.",
+      "beat": "First, the website. I give Claude Code your services and FAQs, it builds a four-page Next.js site with a lead form and a chat widget, runs the build, and checks the page titles and mobile layout. Both the form and the chat send leads to the same n8n webhook.",
+      "details": [
+        "Pages: Home, Services, About, Contact",
+        "Form and chat both post to the n8n lead webhook",
+        "Hosting and your domain are connected at launch"
+      ],
+      "content": {
+        "name": "Business website build",
+        "nodes": [
+          {
+            "id": "ask",
+            "type": "prompt",
+            "label": "Build a 4-page Next.js site with a lead form and chat",
+            "detail": "Home, Services, About and Contact, mobile first"
+          },
+          {
+            "id": "read-faq",
+            "type": "read",
+            "label": "Read your services and FAQ notes",
+            "detail": "services.md and faq.md, sample content"
+          },
+          {
+            "id": "make-pages",
+            "type": "edit",
+            "label": "Create the pages, lead form and chat widget",
+            "detail": "app/page.tsx, components/LeadForm.tsx, components/ChatWidget.tsx"
+          },
+          {
+            "id": "run-build",
+            "type": "command",
+            "label": "Run the production build",
+            "detail": "npm run build: 4 pages built, sample output"
+          },
+          {
+            "id": "check-seo",
+            "type": "review",
+            "label": "Check page titles, descriptions and mobile layout",
+            "detail": "Titles and descriptions on all 4 pages, sitemap.xml added"
+          },
+          {
+            "id": "preview",
+            "type": "result",
+            "label": "Preview ready to go live on your domain",
+            "detail": "Form and chat both send leads to the n8n webhook"
+          }
+        ],
+        "edges": [
+          {
+            "from": "ask",
+            "to": "read-faq"
+          },
+          {
+            "from": "read-faq",
+            "to": "make-pages"
+          },
+          {
+            "from": "make-pages",
+            "to": "run-build"
+          },
+          {
+            "from": "run-build",
+            "to": "check-seo"
+          },
+          {
+            "from": "check-seo",
+            "to": "preview"
+          }
+        ],
+        "runOrder": [
+          "ask",
+          "read-faq",
+          "make-pages",
+          "run-build",
+          "check-seo",
+          "preview"
+        ],
+        "context": {
+          "name": "Business website",
+          "subtitle": "Next.js project, sample content",
+          "fields": [
+            {
+              "label": "Pages",
+              "value": "Home, Services, About, Contact"
+            },
+            {
+              "label": "Lead entry points",
+              "value": "Contact form and chat widget"
+            }
+          ],
+          "states": [
+            "Brief given",
+            "Services and FAQs read",
+            "Pages and widgets created",
+            "Build passed",
+            "Titles and mobile checked",
+            "Preview ready"
+          ]
+        },
+        "related": [
+          {
+            "title": "components/ChatWidget.tsx",
+            "detail": "Chat window that answers from your services and FAQs"
+          },
+          {
+            "title": "components/LeadForm.tsx",
+            "detail": "Name, email and what they need, sent to n8n"
+          }
+        ]
+      },
+      "statuses": [
+        "Brief given",
+        "Services and FAQs read",
+        "Pages and widgets created",
+        "Build passed",
+        "Titles and mobile checked",
+        "Preview ready"
+      ]
+    },
+    {
+      "id": "lead-flow",
+      "kind": "workflow",
+      "platform": "n8n",
+      "optional": false,
+      "title": "Every lead is saved once and your team is told.",
+      "caption": "{{lead.name}} finishes a chat, so n8n checks for a duplicate, adds her row, alerts the team and sends her first email.",
+      "beat": "Now the lead flow. {{lead.first}} asked a question in the chat and left her email. n8n cleans up her details and checks whether that email is already in the Leads sheet. It's new, so she gets one row, your team gets a Slack alert, and Claude writes her Day 0 email from what she said in the chat.",
+      "details": [
+        "If {{lead.email}} were already in the sheet, n8n updates her existing row instead",
+        "Facebook and Instagram Lead Ads and DMs come into the same steps once your Meta accounts are connected",
+        "Any failed step sends an error alert, so nothing fails silently"
+      ],
+      "content": {
+        "name": "Lead capture and Day 0 email",
+        "nodes": [
+          {
+            "id": "new-lead",
+            "type": "webhook",
+            "label": "New lead from chat or form",
+            "detail": "{{lead.name}}, {{lead.email}}, source: website chat"
+          },
+          {
+            "id": "clean",
+            "type": "edit_fields",
+            "label": "Clean up name, email and source",
+            "detail": "Email lowercased, need and timing kept from the chat"
+          },
+          {
+            "id": "is-new",
+            "type": "if",
+            "label": "Is this a new email?",
+            "detail": "Looks up {{lead.email}} in the Leads sheet"
+          },
+          {
+            "id": "add-row",
+            "type": "google_sheets",
+            "label": "Add lead to Leads sheet",
+            "detail": "Row {{lead.row}}: {{lead.name}}, {{lead.need}}"
+          },
+          {
+            "id": "update-row",
+            "type": "http_request",
+            "label": "Update the existing lead row",
+            "detail": "Adds the new message to the lead's existing row"
+          },
+          {
+            "id": "alert",
+            "type": "slack",
+            "label": "Alert the team in #new-leads",
+            "detail": "New lead: {{lead.name}}, {{lead.city}}, {{lead.need}}"
+          },
+          {
+            "id": "write-email",
+            "type": "http_request",
+            "label": "Claude writes the Day 0 email",
+            "detail": "Uses her chat answers: {{lead.need}}, starting {{lead.timing}}"
+          },
+          {
+            "id": "send-day0",
+            "type": "gmail",
+            "label": "Send the Day 0 email",
+            "detail": "To {{lead.email}}, Day 2 and Day 5 scheduled"
+          }
+        ],
+        "edges": [
+          {
+            "from": "new-lead",
+            "to": "clean"
+          },
+          {
+            "from": "clean",
+            "to": "is-new"
+          },
+          {
+            "from": "is-new",
+            "to": "add-row",
+            "label": "true"
+          },
+          {
+            "from": "is-new",
+            "to": "update-row",
+            "label": "false"
+          },
+          {
+            "from": "add-row",
+            "to": "alert"
+          },
+          {
+            "from": "alert",
+            "to": "write-email"
+          },
+          {
+            "from": "write-email",
+            "to": "send-day0"
+          }
+        ],
+        "runOrder": [
+          "new-lead",
+          "clean",
+          "is-new",
+          "add-row",
+          "alert",
+          "write-email",
+          "send-day0"
+        ],
+        "context": {
+          "name": "{{lead.name}}",
+          "subtitle": "{{lead.email}}",
+          "fields": [
+            {
+              "label": "Source",
+              "value": "Website chat"
+            },
+            {
+              "label": "Need",
+              "value": "{{lead.need}}"
+            },
+            {
+              "label": "Start",
+              "value": "{{lead.timing}}"
+            }
+          ],
+          "states": [
+            "Lead received",
+            "Details cleaned up",
+            "New email confirmed",
+            "Added as row {{lead.row}}",
+            "Team alerted",
+            "Day 0 email written",
+            "Day 0 email sent"
+          ]
+        },
+        "related": [
+          {
+            "title": "Facebook and Instagram",
+            "detail": "Lead Ads and DMs feed the same webhook after your Meta accounts are connected"
+          },
+          {
+            "title": "Follow-up check",
+            "detail": "Before Day 2 and Day 5, n8n checks for a reply or a booked call"
+          }
+        ]
+      },
+      "statuses": [
+        "Lead received",
+        "Details cleaned up",
+        "New email confirmed",
+        "Added as row {{lead.row}}",
+        "Team alerted",
+        "Day 0 email written",
+        "Day 0 email sent"
+      ]
+    },
+    {
+      "id": "chat-and-email",
+      "kind": "messages",
+      "platform": "workbench",
+      "optional": true,
+      "title": "The chat qualifies her, and her reply stops the emails.",
+      "caption": "The chatbot answers, asks what she needs, and collects her email. When she replies, the next emails are cancelled.",
+      "beat": "Here's the actual conversation. The chatbot answers {{lead.first}}'s question, asks what she needs and when, and gets her email. Her Day 0 email picks up exactly what she asked. She replies the next morning, so the Day 2 and Day 5 emails are cancelled.",
+      "details": [
+        "If she asks for a person, the chat hands over to your team",
+        "Chat answers come from your services and FAQ notes"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Website chat, then email",
+        "fields": [
+          {
+            "label": "Email",
+            "value": "{{lead.email}}"
+          },
+          {
+            "label": "Need",
+            "value": "{{lead.need}}"
+          },
+          {
+            "label": "Follow-up",
+            "value": "Stopped after her reply"
+          }
+        ],
+        "items": [
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Website chat · {{lead.first}}",
+            "time": "{{chat.time}}",
+            "body": "Hi, do you work with businesses in {{lead.city}}, and how soon could you start?"
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "Website chat · AI assistant",
+            "time": "{{chat.time}}",
+            "body": "Yes, we work with businesses in {{lead.city}}. What do you need help with, and when would you like to start?"
+          },
+          {
+            "channel": "internal",
+            "direction": "incoming",
+            "sender": "Website chat · {{lead.first}}",
+            "time": "{{chat.time}}",
+            "body": "A new website and lead follow-up, ideally next month. My email is {{lead.email}}."
+          },
+          {
+            "channel": "email",
+            "direction": "outgoing",
+            "sender": "Your team",
+            "time": "Day 0 · {{chat.time}}",
+            "subject": "Your website and lead follow-up",
+            "body": "Hi {{lead.first}}, thanks for the chat tonight. You mentioned a new website and lead follow-up starting next month. Would a short call this week work to go over it?"
+          },
+          {
+            "channel": "email",
+            "direction": "incoming",
+            "sender": "{{lead.name}}",
+            "time": "{{reply.time}}",
+            "subject": "Re: Your website and lead follow-up",
+            "body": "Thanks, Thursday afternoon works for me."
+          },
+          {
+            "channel": "internal",
+            "direction": "outgoing",
+            "sender": "n8n follow-up check",
+            "time": "{{reply.time}}",
+            "body": "{{lead.first}} replied, so the Day 2 and Day 5 emails are cancelled and the team is told."
+          }
+        ],
+        "notice": "Illustrative chat and email sample. Nothing here was sent."
+      },
+      "statuses": [
+        "Question asked",
+        "Chatbot answers and qualifies",
+        "Email collected",
+        "Day 0 email sent",
+        "Lead replied",
+        "Follow-ups cancelled"
+      ]
+    },
+    {
+      "id": "lead-result",
+      "kind": "outcome",
+      "platform": "workbench",
+      "optional": false,
+      "title": "One clean lead, answered and followed up.",
+      "caption": "{{lead.name}} has one row, your team was alerted, and her reply stopped the follow-up emails.",
+      "beat": "And here's where {{lead.first}} ends up. One row in the Leads sheet, one alert to your team, her Day 0 email sent, and once she replied, the Day 2 and Day 5 emails were cancelled.",
+      "details": [
+        "Counts are for this one sample lead",
+        "Row {{lead.row}} in the Leads sheet"
+      ],
+      "content": {
+        "name": "{{lead.name}}",
+        "subtitle": "Leads sheet · row {{lead.row}}",
+        "fields": [
+          {
+            "label": "Source",
+            "value": "Website chat"
+          },
+          {
+            "label": "Need",
+            "value": "{{lead.need}}"
+          },
+          {
+            "label": "Team alert",
+            "value": "Sent to #new-leads"
+          },
+          {
+            "label": "Follow-up",
+            "value": "Stopped, she replied {{reply.time}}"
+          }
+        ],
+        "stages": [
+          "Captured",
+          "Saved once",
+          "Team alerted",
+          "Day 0 sent",
+          "Replied, follow-ups stopped"
+        ],
+        "stageSequence": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          {
+            "label": "Rows for this lead",
+            "value": "1",
+            "note": "No duplicate, sample"
+          },
+          {
+            "label": "Team alerts",
+            "value": "1",
+            "note": "Slack #new-leads, sample"
+          },
+          {
+            "label": "Emails cancelled",
+            "value": "2",
+            "note": "Day 2 and Day 5, sample"
+          }
+        ],
+        "note": "Illustrative sample result for one invented lead. No live website, inbox or Meta account is connected."
+      },
+      "statuses": [
+        "Captured",
+        "Saved once",
+        "Team alerted",
+        "Day 0 sent",
+        "Replied, follow-ups stopped"
+      ]
+    }
+  ]
+}

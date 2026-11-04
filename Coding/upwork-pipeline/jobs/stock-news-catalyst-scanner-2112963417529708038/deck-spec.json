@@ -1,0 +1,451 @@
+{
+ "schemaVersion": 1,
+ "id": "stock-news-catalyst-scanner-2112963417529708038",
+ "title": "Python Developer – Real-Time Stock News Scanner, Catalyst Analysis & AI Alerts",
+ "systemName": "Your stock news catalyst scanner",
+ "account": {
+  "name": "Your trading desk",
+  "initials": "TD",
+  "operatorInitials": "LV"
+ },
+ "source": {
+  "jobUrl": "https://www.upwork.com/jobs/~022112963417529708038",
+  "facts": [
+   "Post: real-time US stock news scanner for discretionary day trading; decision support only, never trades.",
+   "Post: three watch types (small-cap short, small-cap long, large-cap long), NO FRESH CATALYST rule, alert format, sources Alpaca, Benzinga, SEC EDGAR, GlobeNewswire, Business Wire, PR Newswire, IR pages.",
+   "Personalization: Kambiz named in 4 separate client reviews; contact only."
+  ]
+ },
+ "personalization": {
+  "firstName": "Kambiz",
+  "source": "client_reviews",
+  "reviewCount": 4
+ },
+ "entities": {
+  "desk": {
+   "name": "Catalyst desk"
+  },
+  "run": {
+   "id": "SCAN-0612",
+   "time": "6:12 AM PT"
+  },
+  "short": {
+   "ticker": "XQLM",
+   "move": "+48%",
+   "age": "3 minutes"
+  },
+  "long": {
+   "ticker": "XBRV",
+   "move": "+31%"
+  },
+  "large": {
+   "ticker": "XTNA",
+   "move": "+6%"
+  }
+ },
+ "cover": {
+  "eyebrow": "Your stock news catalyst scanner",
+  "title": "Know why a stock is moving",
+  "accent": "before you open the chart.",
+  "caption": "I've already put this workflow together for you. Let me walk you through how it works.",
+  "anchors": [
+   "News and SEC filings",
+   "AI catalyst grades",
+   "Alerts with evidence"
+  ],
+  "previewSteps": [
+   {
+    "title": "Read the news",
+    "detail": "Wire services, Alpaca, Benzinga and SEC filings, checked for freshness."
+   },
+   {
+    "title": "Grade the catalyst",
+    "detail": "Strong, puffy or no fresh catalyst, with the reasons."
+   },
+   {
+    "title": "Alert you",
+    "detail": "One alert per real change, and you make the trade call."
+   }
+  ],
+  "footer": "Illustrative sample · invented tickers, news and timestamps",
+  "beat": "You want to know which movers have real news behind them, fast, without the system ever placing a trade. Here's one premarket run."
+ },
+ "scenes": [
+  {
+   "id": "premarket-run",
+   "kind": "intelligence",
+   "platform": "workbench",
+   "title": "One premarket run at 6:12 AM",
+   "caption": "News and filings come in, stale and duplicate stories drop out, and each mover gets a grade.",
+   "beat": "At 6:12 Pacific, three movers have news. The Benzinga copy of the same press release is grouped with the original, the nine-day-old article on XTNA is thrown out, and PR Newswire timing out doesn't stop the run.",
+   "details": [
+    "Python rules handle prices, timestamps, freshness and market hours. The AI only reads the release or filing and grades it.",
+    "The AI provider is a setting, so OpenAI, Anthropic or Google can be compared on the same test cases.",
+    "Breaking news is graded when it arrives, without waiting for the next 15-minute scan."
+   ],
+   "optional": false,
+   "content": {
+    "surface": "workflow",
+    "name": "{{desk.name}}",
+    "reportId": "{{run.id}}",
+    "edition": "Premarket run · {{run.time}}",
+    "schedule": "5:00 AM to 4:00 PM PT · scans every 15 min · news handled on arrival",
+    "objective": "Find stocks moving on fresh news, grade the catalyst, and alert you fast. No trades are placed.",
+    "summary": "{{short.ticker}} is a short watch on thin news. {{long.ticker}} is a long watch on a signed contract. {{large.ticker}} has no fresh catalyst.",
+    "topics": [
+     {
+      "id": "shortwatch",
+      "label": "Small-cap short watch",
+      "priority": "high"
+     },
+     {
+      "id": "longwatch",
+      "label": "Small-cap long watch",
+      "priority": "high"
+     },
+     {
+      "id": "largecap",
+      "label": "Large-cap long watch",
+      "priority": "medium"
+     }
+    ],
+    "stories": [
+     {
+      "id": "XQLM",
+      "title": "{{short.ticker}} jumps {{short.move}} on a partnership with no disclosed value",
+      "category": "risk",
+      "topicId": "shortwatch",
+      "priority": "Potential puffy catalyst",
+      "summary": "Fresh release, {{short.age}} old. No dollar value, no revenue impact, and the agreement is not shown to be binding.",
+      "why": "The move is large for news this thin, and an S-3 shelf filed six weeks ago adds dilution risk.",
+      "action": "Short watch. Wait for your technical setup.",
+      "urgency": "Alert sent at {{run.time}}",
+      "confidence": "Fresh and original source: verified. Substance: weak.",
+      "uncertainty": "The AI grades the wording. It does not know how the market will treat the news, so the chart decision stays with you.",
+      "evidence": [
+       {
+        "id": "E1",
+        "title": "GlobeNewswire release, 6:09 AM PT",
+        "kind": "primary",
+        "excerpt": "The companies plan to explore AI tools together. No financial terms were disclosed."
+       },
+       {
+        "id": "E2",
+        "title": "Benzinga copy of the same release, 6:10 AM PT",
+        "kind": "repost",
+        "excerpt": "Same text as E1. Grouped with it, so it counts as one story and one alert."
+       }
+      ]
+     },
+     {
+      "id": "XBRV",
+      "title": "{{long.ticker}} rises {{long.move}} after a signed supply contract",
+      "category": "opportunity",
+      "topicId": "longwatch",
+      "priority": "Strong catalyst",
+      "summary": "A signed multi-year contract with a stated value, confirmed by an 8-K filed the same morning.",
+      "why": "The contract value is disclosed and large next to the company's size, and the SEC filing backs the release.",
+      "action": "Long watch. Wait for your technical setup.",
+      "urgency": "Alert sent at 6:21 AM PT",
+      "confidence": "Fresh, binding and value disclosed: verified.",
+      "uncertainty": "Revenue timing across the contract years is not stated. Check the filing before sizing a trade.",
+      "evidence": [
+       {
+        "id": "E3",
+        "title": "Form 8-K, SEC EDGAR, 6:15 AM PT",
+        "kind": "primary",
+        "excerpt": "Item 1.01, entry into a material definitive agreement: a signed three-year supply contract."
+       },
+       {
+        "id": "E4",
+        "title": "Business Wire release, 6:14 AM PT",
+        "kind": "primary",
+        "excerpt": "The company announces a signed supply contract and states its total value."
+       }
+      ]
+     },
+     {
+      "id": "XTNA",
+      "title": "{{large.ticker}} is up {{large.move}} with no fresh catalyst found",
+      "category": "watch",
+      "topicId": "largecap",
+      "priority": "No fresh catalyst",
+      "summary": "Big move, but the only article in the ticker search is nine days old and about a different product.",
+      "why": "Large caps are not flagged just for moving. Without verified fresh news, it is reported as no fresh catalyst.",
+      "action": "No watch. Recheck if new news or a filing appears.",
+      "urgency": "Reported at 6:24 AM PT",
+      "confidence": "No current company-specific catalyst found.",
+      "uncertainty": "News may still be coming. A new release or filing would trigger a fresh grade and a new alert.",
+      "evidence": [
+       {
+        "id": "E5",
+        "title": "Ticker search result dated October 12",
+        "kind": "unverified",
+        "excerpt": "Older article that mentions the ticker. Rejected as stale, so it is not attached to today's move."
+       }
+      ]
+     }
+    ],
+    "health": {
+     "fetched": 5,
+     "developments": 3,
+     "failedSource": "PR Newswire feed",
+     "failure": "Timed out at 6:05 AM PT. The other feeds kept running.",
+     "retry": "Retried with backoff at 6:06 and 6:08 AM PT. Heartbeat alert if it fails again."
+    },
+    "history": [
+     {
+      "id": "{{run.id}}",
+      "time": "Today · {{run.time}}",
+      "status": "Saved with sources, grades and the feed outage."
+     },
+     {
+      "id": "SCAN-0557",
+      "time": "Today · 5:57 AM PT",
+      "status": "Two movers, no fresh catalyst. No alerts sent."
+     }
+    ]
+   },
+   "statuses": [
+    "Five items read from news feeds and SEC filings",
+    "Copy grouped, stale article rejected, three movers graded",
+    "Grades and evidence ready for your review"
+   ]
+  },
+  {
+   "id": "alerts",
+   "kind": "messages",
+   "platform": "workbench",
+   "title": "The alerts you'd get",
+   "caption": "Each alert says what the news is, what's missing and which watch it fits.",
+   "beat": "This is the alert format from your post. XQLM is a short watch because the partnership has no value attached and there's recent dilution. XBRV is a long watch on a signed contract. XTNA is reported as no fresh catalyst, and XQLM staying on the scanner doesn't send the same alert again.",
+   "details": [
+    "Every alert ends with wait for your technical setup. Nothing is traded.",
+    "A repeat alert needs new news, a new filing, a big new move or a changed grade."
+   ],
+   "optional": false,
+   "content": {
+    "name": "{{desk.name}} alerts",
+    "subtitle": "Premarket · {{run.id}}",
+    "fields": [
+     {
+      "label": "Run",
+      "value": "{{run.id}} · {{run.time}}"
+     },
+     {
+      "label": "Status",
+      "value": "Illustrative alerts"
+     }
+    ],
+    "items": [
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "Catalyst alert",
+      "time": "6:12 AM PT",
+      "body": "Ticker: {{short.ticker}} · Type: Small cap · Move: {{short.move}} · News age: {{short.age}} · Source: GlobeNewswire · Catalyst: Strategic partnership · Financial value disclosed: No · Revenue impact disclosed: No · Binding agreement: Not verified · Recent dilution: Yes, S-3 shelf · Assessment: Potential puffy catalyst · Watch: Short watch, wait for your technical setup"
+     },
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "Catalyst alert",
+      "time": "6:21 AM PT",
+      "body": "Ticker: {{long.ticker}} · Type: Small cap · Move: {{long.move}} · News age: 7 minutes · Source: Business Wire, confirmed by 8-K · Catalyst: Signed supply contract · Financial value disclosed: Yes · Binding agreement: Yes · Recent dilution: None found · Assessment: Strong catalyst · Watch: Long watch, wait for your technical setup"
+     },
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "Catalyst alert",
+      "time": "6:24 AM PT",
+      "body": "Ticker: {{large.ticker}} · Type: Large cap · Move: {{large.move}} · No current company-specific catalyst found. Assessment: No fresh catalyst. A nine-day-old article was rejected as stale. Not flagged as a watch."
+     },
+     {
+      "channel": "internal",
+      "direction": "outgoing",
+      "sender": "Duplicate check",
+      "time": "6:27 AM PT",
+      "body": "{{short.ticker}} is still on the scanner with no new news, filing or grade change. No repeat alert sent."
+     }
+    ],
+    "notice": "Illustrative alerts. Nothing is sent and no trades are placed in this sample."
+   },
+   "statuses": [
+    "Short watch alert",
+    "Long watch alert",
+    "No fresh catalyst reported",
+    "Repeat alert held back"
+   ]
+  },
+  {
+   "id": "evidence",
+   "kind": "intelligence",
+   "platform": "workbench",
+   "title": "Check why each stock got its grade",
+   "caption": "Open any mover to see the source, its timestamp and what's still unknown.",
+   "beat": "Click into XQLM and you see the original GlobeNewswire release and the Benzinga copy it was grouped with. XBRV has the 8-K behind it. XTNA shows the old article that was rejected, so it never gets tied to today's move.",
+   "details": [
+    "Click View evidence on the first item to see both sources.",
+    "Useful and Request more evidence only change this sample. In the real build they'd feed your test set.",
+    "Click PR Newswire feed to see the outage and retries."
+   ],
+   "optional": false,
+   "content": {
+    "surface": "briefing",
+    "name": "{{desk.name}}",
+    "reportId": "{{run.id}}",
+    "edition": "Premarket run · {{run.time}}",
+    "schedule": "5:00 AM to 4:00 PM PT · scans every 15 min · news handled on arrival",
+    "objective": "Find stocks moving on fresh news, grade the catalyst, and alert you fast. No trades are placed.",
+    "summary": "{{short.ticker}} is a short watch on thin news. {{long.ticker}} is a long watch on a signed contract. {{large.ticker}} has no fresh catalyst.",
+    "topics": [
+     {
+      "id": "shortwatch",
+      "label": "Small-cap short watch",
+      "priority": "high"
+     },
+     {
+      "id": "longwatch",
+      "label": "Small-cap long watch",
+      "priority": "high"
+     },
+     {
+      "id": "largecap",
+      "label": "Large-cap long watch",
+      "priority": "medium"
+     }
+    ],
+    "stories": [
+     {
+      "id": "XQLM",
+      "title": "{{short.ticker}} jumps {{short.move}} on a partnership with no disclosed value",
+      "category": "risk",
+      "topicId": "shortwatch",
+      "priority": "Potential puffy catalyst",
+      "summary": "Fresh release, {{short.age}} old. No dollar value, no revenue impact, and the agreement is not shown to be binding.",
+      "why": "The move is large for news this thin, and an S-3 shelf filed six weeks ago adds dilution risk.",
+      "action": "Short watch. Wait for your technical setup.",
+      "urgency": "Alert sent at {{run.time}}",
+      "confidence": "Fresh and original source: verified. Substance: weak.",
+      "uncertainty": "The AI grades the wording. It does not know how the market will treat the news, so the chart decision stays with you.",
+      "evidence": [
+       {
+        "id": "E1",
+        "title": "GlobeNewswire release, 6:09 AM PT",
+        "kind": "primary",
+        "excerpt": "The companies plan to explore AI tools together. No financial terms were disclosed."
+       },
+       {
+        "id": "E2",
+        "title": "Benzinga copy of the same release, 6:10 AM PT",
+        "kind": "repost",
+        "excerpt": "Same text as E1. Grouped with it, so it counts as one story and one alert."
+       }
+      ]
+     },
+     {
+      "id": "XBRV",
+      "title": "{{long.ticker}} rises {{long.move}} after a signed supply contract",
+      "category": "opportunity",
+      "topicId": "longwatch",
+      "priority": "Strong catalyst",
+      "summary": "A signed multi-year contract with a stated value, confirmed by an 8-K filed the same morning.",
+      "why": "The contract value is disclosed and large next to the company's size, and the SEC filing backs the release.",
+      "action": "Long watch. Wait for your technical setup.",
+      "urgency": "Alert sent at 6:21 AM PT",
+      "confidence": "Fresh, binding and value disclosed: verified.",
+      "uncertainty": "Revenue timing across the contract years is not stated. Check the filing before sizing a trade.",
+      "evidence": [
+       {
+        "id": "E3",
+        "title": "Form 8-K, SEC EDGAR, 6:15 AM PT",
+        "kind": "primary",
+        "excerpt": "Item 1.01, entry into a material definitive agreement: a signed three-year supply contract."
+       },
+       {
+        "id": "E4",
+        "title": "Business Wire release, 6:14 AM PT",
+        "kind": "primary",
+        "excerpt": "The company announces a signed supply contract and states its total value."
+       }
+      ]
+     },
+     {
+      "id": "XTNA",
+      "title": "{{large.ticker}} is up {{large.move}} with no fresh catalyst found",
+      "category": "watch",
+      "topicId": "largecap",
+      "priority": "No fresh catalyst",
+      "summary": "Big move, but the only article in the ticker search is nine days old and about a different product.",
+      "why": "Large caps are not flagged just for moving. Without verified fresh news, it is reported as no fresh catalyst.",
+      "action": "No watch. Recheck if new news or a filing appears.",
+      "urgency": "Reported at 6:24 AM PT",
+      "confidence": "No current company-specific catalyst found.",
+      "uncertainty": "News may still be coming. A new release or filing would trigger a fresh grade and a new alert.",
+      "evidence": [
+       {
+        "id": "E5",
+        "title": "Ticker search result dated October 12",
+        "kind": "unverified",
+        "excerpt": "Older article that mentions the ticker. Rejected as stale, so it is not attached to today's move."
+       }
+      ]
+     }
+    ],
+    "health": {
+     "fetched": 5,
+     "developments": 3,
+     "failedSource": "PR Newswire feed",
+     "failure": "Timed out at 6:05 AM PT. The other feeds kept running.",
+     "retry": "Retried with backoff at 6:06 and 6:08 AM PT. Heartbeat alert if it fails again."
+    },
+    "history": [
+     {
+      "id": "{{run.id}}",
+      "time": "Today · {{run.time}}",
+      "status": "Saved with sources, grades and the feed outage."
+     },
+     {
+      "id": "SCAN-0557",
+      "time": "Today · 5:57 AM PT",
+      "status": "Two movers, no fresh catalyst. No alerts sent."
+     }
+    ]
+   },
+   "statuses": [
+    "Three movers graded with their sources",
+    "Facts kept apart from the AI's reading",
+    "Each grade waits for your review"
+   ]
+  }
+ ],
+ "close": {
+  "eyebrow": "What I'd measure",
+  "title": "Faster alerts,",
+  "accent": "with the right news attached.",
+  "caption": "We'd run your historical test cases first, then the live morning window.",
+  "metrics": [
+   {
+    "name": "Time from news to alert",
+    "direction": "down",
+    "aim": "Alert sooner after the original release",
+    "definition": "Minutes from the original source timestamp to the alert, for each alert."
+   },
+   {
+    "name": "Wrong news attached",
+    "direction": "down",
+    "aim": "Attach fewer old or unrelated articles",
+    "definition": "Alerts where the attached news was stale, recycled or about another company, divided by all alerts, checked in your review."
+   },
+   {
+    "name": "Alerts worth a chart check",
+    "direction": "up",
+    "aim": "Send more alerts you'd open the chart for",
+    "definition": "Share of alerts you mark worth reviewing, across your historical cases and the live window."
+   }
+  ],
+  "baselineNote": "We'll measure these on your historical cases first, then agree the targets together.",
+  "ctaTitle": "Worth a quick 15-minute call?",
+  "ctaCopy": "Reply here and I'll send over three times.",
+  "beat": "I'd start with what your Trade Ideas, Benzinga Pro and Alpaca plans already allow. Worth a quick 15-minute call? Reply here and I'll send over three times."
+ }
+}
