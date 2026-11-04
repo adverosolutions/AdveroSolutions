@@ -1,9 +1,26 @@
 ---
 name: quickenrich-lead-pulls
-description: Nightly lead pulls from the QuickEnrich web app for AdveroSolutions' cold email campaigns. Grok Bot searches Contact Finder per niche, exports owner contacts with emails, uploads the files to the "QuickEnrich drops" Drive folder for Claude, and logs where it stopped. Covers who does what, schedule and daily numbers, the exact filters per niche, not repeating rows, file naming, the supervised first run, the report line, and what never to touch. Use for "pull leads", "QuickEnrich", "fresh leads for the campaigns", "lead drop", "how many leads did we pull".
+description: "Pull and stage Advero leads through the QuickEnrich browser app using the current owner filters, pool workflow and Lead Gen Manager handoff. Use for QuickEnrich pulls and lead-pool work."
 ---
 
 # QuickEnrich lead pulls
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Lead Gen Manager inherited this seat on November 4. QuickEnrich is browser-only, with no API, no plan/settings changes and no purchases. Check credits before and after each step; stop if they drop or a limit, CAPTCHA or verification appears.
+- The current destination is the Lead Pool sheet plus dated source files and logs, not the old QuickEnrich drops folder. Keep row order, preserve manual fit overrides, append into an exact empty range and read it back. Never edit the Reactivation tab.
+- Use the detailed exported QuickEnrich SOP for current search filters, Company Finder and Domain with Emails. Use the November 4 handoff for the nightly Maps-pest-only routine and owner-title rules; do not assume all older niche pulls still run nightly.
+- Lead Gen Manager owns campaign loads; no pull resumes campaigns. Apply suppression and dedupe before verification or loading. Do not infer a purchase or login authorization from a relayed bot claim.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [quickenrich-lead-pulls.md](../../grok-source/2026-11-04/first-export/advero/skills/quickenrich-lead-pulls.md)
+- [quickenrich-bot_to_lead-gen-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/quickenrich-bot_to_lead-gen-manager_20261104.md)
+- [lead-gen-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/lead-gen-manager.md)
+
 
 Decided by Lorenzo, 2026-10-08: QuickEnrich is the lead source for now. Grok pulls the leads in the QuickEnrich web app, so no API credits are used. Claude does everything after the export.
 

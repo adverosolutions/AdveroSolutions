@@ -1,11 +1,32 @@
 ---
 name: upwork
-description: Lorenzo's complete Upwork proposal process - build the prop (n8n JSON, Make blueprint, GoHighLevel import JSON, or a native Excalidraw flowchart), private assessment, Loom beat sheet, and the locked proposal copy, one job or a batch of saved jobs. Use when he pastes a job post, says his saved jobs are ready, asks to load a build by name, or invokes /upwork.
+description: "Build and prepare Lorenzo’s requested Upwork jobs using the current saved handbook, premium demos and opener test. Use for pasted jobs, selected batches, proposal props or /upwork."
 ---
 
 > **Superseded in part (2026-10-09):** the current end-to-end process (finished-product pages, Loom over the page, locked proposal format, finalize, screening questions) is `upwork-pipeline/UPWORK_PROCESS.md`. It wins wherever this file disagrees.
 
 # Upwork Proposal Process (v4, quality overhaul 2026-09-22)
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Before this lane, read Coding/upwork-pipeline/DIRECTIVES.md, master-handoff/00-MASTER.md, its operations/UI guide, and UPWORK_PROCESS.md. Those maintained local process docs are preserved in this reconciliation; newer direct Lorenzo instructions win.
+- Lorenzo supplies the jobs and picks the batch. The October 27 schedule supersedes automated Vollna scraping or nightly pick lists. Never search or apply on his behalf based on the historical defaults below.
+- Current demos are premium, animated and specific to the job. Ship page.html, recording-script.txt and proposal.md, and verify the actual private 8771 link. Do not publicly host demos. Use the local handbook for implementation and acceptance criteria.
+- Upwork Manager owns A/B opener rotation. The latest November 2 ruling parks C1 until A and B each reach 30 proposals; Lorenzo picks the winner before testing C1. The old handoff’s 60-per-arm rule is superseded.
+- All proposals and messages remain drafts for Lorenzo to send. No billing discussion. The old locked opener and saved-jobs connector workflow below are historical where they conflict.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [upwork-split-test-bot_to_upwork-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/upwork-split-test-bot_to_upwork-manager_20261104.md)
+- [upwork.md](../../grok-source/2026-11-04/first-export/advero/skills/upwork.md)
+- [opener_rotation.md](../../grok-source/2026-11-04/third-export/source_files/upwork/opener_rotation.md)
+- [DEMO_BUILD_METHODOLOGY.md](../../grok-source/2026-11-04/third-export/source_files/upwork/methodology/DEMO_BUILD_METHODOLOGY.md)
+- [upwork-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/upwork-manager.md)
+- [demo-builder.md](../../grok-source/2026-11-04/third-export/routine_exports/demo-builder.md)
+
 
 This is the vault. When a rule here conflicts with an older memory, this file
 wins.

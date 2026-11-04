@@ -8,6 +8,8 @@ metadata:
   modified: 2026-09-25T17:12:26.067Z
 ---
 
+Current pointer, 2026-11-04: Grok Bot supplies the current operating rules; the repository maintains the record. Read `ClaudeConfig/PROCESS_AUTHORITY.md` first. The dated notes below are historical where they differ.
+
 2026-09-25 decisions (Lorenzo, replacing the 2026-09-24 design and vetoing my "engine sends approved templates itself" proposal):
 - Grok Bot (SpaceX/xAI's persistent-agent product, NOT the Grok API) is his one contact and the operator for replies, quiet-lead follow-up, booked calls, no-shows and nurture. Grok executes the sends, verifies them, and handles failed sends (retry, then report).
 - Every decision runs through a model: Claude Opus 5.5 (`claude-opus-5-5`) via a `decide` tool. He sees the engine as "no brain" (record, templates, timers only). All MODEL_POLICY roles move to Opus 5.5.
@@ -25,6 +27,6 @@ Onboarding pack for the Chief of Staff Bot: `Agentic Worklfows/agents/grokbot/on
 
 **How to apply:**
 - Don't re-propose engine-side auto-send or polling.
-- Build the pieces the grok-operator skill lists: the Advero MCP connector with an idempotent `send` keyed per decision, shadow mode, `decide` on Opus 5.5, webhooks to Grok, and the timer that posts due touches.
+- The earlier connector proposal was canceled by the later September 25 decision. Do not build it from this historical note. For current operations, read `ClaudeConfig/PROCESS_AUTHORITY.md` and the November 4 Grok source snapshot.
 - The no-live-changes rule still holds ([[no-live-changes-until-tested]]).
 - Unconfirmed until tested in his account: Grok routine webhook URLs and custom MCP.

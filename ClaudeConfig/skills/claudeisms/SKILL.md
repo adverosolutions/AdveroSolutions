@@ -1,9 +1,21 @@
 ---
 name: claudeisms
-description: Lorenzo's rule against "Claudeisms" (in Grok, "Grokisms"), the sentence or tacked-on clause that restates, sums up or sells the point a message just made ("Nobody in the office has to remember to ask.", "No more chasing leads."). Applies to any model writing for Lorenzo: Claude, Grok Bot, Opus via API. Use whenever writing or editing copy for Lorenzo or his clients (cold emails, follow-ups, Upwork proposals and messages, LinkedIn, Maker School, DMs, and prompts that generate copy), and when he says "Claudeism" or "Grokism" or asks to check a draft for them.
+description: "Remove sentences or clauses that only restate, summarize or sell the preceding point. Use when writing or reviewing copy for Lorenzo or his clients, including prompts that generate copy."
 ---
 
 # Claudeisms
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- The delete test remains current for every model and channel: remove a sentence or clause if it adds no fact, question or next step.
+- The old claim below that Grok never drafts any context wording is superseded by Lorenzo’s November 2 standing opener permission. That permission does not waive the copy rules or allow rewriting the approved template body.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+
 
 A Claudeism is a line whose only job is to restate, sum up or sell what the
 previous sentence already said. People texting a peer never write them. They

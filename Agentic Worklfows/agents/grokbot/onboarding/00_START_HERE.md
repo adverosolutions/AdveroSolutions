@@ -1,5 +1,8 @@
 # 00 Start here: Chief of Staff onboarding
 
+Current precedence, 2026-11-04: CURRENT_PROCESS.md and CURRENT_RULEBOOK.md supersede conflicting historical instructions in this file and files 01-09. Read the newest dated Lorenzo ruling in the current rulebook. This pack is a repository record and does not grant a new live-action approval.
+
+
 Pack version: 2026-09-25, updated 2026-10-06. Written for the Grok Bot named "Chief of Staff".
 Read the files in order: 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, then the skills.
 

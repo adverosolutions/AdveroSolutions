@@ -1,9 +1,25 @@
 ---
 name: cold-email-personalization
-description: The per-lead opener that fills {{personalization}} at the top of Lorenzo's cold emails. Covers his philosophy (one specific thing you saw, plain praise, no pitch, the bar test), the locked template mode for recruiting, cleaning and bookkeeping ("Hey {first_name}, I know that you do {x}. Congrats on {specific}. Was wondering if I can run something by you."), X and congrats-on-a-specific rules with real examples, what is safe to assert blind per niche, the guessability test, the batch review rules (banned vague verbs, X/Y fixes, skip/restore, 2-per-company cap), the step-by-step batch pipeline (pick, extract, fill, review, push to Instantly), the med-spa angle library, and the QA gate. Use for "personalize leads", "write the icebreaker", "personalization line", "opener", "cold read", "enrich and personalize the leads", "run a batch", or checking a batch of lines.
+description: "The per-lead opener that fills {{personalization}} at the top of Lorenzo's cold emails. Covers his philosophy (one specific thing you saw, plain praise, no pitch, the bar test), the locked template mode for recruiting, cleaning and bookkeeping (\"Hey {first_name}, I know that you do {x}. Congrats on {specific}. Was wondering if I can run something by you.\"), X and congrats-on-a-specific rules with real examples, what is safe to assert blind per niche, the guessability test, the batch review rules (banned vague verbs, X/Y fixes, skip/restore, 2-per-company cap), the step-by-step batch pipeline (pick, extract, fill, review, push to Instantly), the med-spa angle library, and the QA gate. Use for \"personalize leads\", \"write the icebreaker\", \"personalization line\", \"opener\", \"cold read\", \"enrich and personalize the leads\", \"run a batch\", or checking a batch of lines."
 ---
 
 # Cold email personalization
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- The November 1 Codex implementation and its DAILY_RUN.md remain the local execution reference. Keep fact extraction and copy review in the current Codex session; do not restore older Anthropic or Claude CLI calls for this pipeline.
+- The latest Grok rulebook records approved niche fallbacks for future loads: pest and cleaning text on November 1, PPC text on November 2 at 10:36 CT. Copy those exact strings and their needs_review status from the rulebook; do not edit loaded leads or campaign templates while updating local records.
+- The October 10 I know / Congrats template is retained. The old blanket claim below that only marketing-agency fallbacks are approved is superseded by those later dated niche approvals; deterministic pipeline gates still apply until their configuration is explicitly updated.
+- All campaigns remain paused pending Lorenzo’s new copy and resume. A personalized row, a passed QA gate or an archived approval is not a new instruction to upload or send.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [feedback-opener-certain-language.md](../../memory/feedback-opener-certain-language.md)
+- [feedback-cold-read-not-skip.md](../../memory/feedback-cold-read-not-skip.md)
+
 
 The line proves someone looked at the business for 30 seconds. It is not insight, not a
 pitch, not a problem statement. The email body carries the offer.

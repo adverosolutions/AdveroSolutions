@@ -1,31 +1,15 @@
-# Claude Code config backup
+# Advero instructions and process record
 
-Backup of the Claude Code setup Lorenzo uses every day. The live copies are on his Mac in `~/.claude/`: skills, agents, scheduled-task prompts and the global `CLAUDE.md`. Claude Code reads those, not this folder.
+Lorenzo designated Grok Bot as the current operational process source on 2026-11-04. Start with [PROCESS_AUTHORITY.md](PROCESS_AUTHORITY.md), then the relevant business skill and its dated source records. The repo is the maintained record; installed `~/.claude` files are imports, not the canonical copy.
 
-- `skills/`: one folder per skill, copied from `~/.claude/skills/`.
-- `agents/`: scout, worker, worker-heavy, reviewer and reviewer-max, copied from `~/.claude/agents/`.
-- `scheduled-tasks/`: the prompt of each Claude desktop scheduled task. `daily-personalize-1am` and `upwork-followup-watch` are deleted from the scheduler (last runs 2026-10-02 and 2026-09-30); only their prompts are kept here.
-- `global-CLAUDE.md`: `~/.claude/CLAUDE.md`.
-- `memory/`: Claude's project memory for this repo (`~/.claude/projects/-Users-lorenzovillarreal-Desktop-AdveroSolutions/memory/`). `MEMORY.md` is the index; each file is one fact (decisions, rules, project state). Codex reads this copy.
+- `skills/`: the 25 business skills; all have portable discovery links under `.agents/skills/`.
+- `grok-source/2026-11-04/`: sanitized process exports, source manifests, routine prompts and code evidence from Grok Bot. Imported code is archival and has not been executed.
+- `skill-audit/2026-11-04/`: reconciliation status, source coverage, verification and exclusions.
+- `synced-skills/`: helper-skill snapshots for Claude and Codex, including supporting assets and licenses. These retain their app-specific dependencies and are not business process authority.
+- `agents/`, `scheduled-tasks/`, `global-CLAUDE.md`, `memory/`: retained local instruction records. Historical scheduled-task prompts do not mean a task is currently active.
 
-To refresh: `ClaudeConfig/sync_from_home.sh`, then commit and push. To restore a skill on a new machine, copy `skills/<name>/` into `~/.claude/skills/`.
+`sync_from_home.sh` is non-destructive and read-only by default. `--import-new` copies missing files only; conflicts retain the repo version. An exact `--replace <repo-relative path>` imports one intended replacement after saving a backup under `.tmp/config-import-backups/`. No deletion is performed, and credential-bearing records are excluded.
 
-The Grok Bot copies of the skills are separate: `Agentic Worklfows/agents/grokbot/onboarding/skills/`, rebuilt by `build_pack.py`.
+The Grok onboarding builder uses this checkout's skill sources. Rebuild from the repo with `/usr/bin/python3 "Agentic Worklfows/agents/grokbot/build_pack.py"`; parity checks do not depend on a home-folder installation. Existing Grok bots get a dated delta update rather than a fresh onboarding.
 
-## Codex / Orca clones
-
-Codex discovers repo-scoped skills under `.agents/skills/`; `ClaudeConfig/skills/`
-alone is an archive location, not an automatic discovery location. The repo now
-tracks relative symlinks for `cold-email-personalization` and its referenced
-`lorenzo-voice`, `claudeisms` and `cold-campaigns` skills. These point to this
-folder, so they work in another checkout without any files under `~/.claude`.
-
-In an existing clone, run `git pull --ff-only` from the repository root, then
-start a new Codex session in that clone. Use `$cold-email-personalization` or
-look in `/skills`. If the list has not refreshed, restart the Codex process in
-Orca. This configures Codex discovery; Orca's own UI may maintain a separate list.
-No installer, Claude login or Anthropic key is needed for these repo skill links.
-
-When editing a linked skill, change the source under `ClaudeConfig/skills/`;
-the link follows it automatically. `sync_from_home.sh` copies installed skills
-into that source directory, so review its diff to preserve current Codex policies.
+A clean clone preserves the instruction files and references. Runtime tools, connected accounts, secrets and hosted app features must still be available in the target environment. The audit lists missing exports and restore dependencies rather than claiming those are bundled.

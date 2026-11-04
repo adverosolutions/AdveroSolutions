@@ -1,0 +1,284 @@
+# Advero process export, 2026-11-04 (INDEX)
+
+Read-only export from Grok Bot (COO) box `~/advero`, built Wed Nov 4, 2026 around 1:50 PM CT. Nothing in ~/advero, the routines, or the bots was changed. Emails, phone numbers, and API-key-like strings were replaced with `[REDACTED]`.
+
+Top-level extras: `ROUTINES.md` (COO routines), `STATE_SCHEMAS.md` (keys only).
+
+## ACTIVE vs PROPOSED
+**ACTIVE (Lorenzo-approved):** everything in `state/org/LEAN_ORG.md` (the one rulebook, sections A-L plus the dated 11/1-11/4 entries) and `state/org/approvals.jsonl`. That includes the campaign pause (11/3 7:29 AM, flag `state/CAMPAIGNS_PAUSED.txt`), the one-slot booking rule (11/3 9:06 AM), the offer menu (11/4 12:26 PM, with P1 changed to $500.00 at 12:50 PM; note approvals.jsonl line 3 still says $747.00 and line 5 supersedes it), the COO role change (11/2 1:01 PM), the standing opener rule (11/2 4:20 PM), and the 11/4 bot consolidation. Lorenzo approved that in chat (t1931u/t1935u/t1938u): bots stay = COO, 5 managers, Copywriter, Demo Builder, Accounting, Revenue Operations; the other 16 were deleted or are slated for deletion, and their routines were rebuilt on managers per the 11/4 handoffs.
+
+**PROPOSED (not yet approved):** `LEAN_PLAN_20261104.md` routine cuts (lead runner every 30 min, proposal runner hourly, leak sweep 3x/day, drop Mission Control and stale reminders, fold dashboards and Upwork KPI into the noon roll-up), dropping "Manager" from the bot names, and rewriting role docs. Also the open items in `state/dashboard/live/pending_questions.json`, `state/drafts/copy_doc_pending_placeholders.md`, `state/stops/*`, and the "waiting on Lorenzo" lists in the 11/4 handoffs (RevOps: Leonardo, Drew, Justin/Dawnn/Sopio, unsubscribe policy, Day 1 zeros; Accounting: Tailscale, Namecheap renewal and sign-in, SPF). The new-email copy variant (Copywriter 11/4) is awaiting approval.
+
+## Supersedes Sep/Oct onboarding pack
+Rule of thumb: `LEAN_ORG.md` wins over `GROK_ONBOARDING_PACK.md` and `00-09_*.md`.
+- Pack 00 sec 1, 8; 03 The team (Chief of Staff plus 5 core agents) -> LEAN_ORG A (org 10/30), COO role change 11/2 (auditor/truth report/Upwork desk/rule keeper, no delegation), 11/4 consolidation to 10 bots.
+- 01 sec 2-3 Offers and Pricing rules -> LEAN_ORG "Official offer menu" 11/4 (P1 $1,497.00 -> $500.00, P2 $3,497.00, P3 $8,997.00, cents, verbal-only discounts).
+- 01 sec 4 Niches and campaigns; 02 sec 4 Sending rules -> 11/3 all Instantly campaigns paused, follow-ups only; LEAN_ORG E; requeue timer 11/2; PPC B limit 11/2.
+- 02 sec 1-3 Who does what and the loop -> LEAN_ORG B (who approves), F (24/7 autonomous ops 10/30), standing opener rule 11/2.
+- 02 sec 7 Never list -> LEAN_ORG G.
+- 00 sec 10 Routines; OPS_SCHEDULE.md -> LEAN_ORG I plus ROUTINES.md and the 11/4 manager rebuilds (handoffs).
+- Booking and calls (03 sec 2.3) -> 11/3 one-slot booking in 12-6 PM CT; F2 no-show template 10/30.
+- 03 sec 5 LinkedIn agent -> LinkedIn rulings 11/2, LinkedIn Manager owns Setter routines 11/4, stop records 11/4.
+- 06 Systems and access -> "Logins" 11/1, "Billing and tools" 11/2, Dashboards owned by COO 11/2.
+- Community -> 11/2 10:29 Community branch, max joins, Saturday prune.
+
+## Document links
+- https://docs.google.com/document/d/122qT6YwoK3drjZg4Z0sHrUheays-gqBKMQcO0OirD3Y
+- https://docs.google.com/document/d/1QUHhH2oJR9sLXubiOI03iM-I6Mk7HdQHmDhRzbrXkKE
+- https://docs.google.com/document/d/1SdYkxGSQZetKRmdikIov06RkUlMBfo1ASpPOShJXR-8
+- https://docs.google.com/document/d/1bK3bkYfxYkhY0vFtHhB4RG6lMkKQrHvp6Qyasp8Pbt4
+- https://docs.google.com/spreadsheets/d/13TQ2_A_0uFiLK1diB6eo224IDjk0dUY_wHZIpQL44cE
+- https://docs.google.com/spreadsheets/d/162UL8KgMo2U--ArMl0ieBE19LqcOWjmkYdFbBbqXj9s
+- https://docs.google.com/spreadsheets/d/1CLHGRENAlRLJuHjKPaI1lFql3WiyRj5aPL52ZKkFVWI
+- https://docs.google.com/spreadsheets/d/1FW8AmsL5CmmiUAYHt4lx3MFbjUjfiYVV_rQ4HIqRbP0
+- https://docs.google.com/spreadsheets/d/1H4ddQjoI56cNrnRMHZm2HNZHc0ESAMZnccI8raQN97o
+- https://docs.google.com/spreadsheets/d/1Laj4Afrmx_zQaF_bL-UeilIRxNINqQvvSoIggn1Pkm8
+- https://docs.google.com/spreadsheets/d/1fyuBNwSq8HbUACr5_svYH-E-uOp_nj-q5O_3MOWonNY
+- https://docs.google.com/spreadsheets/d/1pUhPhIMEOs8crBSDfII-32lhz6qLVUOQSL4I10Yr-tY
+
+Bare IDs found that may be Docs or Sheets (type unknown):
+- 10774732-google-maps-scraper-is-going-to-pay-
+- 11-4-fri-thu-sat-checks-refills-after-setter-
+- 1EZur1Kb0ILPg08E2GTmvNPwzIOZGRG2FTfxQpFz9cM0
+- 1GuJBW_FSZJsJZ9gmN37EmTGo65DH695BtwhFkBXWDj0
+- 1J9JRGX1UUBXc1omWmDJuz7oUF047JGDcelQN4-9o57M
+- 1dBddy3rWtRJGCVNld4k6d2_ELFRoq6Vfu6p47Me-Q6A
+- 1jTg1ccYJT8CugDdCf3BQHqzgHUKC4oFG9rgolUILO4U
+- 1kMiei1lCW3rMdc7iX8H2Hpiry-gH7rO7Z5cozJQaTAA
+- 1lBUa2_XzmE94EoKbCHx144y-BNP7rD707zRO_Tyj3XE
+- 1p7zJHGhKtc1QzBTiO51aWSQdIlgnmf7I4S0CimKJBgQ
+- 1qV2gGPrVUQyImraJNmUHZlACg0HrIE2uSF029DmxPk0
+
+## Included files (184)
+- `advero/00_START_HERE.md`: Onboarding pack section (Sep/Oct)
+- `advero/01_business_context.md`: Onboarding pack section (Sep/Oct)
+- `advero/02_operating_model.md`: Onboarding pack section (Sep/Oct)
+- `advero/03_team.md`: Onboarding pack section (Sep/Oct)
+- `advero/04_ask_opus.md`: Onboarding pack section (Sep/Oct)
+- `advero/05_lead_state_ghl.md`: Onboarding pack section (Sep/Oct)
+- `advero/06_systems_and_access.md`: Onboarding pack section (Sep/Oct)
+- `advero/07_reports_and_scorecard.md`: Onboarding pack section (Sep/Oct)
+- `advero/08_about_lorenzo.md`: Onboarding pack section (Sep/Oct)
+- `advero/09_company_and_process_overview.md`: Onboarding pack section (Sep/Oct)
+- `advero/GROK_ONBOARDING_PACK.md`: Sep/Oct onboarding pack (partly superseded)
+- `advero/USAGE_GATE.md`: Process/state doc
+- `advero/CLAUDE_TRANSPORT.md`: Process/state doc
+- `advero/copy_doc.txt`: Process/state doc
+- `advero/state/usage_gate.md`: Process/state doc
+- `advero/state/sprint_sheet_sources.md`: Process/state doc
+- `advero/state/linkedin_content_plan.md`: Process/state doc
+- `advero/state/reminders/pins.md`: Reminders bot pins (now COO-owned)
+- `advero/state/drafts/copy_doc_pending_placeholders.md`: Open copy placeholders
+- `advero/skills/grok-operator.md`: Business skill/SOP: grok-operator
+- `advero/skills/cold-email-replies.md`: Business skill/SOP: cold-email-replies
+- `advero/skills/lorenzo-voice.md`: Business skill/SOP: lorenzo-voice
+- `advero/skills/sales-call.md`: Business skill/SOP: sales-call
+- `advero/skills/quickenrich-lead-pulls.md`: Business skill/SOP: quickenrich-lead-pulls
+- `advero/skills/cold-campaigns.md`: Business skill/SOP: cold-campaigns
+- `advero/skills/quiet-lead-followup.md`: Business skill/SOP: quiet-lead-followup
+- `advero/skills/nurture-90-day.md`: Business skill/SOP: nurture-90-day
+- `advero/skills/linkedin-outreach.md`: Business skill/SOP: linkedin-outreach
+- `advero/skills/claudeisms.md`: Business skill/SOP: claudeisms
+- `advero/skills/upwork.md`: Business skill/SOP: upwork
+- `advero/skills/deliverability-and-inboxes.md`: Business skill/SOP: deliverability-and-inboxes
+- `advero/skills/booked-calls.md`: Business skill/SOP: booked-calls
+- `advero/skills/upwork-followups.md`: Business skill/SOP: upwork-followups
+- `advero/skills/client-fulfillment.md`: Business skill/SOP: client-fulfillment
+- `advero/skills/daily-reports-and-metrics.md`: Business skill/SOP: daily-reports-and-metrics
+- `advero/state/org/approvals.jsonl`: Lorenzo rulings log (active rules)
+- `advero/state/org/roles/INDEX.md`: Role doc: INDEX
+- `advero/state/org/roles/split-test-bots.md`: Role doc: split-test-bots
+- `advero/state/org/roles/lead-generation-specialist.md`: Role doc: lead-generation-specialist
+- `advero/state/org/roles/quickenrich-bot.md`: Role doc: quickenrich-bot
+- `advero/state/org/roles/README.md`: Role doc: README
+- `advero/state/org/roles/linkedin-setter.md`: Role doc: linkedin-setter
+- `advero/state/org/roles/sales-nav-bot.md`: Role doc: sales-nav-bot
+- `advero/state/org/roles/linkedin-outreach-manager.md`: Role doc: linkedin-outreach-manager
+- `advero/state/org/roles/community-engagement-bot.md`: Role doc: community-engagement-bot
+- `advero/state/org/roles/coo.md`: Role doc: coo
+- `advero/state/org/roles/deliverability-specialist.md`: Role doc: deliverability-specialist
+- `advero/state/org/roles/vollna-bot.md`: Role doc: vollna-bot
+- `advero/state/org/roles/revenue-operations.md`: Role doc: revenue-operations
+- `advero/state/org/roles/upwork-coordinator.md`: Role doc: upwork-coordinator
+- `advero/state/org/roles/cold-email-manager.md`: Role doc: cold-email-manager
+- `advero/state/org/roles/demo-builder.md`: Role doc: demo-builder
+- `advero/state/org/roles/linkedin-content-manager.md`: Role doc: linkedin-content-manager
+- `advero/state/org/roles/accounting.md`: Role doc: accounting
+- `advero/state/org/roles/appointment-setter.md`: Role doc: appointment-setter
+- `advero/state/org/roles/community-content-bot.md`: Role doc: community-content-bot
+- `advero/state/org/roles/community-manager.md`: Role doc: community-manager
+- `advero/state/org/roles/committee.md`: Role doc: committee
+- `advero/state/org/roles/maps-bot.md`: Role doc: maps-bot
+- `advero/state/org/roles/copywriter.md`: Role doc: copywriter
+- `advero/state/org/LEAN_PLAN_20261104.md`: PROPOSED bot and routine consolidation plan
+- `advero/state/org/deliverability_overrides.md`: Process/state doc
+- `advero/state/org/retired_routines/weekday-instantly-health-check_20261027.md`: Process/state doc
+- `advero/state/org/APPROVALS.md`: Process/state doc
+- `advero/state/org/day_phase.json`: Process/state doc
+- `advero/state/org/BOT_PROCEDURES.md`: Process/state doc
+- `advero/state/org/LEAN_ORG.md`: THE ONE RULEBOOK, the current active rules (updated 11/4)
+- `advero/state/org/routine_expected.json`: Process/state doc
+- `advero/state/org/ORG_STRUCTURE.excalidraw`: Process/state doc
+- `advero/state/org/ROLLOUT_20261021.md`: Process/state doc
+- `advero/state/org/COMMS_RULES.md`: Process/state doc
+- `advero/state/org/LORENZO_KPIS.md`: Process/state doc
+- `advero/state/org/OPS_AUTOPILOT_PLAN_20261029.md`: Process/state doc
+- `advero/state/org/ORG_STRUCTURE.md`: Org chart (pre-11/4 consolidation)
+- `advero/state/org/unlock_log.txt`: Process/state doc
+- `advero/state/org/ORG_STRUCTURE.png`: Process/state doc
+- `advero/state/org/BOX_MIGRATION_PLAN_20261030.md`: Process/state doc
+- `advero/state/org/OPS_SCHEDULE.md`: Process/state doc
+- `advero/state/stops/linkedin_setter_hang_20261104_1029.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/stops/salesnav_probe_stop_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/stops/linkedin_setter_loaderr_20261104_1005.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/stops/salesnav_stop_20261104_0616.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/deliverability-specialist_to_cold-email-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20260928_ai_agents_offer_split_variants.md`: Historical handoff/brief
+- `advero/state/handoffs/adrilani_followup_cadence_20261001.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_ai_agents_copy_sheet.md`: Historical handoff/brief
+- `advero/state/handoffs/copywriter_1pct_positive_ideas_20261026.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_instantly_campaign_stats.md`: Historical handoff/brief
+- `advero/state/handoffs/sales-nav-bot_to_lead-gen-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20261021_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_cold_email_offer_package_INDEX.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_metrics_tighten_brief.md`: Historical handoff/brief
+- `advero/state/handoffs/Reminders_to_COO_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20261021_automation_readiness.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_ai_agents_split_preview.md`: Historical handoff/brief
+- `advero/state/handoffs/appointment-setter_to_cold-email-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20261002_sticky_autoreply_canary.md`: Historical handoff/brief
+- `advero/state/handoffs/20261002_spintax_random_fix_log.md`: Historical handoff/brief
+- `advero/state/handoffs/copywriter_pilot_variant_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20260929_subject_ab_apply_log.md`: Historical handoff/brief
+- `advero/state/handoffs/20261002_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/linkedin/diagnosis_draft_20261026.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_maker_school_accountability_draft.md`: Historical handoff/brief
+- `advero/state/handoffs/Accounting_to_COO_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/community-content-bot_to_community-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20260926_maker_school_accountability_draft.md`: Historical handoff/brief
+- `advero/state/handoffs/20261001_maker_school_accountability_post_body.txt`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1538_upwork_problems.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1539_instantly_unibox.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1538_upwork_drafts.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_spintax_apply_log.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_ai_agents_opus_pass.md`: Historical handoff/brief
+- `advero/state/handoffs/20261002_spintax_diagnosis.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_maker_school_accountability_post_body.txt`: Historical handoff/brief
+- `advero/state/handoffs/20260928_cold_email_niches_apify.md`: Historical handoff/brief
+- `advero/state/handoffs/offer_b_vs_c_20261027.md`: Historical handoff/brief
+- `advero/state/handoffs/quickenrich-bot_to_lead-gen-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20261020_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1714_maker_school_skool_login_blocked.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_maker_school_accountability_draft.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_creative_ideas_drafts.md`: Historical handoff/brief
+- `advero/state/handoffs/linkedin-setter_to_linkedin-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20261021_lead_volume_options.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1603_noshow_sopio_rob.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_ai_agents_instantly_apply.md`: Historical handoff/brief
+- `advero/state/handoffs/linkedin-content-bot_to_linkedin-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20260925_ilmi_correction_sent.md`: Historical handoff/brief
+- `advero/state/handoffs/20260930_ai_agents_split_prep.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_eric_decision_marks.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_creative_ideas_brief_copywriter.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_cold_email_offer_framing.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_zoom_only_no_meet.md`: Historical handoff/brief
+- `advero/state/handoffs/routines_20261029/pandadoc_watch_msc_prompt.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_n3_weekday_copy.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_eric_nowalski_volume.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_subject_ab_drafts.md`: Historical handoff/brief
+- `advero/state/handoffs/upwork-split-test-bot_to_upwork-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20260928_eric_nowalski_distill_done.md`: Historical handoff/brief
+- `advero/state/handoffs/maps-bot_to_lead-gen-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20261002_deliverability_health_plan.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1609_rob_lost_sopio_hold.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_ilmi_idle_cos_owns_ghl.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_subject_ab_brief_copywriter.md`: Historical handoff/brief
+- `advero/state/handoffs/20261006_maker_school_accountability_post_body.txt`: Historical handoff/brief
+- `advero/state/handoffs/20260925_no_em_dash_rule.md`: Historical handoff/brief
+- `advero/state/handoffs/copywriter_offers_angles_cialdini_20261103.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/routines_20261027/README.md`: Historical handoff/brief
+- `advero/state/handoffs/routines_20261027/pandadoc_watch_prompt.md`: Historical handoff/brief
+- `advero/state/handoffs/20261005_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_metrics_sample_card.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_eric_nowalski_scrape_done.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_ilmi_ghl_done.md`: Historical handoff/brief
+- `advero/state/handoffs/20261006_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1623_sopio_n3_done.md`: Historical handoff/brief
+- `advero/state/handoffs/20261006_followup_process.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_sopio_rob_noshow.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_cold_email_angles_top3.md`: Historical handoff/brief
+- `advero/state/handoffs/20260928_ai_agents_split_test_status.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1722_maker_school_engagement_picks.md`: Historical handoff/brief
+- `advero/state/handoffs/Revenue_Operations_to_COO_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/handoffs/20260925_ilmi_weekday_error.md`: Historical handoff/brief
+- `advero/state/handoffs/20261003_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_email2_brief_copywriter.md`: Historical handoff/brief
+- `advero/state/handoffs/20261001_accountability.md`: Historical handoff/brief
+- `advero/state/handoffs/20261006_linkedin_foundation_applied.md`: Historical handoff/brief
+- `advero/state/handoffs/20261008_quickenrich_update_applied.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_maker_school_accountability_post_body.txt`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1548_inbox_live_ops.md`: Historical handoff/brief
+- `advero/state/handoffs/20260925_1538_upwork_scan.md`: Historical handoff/brief
+- `advero/state/handoffs/20261020_maker_school_audit_takeover.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_spintax_brief_copywriter.md`: Historical handoff/brief
+- `advero/state/handoffs/20260929_spintax_drafts.md`: Historical handoff/brief
+- `advero/state/handoffs/routine_prompts_20261104/instantly-north-star-morning.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/dashboard-sheet-refresh.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/crm-sheet-live-sync.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/nightly-sprint-row.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/pandadoc-watch-leonardo-signed.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/revops-leak-audit.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/stalled-leads-flag.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/routine_prompts_20261104/crm-sheet-nightly-close.md`: RevOps saved routine prompt (verbatim)
+- `advero/state/handoffs/20260928_maker_school_accountability_post_body.txt`: Historical handoff/brief
+- `advero/state/handoffs/community-engagement-bot_to_community-manager_20261104.md`: Handoff from 11/3-11/4 consolidation
+- `advero/state/dashboard/live/pending_questions.json`: Open questions for Lorenzo (dashboard)
+
+## Missing or excluded
+- `/home/box/agent-data/workflows/*/SKILL.md`: the folder is empty, so there are no user workflow skills. Business skills are in `advero/skills/`.
+- Saved routine prompts for COO and the managers live in the app store, which was not read; see ROUTINES.md.
+- `state/handoffs/20261002_sticky_autoreply_excluded_ooo.csv`: data file (csv/json) in handoffs: lead/campaign data, schema-only or excluded
+- `state/handoffs/20260928_instantly_campaign_stats.json`: data file (csv/json) in handoffs: lead/campaign data, schema-only or excluded
+- `state/handoffs/20260925_daily_metrics.json`: data file (csv/json) in handoffs: lead/campaign data, schema-only or excluded
+- `state/handoffs/20260930_ai_agents_split_prep.json`: data file (csv/json) in handoffs: lead/campaign data, schema-only or excluded
+- `state/handoffs/20261002_sticky_autoreply_canary.csv`: data file (csv/json) in handoffs: lead/campaign data, schema-only or excluded
+- `state/handoffs/20260925_1538_upwork_rooms.json`: data file (csv/json) in handoffs: lead/campaign data, schema-only or excluded
+- `state/handoffs/adrilani_portfolio_20260930/**`: client portfolio assets/screenshots/mock CRM data
+- `state/handoffs/leadgen/**`: lead lists (CSV)
+- `state/accountability_sheet.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/approval.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/approvals.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/daily_metrics.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/decisions.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/deliverability_watch_alerted.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/deliverability_watch_state.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/ghl_fields.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/handled.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/heartbeats.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/instantly_last_poll.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/instantly_webhook.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/lead_pool_sheet.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/linkedin_approvals.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/linkedin_cards.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/linkedin_connect_queue.csv`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/linkedin_counts.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/linkedin_tracker.csv`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/offered_times.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/overnight_reply_queue.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/overnight_reply_queue_delivered.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/quickenrich_pulls.csv`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/sent_log.jsonl`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/sticky_canary_sheet_20261002.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `state/upwork_threads.json`: raw data excluded (may hold lead/contact/transaction data); schema in STATE_SCHEMAS.md
+- `config/** (api_access.md, ghl_ids.env)`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `state/claude_auth.json`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `bin/_load_box_secrets.py`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `state/clients/**`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `state/cases/**`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `state/decisions/** (per-lead Opus decisions)`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `*.bak* backups`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `bin/** scripts (code, not process docs; may embed IDs)`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `knowledge/eric-nowalski (third-party course material)`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `state/{upwork,quickenrich,mv,reactivation,stalled,queue,...} subdirs (lead/client working data)`: excluded by policy: credentials/auth, private lead/client or transaction data
+- `Accounting ledgers / finance data`: excluded by policy: credentials/auth, private lead/client or transaction data

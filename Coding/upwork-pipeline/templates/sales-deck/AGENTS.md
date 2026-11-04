@@ -4,6 +4,8 @@ Fresh-model starting point: `../../master-handoff/00-MASTER.md`. Use the consoli
 
 Daily content workers edit only their assigned spec and private evidence in the assigned job folder. Never change shared runtime, catalog, compiler, palette, font or template-lock files during a job. Unsupported native tools/actions require a new adapter through explicit template maintenance; do not improvise a fallback.
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014.
+
 Read `OPERATING_POLICY.md` for current model/speed settings: Sol Medium coordinates and builds; one bounded independent Astra High review at the end. Use short original requirements and isolated folders. Use normal subagents only when requested; do not create extra coordinator chats by default. Main records exact-page review receipts through the canonical queue. Builders cannot approve their own work. Read `visual-reference/README.md` before selecting a native screen; renderer support alone does not establish visual readiness.
 
 Routine local generation is authorized within the job folder. This is an instruction/integrity boundary, not a sandbox security boundary. Template maintenance is separate. Never change global agent/model settings. Never send, submit or externally publish from this lane. Preserve locked proposal/finalization rules.

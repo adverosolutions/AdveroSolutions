@@ -1,5 +1,7 @@
 # Lorenzo’s Upwork demo and delivery master
 
+**Read [DIRECTIVES.md](../DIRECTIVES.md) first.** Its active instructions apply to every future generation. Log each new standing instruction/correction automatically during the same turn and synchronize the working rules; Lorenzo does not need to request persistence again. Retain superseded history and keep individual job facts scoped to their job.
+
 Version: 20 October 2026. Owner: Lorenzo Villarreal, AdveroSolutions.
 
 This is the starting point for any model taking over Lorenzo’s Upwork proposal
@@ -111,6 +113,8 @@ spoken cue and time budget. Narration notes must point to actual evidence—owne
 value, row, recipient, source or missing field—not repeat a slide heading.
 
 ## 3. Presentation identity is locked
+
+> **Update, U-017 (2026-10-21):** The go-forward Upwork demo design is the v5 live product tour in `templates/live-tour/`, on a two-color black and blue layered background. It replaces the sales-deck look for new demos; the rules below still apply to the sales-deck runtime and to native fidelity. Builds run in parallel across builder workers 1 to 3 (U-018). See `DIRECTIVES.md`.
 
 Keep the approved outer presentation: blue/light palette, atmospheric background,
 Inter typography, opening composition, demo framing and the strong blue closing
@@ -292,6 +296,8 @@ client credentials to make a demonstration appear live.
 
 ## 7. Daily generation and usage discipline
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014.
+
 Main coordinator/content default: **GPT-6.1 Sol, Medium**. A difficult bounded
 implementation repair can use Sol High. Final independent review: **one Astra High
 review**, covering the whole pitch, relevant behavior and native visuals. These
@@ -393,6 +399,8 @@ its exact generation is independently approved for the needed scope.
 | Old Claude agent/model rules resurfaced | Use current operating policy, never legacy role defaults |
 | Another model lacked context | Start with this package and exact supporting files, not the old chat |
 
+> **Superseded by U-014 (2026-10-20):** In the table above, the Astra and Sol rows describe the old roles. Demo Builder (Grok) now authors, reviews and gives final acceptance, and its own review must still cover the full sales, copy, causality and interaction matrix. See `DIRECTIVES.md` U-014.
+
 ## 11. Keep this durable
 
 After an accepted update: change the canonical source, rebuild/review affected
@@ -409,3 +417,13 @@ tools/permissions to execute commands. The handbook does not grant account acces
 For a controlled capability test, use `03-TEST-THE-NEXT-MODEL.md`. Do not start
 another saved-job batch as a test. Lorenzo’s five rejected unrecorded jobs remain
 archived unless he explicitly requests otherwise.
+
+## 20 October production extension handoff
+
+The approved cinematic direction is integrated into the compiler rather than injected into generated job pages. It keeps the manual intro/Present/Next behavior Lorenzo selected. See the dated extension contract at the end of `templates/sales-deck/PLATFORMS.md` for custom architecture, typed n8n AI subnodes, Gmail drafts, GHL public funnel/Neo booking and the bounded fintech app. Current source files and the lock are authoritative; old “preview only” notes describe the earlier study. Each generated page still needs an independent exact-hash review, including the whole sales story. New renderer support is not blanket vendor/account parity acceptance.
+
+Batch source manifests: `jobs/2026-10-20-queue.json` plus `jobs/2026-10-20-final-job-queue.json`. Six jobs share the existing canonical recording board. Original posts, private source evidence, preparation notes and proposal drafts are inside each job folder. No applications or live client-system changes occur during generation. Missing personal experience, portfolio links or weekly availability must not be invented to fill screening questions.
+
+## Spoken-copy correction, 20 October
+
+The six-demo review initially missed awkward developer shorthand in sales headings. Lorenzo could not comfortably explain “Agree the product. Test one journey.” while recording. The source specs now use plain spoken headings and concrete narration, with “Let's map out your first feature” as the fintech close. Future generation must pass the read-aloud gate in CONTENT_BRIEF.md and SALES_ACCEPTANCE.md. This applies to custom diagram labels, captions, metrics and CTA as well as operator talking points; genuine native application labels retain their real wording. Do not treat a prior visual approval as copy approval.

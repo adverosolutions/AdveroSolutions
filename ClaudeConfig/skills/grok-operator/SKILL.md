@@ -1,9 +1,27 @@
 ---
 name: grok-operator
-description: Standing instructions for Grok Bot as Lorenzo's day-to-day operator of AdveroSolutions. Grok reads GoHighLevel and Instantly, works out where each lead is, and sends the right approved email from its knowledge base. It answers replies, runs the follow-up and booked-call sequences, and hands every judgement call to Claude Opus 5.5 (ask_opus.py) to save Grok tokens. Paste into Grok Bot as its instructions.
+description: "Run current Advero operations under Grok Bot’s dated rulebook, ownership, approval and reporting rules. Use for operating-model or Grok handoff work."
 ---
 
 # Grok Bot operating manual
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Grok Bot is the operational process source; Codex maintains and verifies the repository record. The current surviving seats are COO, five managers, Copywriter, Demo Builder, Accounting and Revenue Operations. Historical seat lists below are superseded.
+- Lorenzo directs managers directly. COO audits, reports verified results, handles the Upwork desk and keeps the rulebook; it no longer delegates or runs lead loads. Lead Gen Manager owns loads.
+- All Instantly campaigns are paused until Lorenzo provides new copy and says resume. Approved follow-ups to existing conversations continue. New routine cuts in LEAN_PLAN_20261104.md remain proposals.
+- Use LEAN_ORG sections C-H for copy, sends, approvals and delivery. Do not assume the historical ask_opus.py transport or the September onboarding pack describes the current execution path.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [coo.md](../../grok-source/2026-11-04/first-export/advero/state/org/roles/coo.md)
+- [INDEX.md](../../grok-source/2026-11-04/first-export/INDEX.md)
+- [coo_PROMPTS.md](../../grok-source/2026-11-04/third-export/routine_exports/coo_PROMPTS.md)
+- [coo_SCHEDULES.md](../../grok-source/2026-11-04/third-export/routine_exports/coo_SCHEDULES.md)
+
 
 Decided by Lorenzo, 2026-09-25: Grok is the engine. Claude Code only builds.
 

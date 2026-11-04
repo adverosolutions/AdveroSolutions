@@ -1,9 +1,21 @@
 ---
 name: build-research-and-ghl
-description: Reference for build props. How to find and trust real Make.com module ids (Sourcegraph, Make forum exports, the three-way authenticity test), and the GoHighLevel facts learned in Lorenzo's own sub-account (import lane, what the API can and cannot create, verified step shapes, browser traps). Use when a Make or GHL build needs a module id or step shape that isn't verified, when a GHL import lands half-built, or when a GHL API call fails with 401 or 403.
+description: "Reference for build props. How to find and trust real Make.com module ids (Sourcegraph, Make forum exports, the three-way authenticity test), and the GoHighLevel facts learned in Lorenzo's own sub-account (import lane, what the API can and cannot create, verified step shapes, browser traps). Use when a Make or GHL build needs a module id or step shape that isn't verified, when a GHL import lands half-built, or when a GHL API call fails with 401 or 403."
 ---
 
 # Build research and GHL facts
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- The existing module-authenticity and GHL research procedure remains a technical reference; it is not evidence that a connector, import lane or account capability is still live.
+- For current Upwork demo work, use the maintained local handbook and DIRECTIVES.md first. For a live GHL build, re-read the current account shape using available tools and keep live-write approval and dry-run rules. No live GHL changes are authorized by this maintenance task.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+
 
 The `upwork` skill already covers when each prop type is used (n8n, Make, GHL,
 chart), the 10-to-15-node target, charts that read like sentences, and the GHL

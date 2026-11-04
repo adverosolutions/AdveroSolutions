@@ -1,0 +1,46 @@
+# qe_to_sheet: appending deduped leads to the Advero Lead Pool sheet
+
+Not code. Procedure for the Lead Generation Specialist (or any agent) using the
+Google Sheets connector (`user-Google-sheets`). Sheet details live in
+`~/advero/state/lead_pool_sheet.json` (spreadsheet_id, tab sheetIds, header).
+
+## Inputs
+- A deduped file from `~/advero/bin/qe_dedupe.py`:
+  `~/advero/state/leads/pool/<date>_<niche>_<source>_<label>_new.csv`
+- Tab = niche: `pest_control`, `cleaning`, `ppc` (same names the script uses).
+
+## Steps
+1. Run the dedupe first, never append a raw QuickEnrich export:
+   `python3 ~/advero/bin/qe_dedupe.py EXPORT.csv --niche pest_control --source quickenrich --label p1-4`
+   (Sales Nav lookups: `--source salesnav`.) Keep the JSON summary for the log.
+2. If `new_rows` is 0, skip the sheet; still log the pull.
+3. Read the `_new.csv` with Python and build rows of ONLY the 19 sheet columns,
+   in header order (A:S): the 17 schema columns plus fit and fit_reason. Extra source columns stay in the CSV, not in the sheet,
+   so every tab keeps the same layout. All values as strings; empty -> "".
+4. Append with `CallDynamicTool` -> `user-Google-sheets` / `append_rows`:
+   `{"spreadsheetId": "<id>", "sheet": "<niche tab>", "cells": "A1:T", "values": [[...], ...]}`
+   - Leave `parseInput` false (literal text, so dates and `=`/`+` values are not parsed).
+   - Limit is 10,000 cells per call: 19 columns -> at most 526 rows per call. Chunk at 500.
+   - `values` CAN be passed as "$file:/abs/chunk.json" (a JSON array file); verified 2026-10-20.
+   - Check `updates.updatedRange` in each reply; it should continue from the last row.
+5. Verify: `read_range` on `<tab>!E:E` (email column) or just the row count, and
+   confirm it went up by `new_rows`.
+6. Log the pull in `~/advero/state/quickenrich_pulls.csv`:
+   `date,niche,filter,first_page,last_page,rows_exported,file_name,new_after_dedupe,notes`
+   (put "sheet rows A{start}:S{end}" in notes).
+
+## Column T (mv_result)
+- `qe_dedupe.py` now fills mv_result (`skipped_recent_qe` within 90 days, else blank). Append A:T (20 columns:
+  the 17 schema columns, fit, fit_reason, mv_result), at most 500 rows per call.
+- MV prep files: `/workspace/mv/<tab>_to_verify.csv` (email, sheet_row, tab, email_verification_date, fit).
+  Results go back into T by sheet_row, after checking the email in column E matches.
+
+## Rules
+- Dedupe happens on the box (final-leads + pool CSVs), not against the sheet. The
+  pool CSVs are the source of truth for "already staged"; the sheet is the view
+  Lorenzo loads from. Never delete pool CSVs that were appended to the sheet.
+- Never touch Instantly. Lorenzo uploads from the sheet.
+- No retries that could double-append: if an append errors, read the tab's last
+  rows first to see whether it landed before re-sending.
+- Sheets has no revision guard (last write wins); only append, never write_range
+  over existing data rows.

@@ -1,9 +1,30 @@
 ---
 name: daily-reports-and-metrics
-description: What Lorenzo wants reported and how. Field-by-field specs for the morning report (07:30 CT), evening report (18:30 CT), the Daily Metrics tracker row and DAILY UPDATE block, the 15-row KPI dashboard with thresholds, the Friday retro packet, campaign verdicts and experiments, and the pipeline sweep, with where every number comes from. Use for "morning report", "evening report", "daily update", "log today's metrics", "KPI", "how are the campaigns doing", "Friday retro", "verdicts", or when building anything that reports numbers.
+description: "Produce Advero’s current verified reports, KPI checks, sprint rows and campaign analyses. Use for reports, metrics logging and pipeline or campaign performance questions."
 ---
 
 # Daily reports and metrics
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- COO owns the daily truth report and verified dashboards; Revenue Operations and Accounting remain separate seats. A claim from another bot is not a verified metric.
+- Use the current OPS_SCHEDULE, saved routine records and November 4 handoffs for timing. The old 07:30 morning report below is superseded by the Upwork-first 07:30 agenda and post-Upwork/noon roll-up. The evening action list is around 18:30 CT.
+- An alert is delivered only when it reaches COO chat; logs and dashboards do not count. Positive replies need an urgent alert within five minutes. Remain quiet on unchanged routine checks unless the routine asks for a report.
+- 90 Day Sprint Day 1 is October 20, 2026. Missing measurements stay blank or n/a rather than zero; preserve measured versus assumed figures and verify source windows.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [ROUTINES.md](../../grok-source/2026-11-04/first-export/ROUTINES.md)
+- [OPS_SCHEDULE.md](../../grok-source/2026-11-04/first-export/advero/state/org/OPS_SCHEDULE.md)
+- [Revenue_Operations_to_COO_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/Revenue_Operations_to_COO_20261104.md)
+- [Accounting_to_COO_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/Accounting_to_COO_20261104.md)
+- [revenue-operations.md](../../grok-source/2026-11-04/third-export/routine_exports/revenue-operations.md)
+- [accounting.md](../../grok-source/2026-11-04/third-export/routine_exports/accounting.md)
+- [coo_PROMPTS.md](../../grok-source/2026-11-04/third-export/routine_exports/coo_PROMPTS.md)
+
 
 Grok Bot sends the reports. The numbers come from read-only pulls and from the
 engine's own log. Grok does not write the analysis text of a report that goes

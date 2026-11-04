@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Overnight reply queue (audit fix 2026-10-22, OPS_SCHEDULE.md "Cold email").
+
+The backup poll (instantly_reply_poll_backup.py) appends every new reply it finds
+outside 7 AM to 7 PM CT Mon-Sat, or on Sunday, to state/overnight_reply_queue.jsonl.
+
+Usage:
+  overnight_reply_queue.py list                 # everything not yet delivered
+  overnight_reply_queue.py classify ID CLASS    # CLASS: positive | complaint | other
+  overnight_reply_queue.py due                  # 7 AM: print undelivered items as JSON
+  overnight_reply_queue.py mark-delivered ID... # after COO relays them to Lorenzo
+
+Positive includes reschedule, no-show/apology and asking for times/availability
+(rule 2026-11-02, Marco miss). Human replies never get times_refresh or any template.
+Rule: positive and complaint replies ping Lorenzo (via COO, priority) right away,
+not at 7 AM. Everything else waits for the 7 AM delivery.
+Internal file only. Never sends anything.
+"""
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+CT = ZoneInfo("America/Chicago")
+Q = Path.home() / "advero/state/overnight_reply_queue.jsonl"
+CLASSES = {"positive", "complaint", "other"}
+
+
+def load():
+    if not Q.exists():
+        return []
+    out = []
+    for line in Q.read_text().splitlines():
+        line = line.strip()
+        if line:
+            out.append(json.loads(line))
+    return out
+
+
+def save(rows):
+    tmp = Q.with_suffix(".jsonl.tmp")
+    tmp.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    tmp.replace(Q)
+
+
+def main(argv):
+    if not argv:
+        print(__doc__)
+        return 2
+    cmd, args = argv[0], argv[1:]
+    rows = load()
+    now = datetime.now(CT).isoformat(timespec="seconds")
+    if cmd in ("list", "due"):
+        pending = [r for r in rows if not r.get("delivered_at_ct")]
+        print(json.dumps({"count": len(pending), "items": pending}, indent=2))
+        return 0
+    if cmd == "classify" and len(args) == 2:
+        eid, cls = args
+        if cls not in CLASSES:
+            print(f"class must be one of {sorted(CLASSES)}")
+            return 2
+        hit = False
+        for r in rows:
+            if r.get("email_id") == eid:
+                r["class"] = cls
+                r["status"] = "ping_now" if cls in ("positive", "complaint") else "wait_7am"
+                r["classified_at_ct"] = now
+                hit = True
+        save(rows)
+        print(json.dumps({"ok": hit, "email_id": eid, "class": cls}))
+        return 0 if hit else 1
+    if cmd == "mark-delivered" and args:
+        n = 0
+        for r in rows:
+            if r.get("email_id") in args and not r.get("delivered_at_ct"):
+                r["delivered_at_ct"] = now
+                r["status"] = "delivered"
+                n += 1
+        save(rows)
+        print(json.dumps({"marked": n}))
+        return 0
+    print(__doc__)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

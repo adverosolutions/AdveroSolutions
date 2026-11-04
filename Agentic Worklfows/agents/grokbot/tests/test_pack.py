@@ -61,19 +61,21 @@ class Pack(unittest.TestCase):
             self.assertTrue(text.startswith("---\nname: " + name + "\n"), name)
 
     def test_skill_copies_match_their_sources(self):
-        skills_dir = os.path.expanduser("~/.claude/skills")
-        checked = 0
         for name in build_pack.SKILLS:
-            source = os.path.join(skills_dir, name, "SKILL.md")
-            if not os.path.isfile(source):
-                continue
+            source = os.path.join(build_pack.REPO_SKILLS, name, "SKILL.md")
             with self.subTest(skill=name):
+                self.assertTrue(os.path.isfile(source), source)
                 self.assertEqual(read(os.path.join(ONBOARDING, "skills", name + ".md")),
-                                 build_pack.strip_sources(build_pack.read(source)),
-                                 "%s drifted from its skill; run build_pack.py" % name)
-            checked += 1
-        if not checked:
-            self.skipTest("no skill sources on this machine")
+                                 build_pack.prepare_skill(build_pack.read(source)),
+                                 "%s drifted from the repository skill; run build_pack.py" % name)
+
+    def test_current_sources_are_bundled_before_historical_docs(self):
+        pack = build_pack.combine()
+        for name, source in (("CURRENT_PROCESS.md", build_pack.CURRENT_PROCESS),
+                             ("CURRENT_RULEBOOK.md", build_pack.CURRENT_RULEBOOK)):
+            self.assertEqual(read(os.path.join(ONBOARDING, name)), read(source))
+            self.assertLess(pack.index("<!-- FILE: " + name + " -->"),
+                            pack.index("<!-- FILE: 00_START_HERE.md -->"))
 
     def test_linkedin_copies_match_their_sources(self):
         for name in build_pack.LINKEDIN_FILES:

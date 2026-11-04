@@ -1,0 +1,95 @@
+# Lorenzo's Codex settings, ported from his Claude Code setup.
+#
+# setup_codex.sh does NOT copy this file over ~/.codex/config.toml (the ChatGPT app owns that file:
+# plugins, marketplaces, node_repl). It inserts the part above the "TABLES" marker as a managed
+# block at the top of ~/.codex/config.toml (top-level keys must come before any [table]) and the
+# part below the marker as a managed block at the end. A key or table the app already sets outside
+# the blocks is skipped and reported, because TOML rejects duplicates. Edit this file, not the
+# installed blocks, then re-run setup_codex.sh.
+
+# Project instructions. Codex reads AGENTS.override.md, then AGENTS.md, then these names in each
+# directory from the repo root down to the working directory. Lorenzo's repos use CLAUDE.md
+# (root) and Claude.md ("Agentic Worklfows/"), so Codex gets the same project rules as Claude Code.
+project_doc_fallback_filenames = ["CLAUDE.md", "Claude.md"]
+
+# Default is 32 KiB for all project docs combined. Root CLAUDE.md (~10.4 KB) plus
+# "Agentic Worklfows/Claude.md" (~5 KB) fit, but 64 KiB leaves room for them to grow.
+project_doc_max_bytes = 65536
+
+# Permissions. Lorenzo runs Claude Code in bypass-permissions mode. The Codex equivalent
+# (--dangerously-bypass-approvals-and-sandbox, or sandbox_mode = "danger-full-access" with
+# approval_policy = "never") turns off the sandbox entirely, so it is not the default here.
+# Chosen instead: commands run without asking inside the workspace sandbox, with network on
+# (see [sandbox_workspace_write] below), and Codex asks only when a command needs to go
+# outside it (writing outside the writable roots, git metadata, etc.).
+#   Tighter: approval_policy = "untrusted" is not supported by this Codex; use
+#            sandbox_mode = "read-only", or set network_access = false below.
+#   Looser for one session: codex --sandbox danger-full-access --ask-for-approval never
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+# ---- TABLES (everything below goes at the end of ~/.codex/config.toml) ----
+
+# Lets the local Python tools (Apify, Instantly, MillionVerifier, Google APIs, Anthropic API)
+# make network calls from inside the sandbox, and lets a session started in a subfolder or a
+# worktree still write to the AdveroSolutions repo (.tmp/, job folders).
+[sandbox_workspace_write]
+network_access = true
+writable_roots = ["/Users/lorenzovillarreal/Desktop/AdveroSolutions"]
+
+# Skool (Maker School) - local stdio server, same as Claude's Coding/.mcp.json entry. It reads
+# its own ~/.config/skool-mcp/config.json; no env needed. Absolute node path because the
+# ChatGPT app does not load nvm; update it after a Node upgrade (`which node`).
+[mcp_servers.skool]
+command = "/Users/lorenzovillarreal/.nvm/versions/node/v24.13.1/bin/node"
+args = ["/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/skool-mcp/dist/index.js"]
+startup_timeout_sec = 30
+
+# Instantly - official hosted server. OAuth 2.1 with dynamic client registration on the root
+# endpoint; log in once with `codex mcp login instantly`. Source: https://developer.instantly.ai/mcp/quickstart
+# and https://developer.instantly.ai/mcp/authentication (API-key methods); OAuth is published in the
+# server's own metadata at https://mcp.instantly.ai/.well-known/oauth-protected-resource.
+[mcp_servers.instantly]
+url = "https://mcp.instantly.ai/"
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+# Fallback if OAuth login fails: comment out the url above and use the API-key endpoint with
+# `export INSTANTLY_API_KEY=...` in ~/.zshrc (Codex sends it as "Authorization: Bearer <key>",
+# which Instantly accepts).
+# url = "https://mcp.instantly.ai/mcp"
+# bearer_token_env_var = "INSTANTLY_API_KEY"
+
+# Upwork - official Upwork MCP server (same one the claude.ai connector uses). OAuth 2.1;
+# `codex mcp login upwork`. Source: https://www.upwork.com/ai/mcp (lists Codex App and CLI)
+# and https://mcp.upwork.com/.well-known/oauth-protected-resource.
+[mcp_servers.upwork]
+url = "https://mcp.upwork.com/mcp"
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+
+# ClickUp - official server, OAuth only (no API keys); `codex mcp login clickup`.
+# Source: https://developer.clickup.com/docs/connect-an-ai-assistant-to-clickups-mcp-server
+# ClickUp vets OAuth clients and Codex is not on its published list; if login is refused,
+# set enabled = false.
+[mcp_servers.clickup]
+url = "https://mcp.clickup.com/mcp"
+startup_timeout_sec = 30
+
+# GoHighLevel (LeadConnector) - official HighLevel MCP, Codex endpoint, OAuth;
+# `codex mcp login gohighlevel`. Source: https://marketplace.gohighlevel.com/docs/other/mcp
+[mcp_servers.gohighlevel]
+url = "https://services.leadconnectorhq.com/mcp/openai/v2/codex"
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+
+# Gmail, Google Calendar, Google Drive - use the OpenAI-curated Gmail, Google Calendar and
+# Google Drive plugins instead (in Codex: /plugins, or the Plugins tab in the ChatGPT app).
+# Google's own remote MCP servers exist but are a Developer Preview that needs a Google Cloud
+# project, enabled MCP APIs and your own OAuth client ID and secret; Codex config has no
+# client-secret field. Source: https://developers.google.com/workspace/guides/configure-mcp-servers
+# [mcp_servers.gmail]
+# url = "https://gmailmcp.googleapis.com/mcp/v1"
+# [mcp_servers.google-calendar]
+# url = "https://calendarmcp.googleapis.com/mcp/v1"
+# [mcp_servers.google-drive]
+# url = "https://drivemcp.googleapis.com/mcp/v1"

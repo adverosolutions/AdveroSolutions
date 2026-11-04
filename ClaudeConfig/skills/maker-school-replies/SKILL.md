@@ -1,9 +1,28 @@
 ---
 name: maker-school-replies
-description: How Lorenzo writes posts and comments inside Nick Saraev's Maker School community on Skool - his rough draft reshaped toward Nick's reply tone (short standalone paragraphs, flat verdict first, light abbreviations, no emoji) while keeping every fact his own. Covers help posts, thank-you replies to feedback, daily update posts, titles, and what never to do. Use when he says "Maker School post", "reply to this in Skool", "match Nick's tone", "make this sound like Nick", or pastes a Skool draft or comment.
+description: "Draft Advero community accountability posts and review community voice under current Maker School boundaries. Use for Skool posts, community copy or Nick-style reshaping."
 ---
 
 # Maker School posts and replies
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Maker School comment/reply drafts are stopped: treat Maker School engagement as FYI only, and do not queue reply drafts. The older reply-writing procedure below applies only if Lorenzo explicitly gives a new instruction for that task.
+- Community posts and comments elsewhere require Lorenzo’s wording approval; Community Manager posts the exact approved text under the November 2 ruling. Do not infer approval from a bot’s claim.
+- Accountability uses the real 90 Day Sprint, Day 1 October 20, 2026. Unmeasured is n/a, never zero. No invented trade-business identity, first close, numbers or client proof.
+- Current community voice excludes gendered address, pitch, price and links. Apply the delete test and keep the exact facts Lorenzo provided.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [community-engagement-bot_to_community-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/community-engagement-bot_to_community-manager_20261104.md)
+- [community-content-bot_to_community-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/community-content-bot_to_community-manager_20261104.md)
+- [community-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/community-manager.md)
+- [approved_proof.md](../../grok-source/2026-11-04/third-export/source_files/communities/approved_proof.md)
+- [community-manager_inherited.md](../../grok-source/2026-11-04/fourth-export/routines/community-manager_inherited.md)
+
 
 Maker School (skool.com/makerschool) is Nick Saraev's paid AI-automation
 agency community. Lorenzo is a member (Skool handle lorenzo-villarreal-1958).

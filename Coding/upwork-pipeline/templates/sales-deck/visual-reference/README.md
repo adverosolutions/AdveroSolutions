@@ -51,6 +51,8 @@ Each product must pass these stages in order:
    and the scope checked. Accept that exact native template only after defects
    are resolved. The actual prospect demo still needs its job-specific review.
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text above is kept as history. See `DIRECTIVES.md` U-014.
+
 The reference board shows missing imagery and remaining implementation work.
 Do not convert a documentation-only entry, a historical screenshot, or a cropped
 menu into a green production status. No current renderer is made visually ready

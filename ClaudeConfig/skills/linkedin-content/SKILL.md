@@ -1,9 +1,25 @@
 ---
 name: linkedin-content
-description: Lorenzo's LinkedIn posts for AdveroSolutions (AI agents for service businesses). The real-material sourcing rule, the approved proof list, the 5 content pillars, 7 post types, hook and format rules, cadence (4 a week, a personal post about every 2 weeks), and the "LinkedIn Queue" tab of the content calendar sheet the posts go into. Use when he says "write LinkedIn posts", "fill the content calendar", "a week of LinkedIn content", "posts on <pillar>", "turn this call into posts", or asks to check a LinkedIn draft. Claude Opus 5.5 writes every post; Grok Bot never writes or edits one; Lorenzo posts them himself.
+description: "Draft or review Lorenzo’s LinkedIn content from real material and approved proof. Use for posts, content-calendar work and LinkedIn drafts; Lorenzo approves and publishes."
 ---
 
 # LinkedIn content
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- LinkedIn Manager inherited the content seat on November 4. The current handoff keeps this lane drafts-only: Lorenzo approves and publishes LinkedIn posts.
+- Use real material and approved proof, no invented client results or sprint claims. The current guidance favors a useful, honest recommendation and a closing question rather than a comment-keyword CTA.
+- The November 2 v2 post and content dashboard are source records with pending approval. Do not treat a scheduled draft or an image as a published or approved post. The generic four-post cadence below is not evidence that those posts were sent.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [linkedin-content-bot_to_linkedin-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/linkedin-content-bot_to_linkedin-manager_20261104.md)
+- [linkedin_content_plan.md](../../grok-source/2026-11-04/first-export/advero/state/linkedin_content_plan.md)
+- [linkedin-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/linkedin-manager.md)
+
 
 Posts that make Lorenzo, founder of AdveroSolutions, look like a builder who is
 in the middle of it right now. They go into a Google Sheet queue. Lorenzo reads

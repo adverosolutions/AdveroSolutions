@@ -1,9 +1,26 @@
 ---
 name: sales-call
-description: Lorenzo's one-call-close discovery call for AdveroSolutions. Covers pre-call prep, the 15-minute call structure and script, objection handling, the offers with their pricing and guarantees (from the offer sheet only), which proof to cite, and what happens after a yes, a "think about it" or a no. Use for "prep me for my call", "pre-call brief", "what do I say if they ask price", "objection", "close", "proposal", "verbal commit", or any sales-call question.
+description: "Prepare and run Lorenzo’s current Zoom sales calls and fixed three-package offer menu. Use for pre-call prep, sales scripts, objections, closing or fitting a proposal to a call."
 ---
 
 # Sales call: the one-call close
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../../../../ClaudeConfig/PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Use the fixed November 4 offer menu in LEAN_ORG: P1 normally $1,497.00, Intro Pilot $500.00 for the first 3-5 customers, 30 days/one automation; P2 $3,497.00, 45 days/two-three automations; P3 $8,997.00, six months/QBRs/priority support. The earlier $747.00 pilot is superseded.
+- Prices include cents. Only P1 is discounted; discounts are verbal only and never in email or written proposals. No email pricing or guarantee figures. Fit package scope to the actual call transcript while keeping menu prices fixed.
+- Calls are Zoom-only, 12:00-18:00 CT. Each booked call has a call doc and a separate prep doc, each linking the lead’s website and LinkedIn. Use the actual event duration and do not add a duration promise to the booking confirmation.
+- The current sales skeleton is the long BS WISP version without lock-the-next-step lines. Proposals include expected results per package and Lorenzo’s software stack page. Do not invent proof, scope, prices or a close.
+
+Current sources:
+
+- [LEAN_ORG.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [sales-call.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/skills/sales-call.md)
+- [coo.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/roles/coo.md)
+- [coo_PROMPTS.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/routine_exports/coo_PROMPTS.md)
+
 
 "There is no 'I'll send you a proposal' or 'let me follow up with pricing.'" Price is presented on the call and a decision is asked for on the call. Post-call sequences exist only for leads who slip through despite the close attempt.
 

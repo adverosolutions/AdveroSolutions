@@ -132,3 +132,8 @@ Agentic\ Worklfows/execution/.sessions/
 .worktrees/
 !Agentic\ Worklfows/tools/**/*.json
 Agentic Worklfows/tools/template_doc/roundtrip_export.txt
+
+# Sanitized instruction/source snapshots and helper-skill assets (2026-11-04).
+!ClaudeConfig/grok-source/**/*.json
+!ClaudeConfig/grok-source/**/*.jsonl
+!ClaudeConfig/synced-skills/**/*.json

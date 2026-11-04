@@ -2,6 +2,8 @@
 
 Master handoff for a fresh model: [`master-handoff/00-MASTER.md`](master-handoff/00-MASTER.md). It consolidates the UI references, sales requirements, quality gate and delivery process; the saved export includes a paste-ready prompt and a test.
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014.
+
 > **Whole-walkthrough quality gate (2026-10-19):** Read `templates/sales-deck/SALES_ACCEPTANCE.md`. Every generation needs a nonrepeating problem → workflow → visible result → 15-minute call story. Astra reviews sales logic, copy, sample continuity, interactions and native fidelity together; visual-only approval does not pass.
 
 > **2026-10-19 visual rejection:** Today's batch stopped after the AI training and Florida legal recordings. The other five entries are rejected and archived. Lorenzo rejected native interface fidelity despite prior technical approvals. Do not reuse the current adapters as visually approved references. Future production must first resolve exact product-surface fidelity using current screenshots/workspace evidence, and reduce the run's usage cost. No new proposal demos today. Visual research and preparation were subsequently authorized; see `templates/sales-deck/visual-reference/README.md`.
@@ -52,7 +54,7 @@ Paths:
    "$PIPELINE/recording-queue" start --port 8769
    ```
    Re-registering the same ID and spec path is idempotent; a conflicting ID/path is refused. Normal sessions omit `--root` and all join the same durable queue. Missing specs remain queued.
-5. Follow `templates/sales-deck/BATCH_RUNBOOK.md`: explicit Sol content workers own only their assigned `deck-spec.json` and private evidence; main runs queue builds as specs arrive and records independent Astra verdicts against exact page hashes. Use the current supported adapters in `templates/sales-deck/PLATFORMS.md` and `extension-contract.md` (GHL, n8n, Make, Claude Code/Codex task transcripts, and custom workbench outputs); report `requires_adapter` for unsupported native tools/actions. Use actual exposed capacity, currently four total agents including main; do not assume a six-agent pool or edit global settings.
+5. Follow `templates/sales-deck/BATCH_RUNBOOK.md`: explicit Sol content workers own only their assigned `deck-spec.json` and private evidence; main runs queue builds as specs arrive and records independent Astra verdicts against exact page hashes. Use the current supported adapters in `templates/sales-deck/PLATFORMS.md` and `extension-contract.md` (GHL, n8n, Make, Claude Code/Codex task transcripts, and custom workbench outputs, plus the explicit `native` candidate surfaces in `templates/sales-deck/native-templates/README.md`: GoHighLevel, n8n (including the typed AI agent extension), Zapier editor/test panel and Claude app skills/project/chat. Each is a desktop sales candidate under bounded review with native production parity withheld (`templates/sales-deck/native-templates/SALES-REVIEW-2026-10-19.md`)); report `requires_adapter` for unsupported native tools/actions. Use actual exposed capacity, currently four total agents including main; do not assume a six-agent pool or edit global settings.
 6. While specs and review progress, main drafts `proposal.md` using section 6 and checks preview length. The recording board shows newest Upwork job posts first by descending numeric job ID. Entries without a recognized Upwork ID keep registration order below them; review completion never changes the order. `jobs/_ORDER.txt` remains historical; shared-queue sessions do not rewrite it or race on a separate order list. Never edit the shared registry/index or run the old `build.py batch --out` lane into `.local/recording-queue`.
 7. Report jobs progressively with the Upwork link, goal, preview count, queue status and unresolved factual questions. Only independently approved exact generations are ready to record; template/spec/page changes need new review. Never open the queue or demo automatically.
 
@@ -67,7 +69,7 @@ On "next", "go" or "open the first one":
    - how the proposal answers the post's questions
 3. He replies with a Loom link and a runtime, usually "2 minute video, push for the 15 minute call". Finalize:
    ```bash
-   cd /Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-workflow-generator && python3 -m upwork_gen.finalize ../upwork-pipeline/jobs/<slug> --loom <url> --runtime <N> --start "this week" --no-copy && cat ../upwork-pipeline/jobs/<slug>/proposal.md
+   cd /Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-workflow-generator && /usr/bin/python3 -m upwork_gen.finalize ../upwork-pipeline/jobs/<slug> --loom <url> --runtime <N> --start "this week" --no-copy && cat ../upwork-pipeline/jobs/<slug>/proposal.md
    ```
    - Add `--name <First>` when `jd.txt` has a `client first name:` line.
    - Never write `proposals.csv` by hand. Never use pbcopy (always pass `--no-copy`).
@@ -182,6 +184,8 @@ Use a capable model, run it in the background, and include all of this:
 
 - Use no names, companies, tools or industries from the client's review history or past jobs.
 - A first name in the greeting only when the post gives it (e.g. a signature) or Lorenzo gives it in chat. A name seen only in reviews: keep "Hey there".
+
+> **Superseded by U-006 (personalization):** The name rule in the two bullets above is replaced. Use a supplied or post name, or a repeated unambiguous contact name evidenced by two separate reviews. Do not infer ownership. Fallback: the business or account name, then "your team". Evidence stays private. The rest of this section still applies. See `DIRECTIVES.md` U-006.
 - Facts about Lorenzo only from section 7.
 
 ## 6. Proposal (locked format)
@@ -210,7 +214,7 @@ P.S. A few other things I've done:
 **Format**
 - Preview: 133 to 150 characters, counted from the start through `https://www.loom`. Check it with:
   ```bash
-  python3 -c "import sys; sys.path.insert(0,'/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-workflow-generator'); from upwork_gen.verify_job import preview_length; print(preview_length(open('<job>/proposal.md').read()))"
+  /usr/bin/python3 -c "import sys; sys.path.insert(0,'/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-workflow-generator'); from upwork_gen.verify_job import preview_length; print(preview_length(open('<job>/proposal.md').read()))"
   ```
   To hit the range, trim or lengthen the opener's [X] and [system] wording.
 - Required keyword goes inline before the greeting: `SyncReady. Hey there 👋 ...`, `TRACKER. Hey there 👋 ...`.

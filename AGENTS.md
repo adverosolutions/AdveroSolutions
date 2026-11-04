@@ -1,5 +1,8 @@
 # AdveroSolutions — Agent Instructions
 
+**Current process authority (Lorenzo, 2026-11-04):** Grok Bot is the operational process source; this repo is the maintained record. Before process work, read `ClaudeConfig/PROCESS_AUTHORITY.md` and the relevant updated skill. Latest dated Lorenzo rulings there supersede the older business/process snapshots below. This grants no live-action or template approval.
+
+
 > Canonical source: `Agentic Worklfows/Claude.md` (Claude's copy). This root file ensures Codex auto-loads the instructions.
 
 ## 3-Layer Architecture

@@ -1,9 +1,28 @@
 ---
 name: lead-sourcing
-description: Finding, verifying and loading cold-email leads for AdveroSolutions. Covers the current niches (recruiting, commercial cleaning, bookkeeping/tax), the Apify actors that work and the ones that do not, sharding and billing traps, MillionVerifier rules, the mailbox-provider rule (no Microsoft until 2026-10-12, risky rows allowed), the owner-email pipeline, Google Maps scraping, the lead sheet, suppression and the "already contacted" check, and the AnyMail row-misalignment guard. Use for "find leads", "scrape", "how many leads do we have", "Apify", "verify emails", "import leads", "separate contacted leads", "new niche".
+description: "Find, fit-check, verify and stage Advero leads under current Lead Gen ownership, suppression and source rules. Use for scraping, lead counts, verification or import planning."
 ---
 
 # Lead sourcing
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Lead Gen Manager owns lead sourcing and all loads. Its November 4 handoffs absorb QuickEnrich, Maps and Sales Nav duties. Older notes saying COO or Claude owns loading are superseded.
+- QuickEnrich is browser-only, never its API. Current pool lanes include pest control, commercial cleaning and PPC, with residential and adjacent niches separately tagged. Keep owner-title, identity, country, fit and company-dedupe checks.
+- Use existing MillionVerifier credits only, preserve valid and catch-all outcomes, and skip recently verified QuickEnrich rows under the current source procedure. Never buy credits as part of a pull.
+- Completed no-reply leads can be exported with all fields and a 90-day recontact date to free plan capacity, with count verification and suppression checks. This is a separate process from warm nurture and opt-out handling.
+- Current Maps crawl is on a 72-hour hold until at least November 5 at 21:00 CT; the staged probe and stop records still control. Never restart from a historical nightly schedule. No campaigns resume through a sourcing task.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [quickenrich-bot_to_lead-gen-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/quickenrich-bot_to_lead-gen-manager_20261104.md)
+- [maps-bot_to_lead-gen-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/maps-bot_to_lead-gen-manager_20261104.md)
+- [quickenrich-lead-pulls.md](../../grok-source/2026-11-04/first-export/advero/skills/quickenrich-lead-pulls.md)
+- [lead-gen-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/lead-gen-manager.md)
+
 
 Every lead must be verified clean before any money goes into enrichment or personalization,
 and every lead must pass suppression before it can be staged for a campaign.

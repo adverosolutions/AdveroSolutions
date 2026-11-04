@@ -19,6 +19,8 @@ From `templates/sales-deck`:
 /usr/bin/python3 native-templates/build_preview.py
 ```
 
+> **Warning:** Do not run `build.py lock` merely to bypass drift. Validate against the saved lock; relock only as deliberate template maintenance. See `master-handoff/01-OPERATIONS.md` section 1.
+
 The persistent review hub is `../../.local/native-template-review/index.html`.
 Each standalone page embeds its font, styles, data and vendor icons. The hub is
 outside the recording queue. Rebuild after any source/spec change; old page review

@@ -1,9 +1,24 @@
 ---
 name: revenue-engine-ops
-description: Maintainer manual for the AdveroSolutions revenue engine ("Agentic Worklfows" repo). Layout, shadow vs live and guard_write, template approvals and the one Google Doc "done" path, change-sets with --dry-run, Modal and laptop schedules and deploy status, the four section chats with worktree and push rules, the test command, Python 3.9 limits, the old Instantly-to-CRM sync. Use before building, fixing, testing, deploying or reviewing engine code, or when asked "is it live", "what runs where", "how do I push", "how do approvals work".
+description: "Maintain Advero’s repository tools and distinguish legacy engine code from current Grok operations. Use before changing, testing, reviewing or deploying revenue-engine code."
 ---
 
 # Revenue engine: maintainer manual
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Current operations are run by Grok Bot under LEAN_ORG, not by the September connector/engine migration described below. Codex maintains repository code and process records. Do not restart canceled connector builds or describe historical shadow schedules as current live operations.
+- Current operational changes, campaign pauses, sequence approvals and ownership come from the dated Grok records. The old assertions below about Haiku/Sonnet, no webhook, no polling, no booking links and no live deployment are historical statements, not present facts.
+- Keep the repository’s code-level shadow/write guards, recipient checks, template registry and dry-run requirements. This documentation update approves no deployment, live flags, sends or template hashes.
+- Use /usr/bin/python3 for local Python 3.9 checks and the repository’s netguard test command. Imported Grok code is archival until reviewed; do not execute its production CLIs or supply secrets while validating this handoff.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [INDEX.md](../../grok-source/2026-11-04/first-export/INDEX.md)
+
 
 For Claude Code working in the repo. Grok Bot needs only the "Safety rules" and
 "Where it runs" sections; its own manual is the `grok-operator` skill. Reply

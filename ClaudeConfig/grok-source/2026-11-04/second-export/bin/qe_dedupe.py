@@ -1,0 +1,365 @@
+#!/usr/bin/env python3
+"""Dedupe a QuickEnrich (or Sales Nav -> QuickEnrich) export against Lorenzo's
+final leads (~/advero/state/leads/final-leads/*.csv) and everything already
+staged in ~/advero/state/leads/pool/*.csv, then write new rows in a fixed schema.
+
+Usage:
+  qe_dedupe.py EXPORT.csv --niche pest_control|cleaning|ppc --source quickenrich|salesnav
+               [--label p1-25] [--date 2026-10-21] [--out-dir DIR] [--final-dir DIR]
+               [--dry-run]
+
+Matching (a row is a dupe if ANY key matches):
+  * lowercased email
+  * normalized domain + normalized full name (lowercase, letters only).
+    Domains come from website and email domain (www/scheme/path stripped);
+    each available domain is paired with the name.
+Rows without an email are dropped, as are duplicates within the file.
+New rows get fit / fit_reason from qe_fit.classify (sheet R:S) and mv_result (sheet T:
+'skipped_recent_qe' when the QuickEnrich verification date is within 90 days, else blank).
+Prints a JSON summary to stdout.
+
+Sales Nav / LinkedIn mode (--source salesnav, Lorenzo 2026-10-27 3:08 PM CT, li-ce-separate-20261027):
+cold email and LinkedIn are separate. do_not_reload rows are KEPT and flagged, client_known rows are KEPT
+and flagged (column li_flags; summary do_not_reload_flagged_kept). Dedupe vs final-leads/pool still applies.
+All other sources are unchanged.
+
+Suppression (do_not_reload, Lorenzo's rule 2026-10-21): any email in
+~/advero/state/reactivation/do_not_reload.csv whose suppress_until is still in the future
+(today in America/Chicago) is dropped and counted as `suppressed` (lowercased, trimmed match).
+It re-enters once the date is reached. Missing/unreadable file -> loud stderr warning, the run
+continues, summary shows "suppression": "off". Test override: --suppress-file or env
+ADVERO_DO_NOT_RELOAD. Logic lives in suppression.py (read only on the source file).
+
+Domain w/Emails / other bulk result files (added 2026-10-20 for Company Finder pulls):
+  --header-map "email=Work Email,title=Job Position,..."  forces canonical->actual header
+      mapping on top of the automatic VARIANTS match (use when a column isn't recognised;
+      the JSON summary's column_map shows what was matched). Canonical keys: see VARIANTS.
+  --meta pest_domains_meta.csv  sidecar keyed by domain (domain,company_name,city,state,
+      employee_count,fit_reason). Fills blank company/city/state/employee_count by domain,
+      and since those companies were already fit-checked at company level, a niche
+      "off-niche" verdict from qe_fit is replaced by the sidecar's fit_reason (title rule
+      still applies: non-owner stays non-owner). Use --search-id CF for these.
+      Cleaning meta (qe_cf_domains.py cleaning) adds fit_class: cleaning_residential companies tag
+      cleaning_residential for owner titles and non-owner otherwise (assistant/coordinator always non-owner); commercial rows that the name rules
+      call off-niche or cleaning_residential become good / non-owner by title.
+"""
+import argparse, csv, glob, json, os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from qe_fit import classify  # fit / fit_reason tagging
+import suppression  # do_not_reload hold-out (read only)
+import client_index  # shared client INDEX.csv check (read only)
+from collections import Counter
+from datetime import datetime
+
+HOME = os.path.expanduser("~")
+FINAL_DIR = os.path.join(HOME, "advero/state/leads/final-leads")
+POOL_DIR = os.path.join(HOME, "advero/state/leads/pool")
+
+SCHEMA = ["first_name", "last_name", "full_name", "title", "email",
+          "email_verification_date", "company", "domain", "website",
+          "linkedin_url", "employee_count", "city", "state", "country",
+          "niche", "source", "pulled_at", "fit", "fit_reason", "mv_result", "source_search"]
+
+# canonical field -> header variants (compared after normalizing: lowercase, alnum only)
+VARIANTS = {
+    "first_name": ["first name", "firstname", "first", "given name", "fname"],
+    "last_name": ["last name", "lastname", "last", "surname", "family name", "lname"],
+    "full_name": ["full name", "fullname", "name", "contact name", "person name", "contact", "employee name"],
+    "title": ["title", "job title", "position", "role", "headline", "jobtitle", "job position", "designation", "contact title", "person title"],
+    "email": ["email", "email address", "work email", "business email", "e-mail",
+              "verified email", "professional email", "contact email", "emails"],
+    "email_verification_date": ["email verification date", "email verified date",
+                                "email_verified_date", "verification date", "verified at",
+                                "email verified at", "last verified"],
+    "company": ["company", "company name", "organization", "organization name",
+                "account name", "employer", "current company"],
+    "website": ["company url", "website", "company website", "url", "website url",
+                "company domain url", "homepage", "web site"],
+    "domain": ["domain", "company domain", "website domain"],
+    "email_domain": ["email domain"],
+    "linkedin_url": ["linkedin", "linkedin url", "linkedin profile", "person linkedin url",
+                     "linkedin profile url", "profile url", "li url", "linkedinurl"],
+    "employee_count": ["employee count", "employees", "company size", "headcount",
+                       "number of employees", "employee range", "size", "company employees"],
+    "city": ["city", "person city", "company city"],
+    "state": ["state", "region", "province", "state province", "person state", "company state"],
+    "country": ["country", "country code", "person country", "company country"],
+    "locality": ["locality", "location", "person location", "company location"],
+}
+
+MV_RECENT_DAYS = 90
+
+def mv_default(vdate, today=None):
+    """'skipped_recent_qe' if QuickEnrich verified the email within 90 days, else '' (needs MillionVerifier)."""
+    from datetime import date, timedelta
+    today = today or date.today()
+    try:
+        d = date.fromisoformat((vdate or "").strip()[:10])
+    except ValueError:
+        return ""
+    return "skipped_recent_qe" if d >= today - timedelta(days=MV_RECENT_DAYS) else ""
+
+def norm_header(h):
+    return re.sub(r"[^a-z0-9]", "", (h or "").lower())
+
+def build_map(headers):
+    """Return canonical -> actual header (first matching variant wins, in variant order)."""
+    by_norm = {}
+    for h in headers:
+        by_norm.setdefault(norm_header(h), h)
+    m = {}
+    for canon, vs in VARIANTS.items():
+        for v in [canon] + vs:
+            hit = by_norm.get(norm_header(v))
+            if hit is not None and hit not in m.values():
+                m[canon] = hit
+                break
+    return m
+
+def norm_domain(s):
+    s = (s or "").strip().lower()
+    if not s:
+        return ""
+    if "@" in s:
+        s = s.split("@", 1)[1]
+    s = re.sub(r"^[a-z][a-z0-9+.-]*://", "", s)
+    s = s.split("/")[0].split("?")[0].split("#")[0].split(":")[0]
+    s = re.sub(r"^www\d*\.", "", s)
+    return s.strip(".")
+
+def norm_name(s):
+    return re.sub(r"[^a-z]", "", (s or "").lower())
+
+def norm_email(s):
+    s = (s or "").strip().lower()
+    if s.startswith("mailto:"):
+        s = s[7:]
+    # some exports put several emails in one cell; take the first
+    s = re.split(r"[;,\s]+", s)[0] if s else s
+    return s if "@" in s else ""
+
+def state_from_locality(loc):
+    """'Phoenix, Arizona, United States' -> 'Arizona' (only for 3-part localities)."""
+    parts = [p.strip() for p in (loc or "").split(",") if p.strip()]
+    return parts[-2] if len(parts) >= 3 else ""
+
+def get(row, m, key):
+    h = m.get(key)
+    return (row.get(h) or "").strip() if h else ""
+
+def extract(row, m):
+    first, last, full = get(row, m, "first_name"), get(row, m, "last_name"), get(row, m, "full_name")
+    if not full and (first or last):
+        full = f"{first} {last}".strip()
+    if full and not (first or last):
+        parts = full.split()
+        first, last = parts[0], " ".join(parts[1:])
+    email = norm_email(get(row, m, "email"))
+    website = get(row, m, "website")
+    domain = norm_domain(get(row, m, "domain")) or norm_domain(website)
+    email_dom = norm_domain(get(row, m, "email_domain")) or norm_domain(email)
+    if not domain:
+        domain = email_dom
+    return dict(first_name=first, last_name=last, full_name=full, email=email,
+                website=website, domain=domain, email_domain=email_dom)
+
+def keys_for(rec):
+    ks = set()
+    if rec["email"]:
+        ks.add("e:" + rec["email"])
+    nm = norm_name(rec["full_name"])
+    if nm:
+        for d in {rec["domain"], rec["email_domain"], norm_domain(rec["email"])}:
+            if d:
+                ks.add(f"n:{d}|{nm}")
+    return ks
+
+def read_csv(path):
+    with open(path, newline="", encoding="utf-8-sig", errors="replace") as fh:
+        r = csv.DictReader(fh)
+        return list(r.fieldnames or []), list(r)
+
+def load_keys(paths):
+    ks = set()
+    for p in paths:
+        hdr, rows = read_csv(p)
+        m = build_map(hdr)
+        for row in rows:
+            ks |= keys_for(extract(row, m))
+    return ks
+
+def parse_header_map(spec, headers):
+    """'email=Work Email,title=Position' -> {canon: actual}; unknown headers are an error."""
+    out = {}
+    for part in [x for x in (spec or "").split(",") if x.strip()]:
+        k, _, v = part.partition("=")
+        k, v = k.strip(), v.strip()
+        if k not in VARIANTS:
+            sys.exit(f"ERROR: --header-map key '{k}' not in {sorted(VARIANTS)}")
+        if v not in headers:
+            sys.exit(f"ERROR: --header-map column '{v}' not in export headers {headers}")
+        out[k] = v
+    return out
+
+def load_meta(path):
+    if not path:
+        return {}
+    _, rows = read_csv(path)
+    return {norm_domain(r.get("domain")): r for r in rows if norm_domain(r.get("domain"))}
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("export")
+    ap.add_argument("--niche", required=True, choices=["pest_control", "cleaning", "ppc"])
+    ap.add_argument("--source", required=True, choices=["quickenrich", "salesnav"])
+    ap.add_argument("--label", default=None, help="e.g. p1-4; default = export file stem")
+    ap.add_argument("--search-id", default="", help="QuickEnrich search id, e.g. P2 (stored in source_search, used by fit rules)")
+    ap.add_argument("--date", default=datetime.now().strftime("%Y-%m-%d"))
+    ap.add_argument("--final-dir", default=FINAL_DIR)
+    ap.add_argument("--pool-dir", default=POOL_DIR)
+    ap.add_argument("--out-dir", default=None, help="default = pool dir")
+    ap.add_argument("--header-map", default="", help="canon=Actual Header,... overrides for unrecognised columns")
+    ap.add_argument("--meta", default="", help="company sidecar CSV keyed by domain (Company Finder pulls)")
+    ap.add_argument("--dry-run", action="store_true", help="count only, write nothing")
+    ap.add_argument("--suppress-file", default=None, help="do_not_reload CSV override (tests); default ~/advero/state/reactivation/do_not_reload.csv")
+    a = ap.parse_args()
+
+    label = a.label or os.path.splitext(os.path.basename(a.export))[0]
+    label = re.sub(r"[^A-Za-z0-9._-]+", "-", label).strip("-") or "batch"
+    out_dir = a.out_dir or a.pool_dir
+    out_path = os.path.join(out_dir, f"{a.date}_{a.niche}_{a.source}_{label}_new.csv")
+
+    final_files = sorted(glob.glob(os.path.join(a.final_dir, "*.csv")))
+    if not final_files:
+        sys.exit(f"ERROR: no final-leads CSVs in {a.final_dir}")
+    pool_files = [p for p in sorted(glob.glob(os.path.join(a.pool_dir, "*.csv")))
+                  if os.path.abspath(p) != os.path.abspath(out_path)]
+    final_keys = load_keys(final_files)
+    pool_keys = load_keys(pool_files)
+    sup = suppression.load(a.suppress_file)
+    sup_hits = []
+    cli = client_index.load()
+    cli_hits = []
+
+    hdr, rows = read_csv(a.export)
+    m = build_map(hdr)
+    forced = parse_header_map(a.header_map, hdr)
+    if forced:
+        m = {k: v for k, v in m.items() if v not in forced.values()}
+        m.update(forced)
+    meta = load_meta(a.meta)
+    meta_hits = 0
+    if "email" not in m:
+        sys.exit(f"ERROR: no email column recognised in {a.export}. Headers: {hdr}")
+    # Email Domain and Locality are used for matching/derivation but kept as extra columns too
+    used = {v for k, v in m.items() if k not in ("email_domain", "locality")}
+    extras = [h for h in hdr if h not in used and h not in SCHEMA]
+    fit_counts = Counter()
+
+    pulled_at = datetime.now().astimezone().isoformat(timespec="seconds")
+    s = dict(rows_in=len(rows), no_email=0, suppressed=0, dupes_vs_final=0, dupes_vs_pool=0,
+             in_file_dupes=0, new_rows=0)
+    seen, out = set(), []
+    # Sales Nav (LinkedIn) mode, Lorenzo 2026-10-27 3:08 PM CT (li-ce-separate-20261027):
+    # do_not_reload rows are kept and flagged, client_known rows are kept and flagged (INDEX is flag only).
+    linkedin_mode = a.source == "salesnav"
+    dnr_flagged = []
+    for row in rows:
+        rec = extract(row, m)
+        if not rec["email"]:
+            s["no_email"] += 1; continue
+        li_flags = []
+        if rec["email"] in sup["active"]:
+            if linkedin_mode:
+                # li-ce-separate-20261027: cold email suppression never removes anyone from LinkedIn lists
+                li_flags.append("cold_email_do_not_reload"); dnr_flagged.append(rec["email"])
+            else:
+                s["suppressed"] += 1; sup_hits.append(rec["email"]); continue
+        ck = client_index.match(cli, rec["email"], rec["domain"])
+        if ck:
+            cli_hits.append(f'{rec["email"]} -> {ck}')
+            if linkedin_mode:
+                li_flags.append(f"client_known:{ck}")
+            else:
+                continue
+        ks = keys_for(rec)
+        if ks & final_keys:
+            s["dupes_vs_final"] += 1; continue
+        if ks & pool_keys:
+            s["dupes_vs_pool"] += 1; continue
+        if ks & seen:
+            s["in_file_dupes"] += 1; continue
+        seen |= ks
+        o = {
+            "first_name": rec["first_name"], "last_name": rec["last_name"],
+            "full_name": rec["full_name"], "title": get(row, m, "title"),
+            "email": rec["email"],
+            "email_verification_date": get(row, m, "email_verification_date"),
+            "company": get(row, m, "company"), "domain": rec["domain"],
+            "website": rec["website"], "linkedin_url": get(row, m, "linkedin_url"),
+            "employee_count": get(row, m, "employee_count"), "city": get(row, m, "city"),
+            "state": get(row, m, "state") or state_from_locality(get(row, m, "locality")),
+            "country": get(row, m, "country"),
+            "niche": a.niche, "source": a.source, "pulled_at": pulled_at,
+            "source_search": a.search_id,
+        }
+        for h in extras:
+            o[h] = row.get(h, "")
+        md = meta.get(rec["domain"]) or meta.get(rec["email_domain"])
+        if md:
+            meta_hits += 1
+            for k_o, k_m in (("company", "company_name"), ("city", "city"), ("state", "state"), ("employee_count", "employee_count")):
+                if not o[k_o]:
+                    o[k_o] = (md.get(k_m) or "").strip()
+        o["fit"], o["fit_reason"] = classify(o, a.niche)
+        if md:
+            # cleaning meta carries fit_class (commercial | cleaning_residential); older meta (pest) has none.
+            mfr = (md.get("fit_reason") or "").strip()
+            mclass = (md.get("fit_class") or "").strip() or ("cleaning_residential" if mfr.startswith("cleaning_residential") else "")
+            tag = f"[{a.search_id}] " if a.search_id else ""
+            if mclass == "cleaning_residential":
+                # company-level verdict wins, but the owner-title rule still applies (2026-10-20 10 PM):
+                # owner titles -> cleaning_residential, others -> non-owner. Assistant/coordinator titles are
+                # non-owner even when they mention CEO/partner ("Executive Assistant to the CEO").
+                from qe_fit import owner_title
+                ok, twhy = owner_title(o["title"])
+                tl = o["title"].lower()
+                if ok and re.search(r"assistant|coordinator", tl) and "owner" not in tl:
+                    ok, twhy = False, ""
+                if ok:
+                    o["fit"], o["fit_reason"] = "cleaning_residential", f"{tag}company pre-vetted: {mfr}"
+                else:
+                    o["fit"], o["fit_reason"] = "non-owner", f"{tag}residential co (cleaning_residential company); {twhy or 'title ' + repr(o['title'][:40])}"
+            elif o["fit"] == "off-niche" or (mclass == "commercial" and o["fit"] == "cleaning_residential"):
+                from qe_fit import owner_title
+                ok, twhy = owner_title(o["title"])
+                o["fit"], o["fit_reason"] = ("good", f"{tag}company pre-vetted: {mfr}") if ok else ("non-owner", twhy)
+        o["mv_result"] = mv_default(o["email_verification_date"])
+        if linkedin_mode:
+            o["li_flags"] = ";".join(li_flags)
+        fit_counts[o["fit"]] += 1
+        out.append(o)
+    s["new_rows"] = len(out)
+    s["fit"] = dict(fit_counts)
+    if meta:
+        s["meta_rows_matched"] = meta_hits
+
+    if not a.dry_run:
+        os.makedirs(out_dir, exist_ok=True)
+        with open(out_path, "w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=SCHEMA + extras + (["li_flags"] if linkedin_mode else []), extrasaction="ignore")
+            w.writeheader(); w.writerows(out)
+
+    s.update(suppression.summary(sup, s["suppressed"], sup_hits))
+    s.update(client_index.summary(cli, cli_hits))
+    if linkedin_mode:
+        s.update(linkedin_mode=True, client_known_dropped=0,
+                 do_not_reload_flagged_kept=len(dnr_flagged), do_not_reload_flagged_emails=sorted(dnr_flagged))
+    s.update(export=os.path.abspath(a.export), output=None if a.dry_run else out_path,
+             niche=a.niche, source=a.source, column_map=m, extra_columns=extras,
+             final_files=len(final_files), pool_files=len(pool_files),
+             final_keys=len(final_keys), pool_keys=len(pool_keys))
+    print(json.dumps(s, indent=2))
+
+if __name__ == "__main__":
+    main()

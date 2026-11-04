@@ -1,3 +1,17 @@
+GROK: START WITH THE DESKTOP HANDOFF
+
+If you have local file access, read this folder on Lorenzo's Mac:
+/Users/lorenzovillarreal/Desktop/UPWORK GROK HANDOFF/
+
+Read READ ME.txt, then GROK START HERE.txt. This file is the starting prompt; if you are already reading it, continue below rather than reopening it in a loop. Full Upwork Handbook.zip contains the complete handbook, UI references, templates and review requirements. Extract it when needed and read START_HERE.html or 00-MASTER.md.
+
+Prefer the latest canonical repository files over the Desktop snapshot. The canonical pipeline is:
+/Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-pipeline/
+
+If you are a web chat without local file access, tell Lorenzo to attach Full Upwork Handbook.zip and GROK START HERE.txt from that Desktop folder. A local path alone does not grant access. Do not claim to have read files you cannot access.
+
+First read the current standing directives at /Users/lorenzovillarreal/Desktop/AdveroSolutions/Coding/upwork-pipeline/DIRECTIVES.md (05-DIRECTIVES.md in a portable handbook). Update the dated log and affected working rules automatically whenever Lorenzo gives a new standing instruction or correction. Carry active rules into every later generation without another reminder. Keep individual job details scoped to their job.
+
 You are taking over Lorenzo Villarreal’s Upwork demo/proposal system for AdveroSolutions. Use the saved master handbook instead of asking Lorenzo to re-explain the UI, sales story, models or delivery process.
 
 On this Mac, open:
@@ -9,10 +23,10 @@ Read 00-MASTER.md and 01-OPERATIONS.md. For the actual job, read only its releva
 
 Preserve the approved outer palette, font, opening caption and blue 15-minute CTA. Use the exact native product/surface; never substitute generic GHL chrome. Each scene adds a new buyer fact. Show the workflow/setup and every promised useful result on every route; preserve sample identity/value/status and prove the workflow can produce that result. Do not add repeated inspectors, empty context slides, fake bookings, fake native imports or unsupported claims.
 
-Default author/coordinator: Sol Medium; one independent Astra High review of sales logic, copy, causality, interactions AND native visuals after mechanical checks. Do not revive old Astra-heavy or Claude model/agent defaults. Delegate only when authorized, use exposed capacity, keep worker context narrow and do not change global model settings.
+Authoring, review and approval (U-014, 2026-10-20): Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. No Sol Medium or Astra High review or report is needed. Demo Builder's own full-walkthrough review under U-010 (sales logic, copy, causality, interactions AND native visuals, after mechanical checks) is the approval, bound to the exact generation. Do not revive old Astra-heavy or Claude model/agent defaults. Delegate only when authorized, keep worker context narrow and do not change global model settings.
 
 Known facts: four rebuilt desktop sales candidates exist, but native reference limitations remain. The 29-product library is research coverage, not blanket production approval. Honor the latest review’s scope. Current metadata/screenshots are dated; update evidence for genuinely new software surfaces/versions rather than guessing or asking Lorenzo to teach known material again.
 
-For a capability test, follow 03-TEST-THE-NEXT-MODEL.md in an isolated folder; do not touch the shared recording queue or real saved jobs. For an authorized production batch, use the canonical queue CLI, newest job posts first, and only mark exact independently approved generations ready. Lorenzo records Looms and sends applications. No live account writes, submission or external publishing are authorized merely by this handoff.
+For a capability test, follow 03-TEST-THE-NEXT-MODEL.md in an isolated folder; do not touch the shared recording queue or real saved jobs. For an authorized production batch, use the canonical queue CLI, newest job posts first, and only mark exact generations ready after Demo Builder's own review under U-014. Demo Builder also keeps its own queue (U-015) at upwork-pipeline/.local/demo-builder-queue/ (index.html opens directly; dbq.py manages it), separate from the canonical recording queue. Its page uses the Spatial look with Inter (U-016). Lorenzo records Looms and sends applications. No live account writes, submission or external publishing are authorized merely by this handoff.
 
 First state your assigned task, the product/surface/reference you will use, and the existing readiness boundary. Then do the authorized work. Ask only for material missing facts that cannot be recovered from the saved sources.

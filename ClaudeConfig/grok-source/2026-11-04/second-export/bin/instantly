@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+eval "$(python3 - <<'PY'
+import importlib.util, os, shlex
+spec = importlib.util.spec_from_file_location("lbs", "/home/box/advero/bin/_load_box_secrets.py")
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+m.apply()
+for k in ("INSTANTLY_API_KEY",):
+    v = os.environ.get(k)
+    if v:
+        print(f"export {k}={shlex.quote(v)}")
+PY
+)"
+BASE="https://api.instantly.ai/api/v2"
+if [[ -z "${INSTANTLY_API_KEY:-}" ]]; then
+  echo "INSTANTLY_API_KEY is not set" >&2
+  exit 1
+fi
+UA="Mozilla/5.0 (compatible; AdveroBot/1.0)"
+auth=(-H "Authorization: Bearer ${INSTANTLY_API_KEY}" -H "Content-Type: application/json" -H "Accept: application/json" -H "User-Agent: ${UA}")
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  ping)
+    curl -sS -o /tmp/instantly_ping.json -w "%{http_code}" "${auth[@]}" "$BASE/campaigns?limit=1"
+    echo
+    python3 -c "import pathlib; p=pathlib.Path('/tmp/instantly_ping.json'); t=p.read_text()[:200]; print('body_prefix', t.replace(chr(10),' ')[:200])"
+    ;;
+  interest)
+    email="${1:?email}"; value="${2:?interest_value}"
+    curl -sS -X POST "${auth[@]}" "$BASE/leads/update-interest-status" \
+      -d "$(python3 -c "import json,sys; print(json.dumps({'lead_email':sys.argv[1],'interest_value':float(sys.argv[2])}))" "$email" "$value")"
+    echo
+    ;;
+  reply)
+    file="${1:?json file}"
+    python3 - "$file" <<'PY'
+import json, sys
+from pathlib import Path
+sys.path.insert(0, "/home/box/advero/bin")
+from instantly_body import ensure_body
+p = Path(sys.argv[1])
+data = ensure_body(json.loads(p.read_text()))
+p.write_text(json.dumps(data))
+html = (data.get("body") or {}).get("html") or ""
+if "<br" not in html.lower() and "<p" not in html.lower():
+    print("instantly_reply: WARNING html may flatten to one block", file=sys.stderr)
+else:
+    print("instantly_reply: body.html paragraph breaks ready", file=sys.stderr)
+PY
+    curl -sS -X POST "${auth[@]}" "$BASE/emails/reply" -d @"$file"
+    echo
+    ;;
+  emails)
+    q="${1:-}"
+    curl -sS "${auth[@]}" "$BASE/emails?limit=20&search=$q"
+    echo
+    ;;
+  *)
+    echo "usage: instantly ping|interest <email> <value>|reply <json>|emails [q]" >&2
+    exit 2
+    ;;
+esac

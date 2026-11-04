@@ -1,0 +1,71 @@
+import csv, glob, os, re, sys, json, collections
+sys.path.insert(0, '/home/box/advero/bin'); 
+from qe_dedupe import norm_domain, read_csv
+from qe_cf_fit import fit
+H = os.path.expanduser('~')
+SRC = f'{H}/advero/state/quickenrich/2026-10-20_pest_control_companyfinder.csv'
+FREE = {"gmail.com","yahoo.com","hotmail.com","outlook.com","aol.com","icloud.com","msn.com","live.com","comcast.net","att.net","bellsouth.net","sbcglobal.net","verizon.net","me.com","ymail.com","protonmail.com","cox.net","charter.net","earthlink.net"}
+PLATFORM = re.compile(r"(^|\.)(facebook|fb|yelp|google|business\.site|sites\.google|wixsite|wix|godaddysites|squarespace|weebly|linkedin|instagram|angi|homeadvisor|thumbtack|bbb|nextdoor|mapquest|yellowpages|linktr)\.")
+def ex_domains(paths):
+    d = set()
+    for p in paths:
+        hdr, rows = read_csv(p)
+        cols = [h for h in hdr if re.sub(r'[^a-z]','',h.lower()) in ("domain","website","companyurl","url","emaildomain","companywebsite","email")]
+        for r in rows:
+            for c in cols:
+                x = norm_domain(r.get(c) or "")
+                if x and x not in FREE and "." in x: d.add(x)
+    return d
+final = sorted(glob.glob(f'{H}/advero/state/leads/final-leads/*.csv'))
+pool = sorted(glob.glob(f'{H}/advero/state/leads/pool/*.csv'))
+fd, pdm = ex_domains(final), ex_domains(pool)
+staged = ex_domains(sorted(glob.glob(f'{H}/advero/state/leads/staged_leads_*.csv')))
+HOSTED = re.compile(r"\.(ueniweb\.com|gorilladesksites\.com|myworkwave\.com|wordpress\.com|godaddysites\.com|bizlistusa\.com|ctcin\.bio|weebly\.com|wixsite\.com|square\.site|business\.site|yahoo\.com)$")
+JUNK_PREFIX = re.compile(r"^(m|local|signup|us|en|web|home)\.(?=[^.]+\.[a-z]+$)")
+def canon(d):
+    return JUNK_PREFIX.sub("", d)
+def franchise(d):
+    return d.count(".") >= 2 and not HOSTED.search(d)
+def root(d):  # registrable-ish: last 2 labels (US cos are almost all .com/.net)
+    return ".".join(d.split(".")[-2:])
+fd_r = {root(x) for x in fd}; pd_r = {root(x) for x in pdm}
+
+rows = list(csv.DictReader(open(SRC, newline='', encoding='utf-8-sig')))
+c = collections.Counter(raw=len(rows)); drop = collections.Counter()
+kept, seen, meta, held = [], {}, [], []
+for r in rows:
+    k, why = fit(r)
+    if not k: drop[why.split("'")[0].split('(')[0].strip()[:70]] += 1; continue
+    c['fit_kept'] += 1
+    dom = norm_domain(r['URL']) or norm_domain(r['Final Email Domain']) or norm_domain(r['Email Domain'])
+    if not dom or "." not in dom or PLATFORM.search(dom + "."):
+        alt = norm_domain(r['Final Email Domain']) or norm_domain(r['Email Domain'])
+        if alt and "." in alt and not PLATFORM.search(alt + ".") and alt not in FREE: dom = alt
+        else: c['no_usable_domain'] += 1; continue
+    dom = canon(dom)
+    if HOSTED.search(dom):
+        c['held_out_site_builder_subdomain'] += 1; held.append(dict(domain=dom, company_name=r['Company Name'].strip(), reason='site-builder subdomain, no own domain')); continue
+    if dom in seen: c['dup_domain_in_file'] += 1; continue
+    seen[dom] = 1
+    meta.append(dict(domain=dom, company_name=r['Company Name'].strip(), city=r['City'].strip(), state=r['State'].strip(),
+                     employee_count=r['Employee Count'].strip(), fit_reason=why,
+                     note='franchise/location subdomain: lookup may return franchisor contacts' if franchise(dom) else ''))
+c['unique_domains'] = len(meta)
+out = []
+for m in meta:
+    d = m['domain']
+    if d in fd: c['excl_final_leads'] += 1; continue
+    if d in pdm: c['excl_pool'] += 1; continue
+    if d in staged: c['in_staged_2026-10-12_not_excluded'] += 1
+    out.append(m)
+c['after_exclusion'] = len(out)
+os.makedirs('/workspace/qe_bulk', exist_ok=True)
+with open('/workspace/qe_bulk/pest_domains_upload.csv','w',newline='') as f:
+    w = csv.writer(f); w.writerow(['domain']); [w.writerow([m['domain']]) for m in out]
+with open('/workspace/qe_bulk/pest_domains_meta.csv','w',newline='',encoding='utf-8') as f:
+    w = csv.DictWriter(f, fieldnames=['domain','company_name','city','state','employee_count','fit_reason','note']); w.writeheader(); w.writerows(out)
+with open('/workspace/qe_bulk/pest_domains_heldout_sitebuilder.csv','w',newline='',encoding='utf-8') as f:
+    w = csv.DictWriter(f, fieldnames=['domain','company_name','reason']); w.writeheader(); w.writerows(held)
+c['franchise_subdomains_in_upload'] = sum(1 for m in out if m['note'])
+c['final_domains'] = len(fd); c['pool_domains'] = len(pdm)
+print(json.dumps(dict(c), indent=1)); print(json.dumps(drop.most_common(), indent=1))

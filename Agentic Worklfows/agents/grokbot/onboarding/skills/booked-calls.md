@@ -1,9 +1,28 @@
 ---
 name: booked-calls
-description: What happens between a lead booking a 15-minute discovery call with Lorenzo and the call itself, and what happens when they miss it. Covers the "Locked in" confirmation, pre-call reminders R2/R3/R4, the no-show recovery ladder (N1, N3-N9), exact approved copy, timing, stop rules, the nurture hand-off, Zoom/GHL dependencies and current status. Use for "reminder", "confirmation", "no-show", "missed the call", "rebook", "show rate", or any booked-call event.
+description: "Handle Advero booked calls, Zoom confirmations, reminders, preparation and no-show recovery under the current November rules. Use for bookings, reminders, rebooking and missed calls."
 ---
 
 # Booked calls: confirmation, reminders, no-show recovery
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../../../../ClaudeConfig/PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Cold Email Manager inherited Appointment Setter’s work on November 4. Discovery calls belong to this lane; COO owns pricing calls. Use the current calendar event and client record.
+- When the lead provides availability, book one fitting 12:00-18:00 CT slot and confirm it. Zoom only; verify the Zoom URL on the event and remove any Google Meet conference before notification. Lorenzo sends calendar invites. Do not promise a 15-minute call in the confirmation.
+- Reminders are armed at booking under their recorded standing approval: R2/R3 as applicable and R4 one hour before. The September/October blanket reminder pause below is superseded. Hold any reminder that promises a missing Zoom link. A lead reply after a check-in cancels later reminders.
+- Every booked call gets separate call and pre-call prep documents, both with the lead’s website and LinkedIn links. The pre-call brief reaches COO 60 minutes before the call; outcomes must be logged within 24 hours.
+- No-shows use the exact LEAN_ORG F2 reschedule template, one per missed call, with three real slots from the lead’s own event context. Omit the calendar-link clause until supplied. Never apologize. Without join data, wait for Lorenzo to mark the no-show. The N1-N9 ladder below is historical.
+
+Current sources:
+
+- [LEAN_ORG.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [appointment-setter_to_cold-email-manager_20261104.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/handoffs/appointment-setter_to_cold-email-manager_20261104.md)
+- [booked-calls.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/skills/booked-calls.md)
+- [cold-email-manager.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/routine_exports/cold-email-manager.md)
+- [cold-email-manager_8-16.md](../../../../../ClaudeConfig/grok-source/2026-11-04/fourth-export/routines/cold-email-manager_8-16.md)
+
 
 Goal: once a lead books, get them to show. If they miss, get them rebooked. If they never rebook, hand them to the 90-day nurture.
 

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# linkedin_gate: single-session gate for LinkedIn (Grok update 20261021_linkedin_named_bots_and_gate.md, approval li-227).
+# Only one named LinkedIn bot may be in LinkedIn at a time, and only while holding the gate.
+# Usage:
+#   linkedin_gate acquire <bot> [ttl_min]   (default ttl 45 min; exit 0 = acquired, 1 = held by someone else)
+#   linkedin_gate release <bot>             (exit 0 = released, 1 = not the holder)
+#   linkedin_gate status                    (prints holder or "free")
+# Named bots (li-227): linkedin-outreach-manager, linkedin-setter, sales-nav-bot.
+set -u
+DIR="${LINKEDIN_GATE_DIR:-$HOME/advero/state/linkedin}"
+LOCK="$DIR/.gate.lock"
+HOLDER="$DIR/gate_holder"
+LOG="$DIR/gate_log.csv"
+ALLOWED="linkedin-outreach-manager linkedin-setter sales-nav-bot"
+mkdir -p "$DIR"
+[ -f "$LOG" ] || echo "ts_ct,action,bot,result,detail" > "$LOG"
+
+now_epoch() { date +%s; }
+iso() { date -d "@$1" +%Y-%m-%dT%H:%M:%S%:z; }
+log() { echo "$(iso "$(now_epoch)"),$1,$2,$3,\"${4//\"/}\"" >> "$LOG"; }
+read_holder() {  # sets H_BOT H_ACQ H_EXP H_EXP_EPOCH
+  H_BOT=""; H_ACQ=""; H_EXP=""; H_EXP_EPOCH=0
+  [ -s "$HOLDER" ] || return 1
+  H_BOT=$(sed -n 's/^bot=//p' "$HOLDER"); H_ACQ=$(sed -n 's/^acquired_at=//p' "$HOLDER")
+  H_EXP=$(sed -n 's/^expires_at=//p' "$HOLDER"); H_EXP_EPOCH=$(sed -n 's/^expires_epoch=//p' "$HOLDER")
+  [ -n "$H_BOT" ]
+}
+allowed() { for b in $ALLOWED; do [ "$b" = "$1" ] && return 0; done; return 1; }
+
+cmd="${1:-}"; bot="${2:-}"
+exec 9>"$LOCK"
+flock -w 10 9 || { echo "ERROR: could not lock $LOCK"; exit 2; }
+
+case "$cmd" in
+  acquire)
+    [ -n "$bot" ] || { echo "usage: linkedin_gate acquire <bot> [ttl_min]"; exit 2; }
+    allowed "$bot" || { log acquire "$bot" denied "not a named LinkedIn bot (li-227)"; echo "DENIED: $bot is not a named LinkedIn bot (li-227)"; exit 1; }
+    ttl="${3:-45}"; [[ "$ttl" =~ ^[0-9]+$ ]] && [ "$ttl" -ge 1 ] && [ "$ttl" -le 240 ] || { echo "ERROR: ttl_min must be 1 to 240"; exit 2; }
+    now=$(now_epoch)
+    if read_holder; then
+      if [ "$H_EXP_EPOCH" -gt "$now" ]; then
+        log acquire "$bot" refused "held by $H_BOT until $H_EXP"
+        echo "HELD: by $H_BOT since $H_ACQ, expires $H_EXP"; exit 1
+      fi
+      log takeover "$bot" ok "expired hold by $H_BOT (acquired $H_ACQ, expired $H_EXP)"
+      echo "NOTE: took over expired hold by $H_BOT (expired $H_EXP)"
+    fi
+    exp=$((now + ttl * 60))
+    printf 'bot=%s\nacquired_at=%s\nexpires_at=%s\nexpires_epoch=%s\n' "$bot" "$(iso "$now")" "$(iso "$exp")" "$exp" > "$HOLDER.tmp" && mv "$HOLDER.tmp" "$HOLDER"
+    log acquire "$bot" ok "ttl ${ttl}m, expires $(iso "$exp")"
+    echo "ACQUIRED: $bot until $(iso "$exp")"; exit 0 ;;
+  release)
+    [ -n "$bot" ] || { echo "usage: linkedin_gate release <bot>"; exit 2; }
+    if read_holder && [ "$H_BOT" = "$bot" ]; then
+      : > "$HOLDER"; log release "$bot" ok "held since $H_ACQ"; echo "RELEASED: $bot"; exit 0
+    fi
+    log release "$bot" refused "holder is ${H_BOT:-none}"; echo "NOT HOLDER: holder is ${H_BOT:-none}"; exit 1 ;;
+  status)
+    now=$(now_epoch)
+    if read_holder; then
+      if [ "$H_EXP_EPOCH" -gt "$now" ]; then echo "HELD: $H_BOT since $H_ACQ, expires $H_EXP"
+      else echo "EXPIRED: last holder $H_BOT, expired $H_EXP (free to acquire)"; fi
+    else echo "FREE"; fi
+    exit 0 ;;
+  *) echo "usage: linkedin_gate acquire <bot> [ttl_min] | release <bot> | status"; exit 2 ;;
+esac

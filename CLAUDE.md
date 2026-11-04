@@ -1,5 +1,10 @@
 # AdveroSolutions — Agent Instructions
 
+**Current process authority (Lorenzo, 2026-11-04):** Grok Bot supplies the current operating rules; the repository maintains the record. Read `ClaudeConfig/PROCESS_AUTHORITY.md` and the relevant updated business skill before process work. Latest dated Lorenzo rulings supersede the older snapshots below. This does not grant live-action or template approval.
+
+
+**Persistent Upwork instructions:** Before Upwork work, read `Coding/upwork-pipeline/DIRECTIVES.md`. Maintain that dated log and synchronize the affected working rules automatically whenever Lorenzo gives a standing directive or correction. Carry active instructions into future generations and delegated briefs without another reminder. Keep superseded history and job-specific scope; current human instructions win.
+
 **Upwork demos and proposals:** Before working in that lane, read `Coding/upwork-pipeline/master-handoff/00-MASTER.md`, then its operations/UI guide and current `UPWORK_PROCESS.md`. The local `UPWORK_MASTER.html` opens the complete saved handbook. Preserve the current sales/UI/model decisions rather than using historical agent defaults. All live-write rules below still apply.
 
 > Canonical source: `Agentic Worklfows/Claude.md`. This root file ensures Claude Code auto-loads the instructions.

@@ -1,11 +1,6 @@
 #!/bin/sh
-# Copy the live Claude Code config on this Mac into the repo, then commit and push it.
-# Live copies stay in ~/.claude; this folder is the backup on GitHub.
-set -e
-cd "$(dirname "$0")"
-rsync -a --delete --exclude 'synced/' --exclude '.*' ~/.claude/skills/ skills/
-rsync -a --delete ~/.claude/agents/ agents/
-rsync -a --delete --exclude '.*' ~/.claude/scheduled-tasks/ scheduled-tasks/
-rsync -a --delete --exclude '.*' ~/.claude/projects/-Users-lorenzovillarreal-Desktop-AdveroSolutions/memory/ memory/
-cp ~/.claude/CLAUDE.md global-CLAUDE.md
-git status --short .
+# Repository instructions are maintained here. Audit first; never rsync --delete.
+# --import-new copies additions; --replace PATH backs up an explicit conflict.
+set -eu
+cd "$(dirname "$0")/.."
+exec /usr/bin/python3 ClaudeConfig/tools/sync_config.py "$@"

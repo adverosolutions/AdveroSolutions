@@ -1,0 +1,32 @@
+[
+ {
+  "item_id": "q-cm-reddit-login",
+  "bot": "Community Manager",
+  "title": "Reddit sign-in",
+  "question": "How should Community Manager get into Reddit?",
+  "options": [
+   "I'll sign in to my Reddit on the bot's computer once",
+   "Create a new free Advero Reddit account with my email"
+  ]
+ },
+ {
+  "item_id": "q-cm-makerschool-comments",
+  "bot": "Community Manager",
+  "title": "Maker School comments",
+  "question": "Does \"never reply in Maker School\" also stop new comments on other members' posts there?",
+  "options": [
+   "Yes, no Maker School comments at all",
+   "No, new-post comments are still fine"
+  ]
+ },
+ {
+  "item_id": "q-lg-free-test-scrapes",
+  "bot": "Lead Gen Manager",
+  "title": "Free test scrapes",
+  "question": "Run the 4 free test scrapes? (Maps on one adjacent trade in 10 metros; Maps cleaning on the 17 held metros; QuickEnrich re-pull check on electrician, dental, law firms; Maps pest on 10 metros past the top 200). No cost.",
+  "options": [
+   "Yes, run all 4",
+   "Hold for now"
+  ]
+ }
+]

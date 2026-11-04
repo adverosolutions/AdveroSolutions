@@ -1,9 +1,28 @@
 ---
 name: nurture-90-day
-description: The 90-day nurture for AdveroSolutions leads who are not buying now. Covers who enters (follow-up ladder ran out, a "not now" reply, a no-show who never rebooked), who leaves (re-engaged, booked), what the record holds, how it blocks the daily follow-ups, what is sent and when (nothing yet, the content plan is waiting on Lorenzo), and the open decisions. Use for "nurture", "put them in nurture", "check back in a few months", "not now leads", "who is in nurture", "nurture touch due".
+description: "Maintain Advero warm-lead nurture and recontact records while honoring current stops and suppression. Use for not-now leads, stalled leads or a due recontact."
 ---
 
 # 90-day nurture
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../../../../ClaudeConfig/PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Keep warm nurture distinct from Instantly’s completed-no-reply capacity requeue. A future recontact date is not permission to restart an opt-out or an out-of-office follow-up.
+- The current stalled-lead flow classifies and records the lead, queues reactivation or raises a warm/past-call/unclear case through COO. It sends no email, Upwork message or LinkedIn message by itself.
+- Current source handoffs route plain no, unsubscribe and pause records without a card under the ONLY YESES rule. Actual unsubscribe/reload policy conflicts remain open in Revenue Operations; preserve suppression until resolved.
+- No new nurture copy is approved by this maintenance change. Use only exact current approved content and the lead’s recorded next step; do not revive the historical nurture plan by default.
+
+Current sources:
+
+- [LEAN_ORG.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [appointment-setter_to_cold-email-manager_20261104.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/handoffs/appointment-setter_to_cold-email-manager_20261104.md)
+- [Revenue_Operations_to_COO_20261104.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/handoffs/Revenue_Operations_to_COO_20261104.md)
+- [interested_lead_sequence_v2.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/source_files/copy/interested_lead_sequence_v2.md)
+- [post_proposal_sequence_v1.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/source_files/copy/post_proposal_sequence_v1.md)
+- [revenue-operations.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/routine_exports/revenue-operations.md)
+
 
 A lead who is not buying now is not dropped. Nurture keeps them on a slow 90-day track so they hear from Lorenzo again later, instead of more daily follow-ups or nothing at all.
 

@@ -69,3 +69,10 @@
 - [Overture Places free source](overture-places-free-source.md) — free open US business dataset (websites/emails/phones by category), DuckDB query ~3 min; electricians 42k (union w/ Maps file 42.3k domains); state licence CSVs (TX, FL)
 - [python3 is 3.14, no pytest](python3-is-3-14-no-pytest.md) — run tests with /usr/bin/python3 (3.9 + pytest); Homebrew python3 lacks pytest (2026-10-09)
 - [Sync 2026-10-09](sync-2026-10-09.md) — merged to main (scoreboard, Offer Intel, LinkedIn, lead-sync fix, grokbot), ClaudeConfig backup; scheduled tasks stay off; reply-examples never merge; Grok paste state
+
+- [commercial-cleaning-personalization-2026-10-10](commercial-cleaning-personalization-2026-10-10.md) — restored from the local process-memory copy on 2026-11-04.
+- [feedback-cold-read-not-skip](feedback-cold-read-not-skip.md) — restored from the local process-memory copy on 2026-11-04.
+- [feedback-opener-certain-language](feedback-opener-certain-language.md) — restored from the local process-memory copy on 2026-11-04.
+- [fit-review-2026-10-10](fit-review-2026-10-10.md) — restored from the local process-memory copy on 2026-11-04.
+- [pest-control-personalization-2026-10-10](pest-control-personalization-2026-10-10.md) — restored from the local process-memory copy on 2026-11-04.
+- [ppc-agencies-personalization-2026-10-10](ppc-agencies-personalization-2026-10-10.md) — restored from the local process-memory copy on 2026-11-04.

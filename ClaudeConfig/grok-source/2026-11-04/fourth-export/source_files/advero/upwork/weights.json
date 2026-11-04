@@ -1,0 +1,6 @@
+{
+  "version": "v1",
+  "effective_ct": "2026-10-21 10:54 CT",
+  "weights": {"tools": 30, "category": 20, "feedback": 15, "spend": 15, "age": 10, "interviews": 10},
+  "note": "Initial rank weights from Lorenzo via COO 2026-10-21 10:54 CT. Changes only via propose_weights.py --apply after COO/Lorenzo approval."
+}

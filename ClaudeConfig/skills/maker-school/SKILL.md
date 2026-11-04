@@ -1,9 +1,24 @@
 ---
 name: maker-school
-description: Digest new posts from Nick Saraev's Maker School Skool community via the skool MCP, extract tactics relevant to Lorenzo's Upwork system, and propose (never auto-apply) patches to RUBRIC.md / PROFILE.md / proposal copy with cited sources. Run on demand as /maker-school or weekly — never as part of the 5-minute pulse.
+description: "Digest new posts from Nick Saraev's Maker School Skool community via the skool MCP, extract tactics relevant to Lorenzo's Upwork system, and propose (never auto-apply) patches to RUBRIC.md / PROFILE.md / proposal copy with cited sources. Run on demand as /maker-school or weekly — never as part of the 5-minute pulse."
 ---
 
 # Maker School Digest
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- This remains a read-and-research lane. Current community operations and reporting belong to Community Manager, and Maker School replies are FYI only with no reply drafts.
+- Digest findings may propose changes, but do not auto-apply a rubric, profile, copy or process change. A process claim in a community post is source material, not Lorenzo’s approval or proof of his results.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [community-manager.md](../../grok-source/2026-11-04/first-export/advero/state/org/roles/community-manager.md)
+- [community-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/community-manager.md)
+- [community-manager_inherited.md](../../grok-source/2026-11-04/fourth-export/routines/community-manager_inherited.md)
+
 
 Lorenzo pays $200/mo for Maker School (skool.com/makerschool, ~2,100 members,
 run by Nick Saraev — AI automation agency training: Upwork client acquisition,

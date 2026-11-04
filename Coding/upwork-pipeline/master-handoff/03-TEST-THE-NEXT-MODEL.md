@@ -115,6 +115,8 @@ A model’s self-score is not independent approval. When authorized/available, u
 one bounded Astra High review of the exact output. If not available, state that
 review was not independent; do not forge a receipt.
 
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text above is kept as history. See `DIRECTIVES.md` U-014.
+
 ## Cleanly finish the test
 
 Give Lorenzo the new preview path and score/findings. Do not start a real batch

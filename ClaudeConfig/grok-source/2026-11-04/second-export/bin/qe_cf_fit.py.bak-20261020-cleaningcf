@@ -1,0 +1,89 @@
+"""Company-level pest fit for QuickEnrich Company Finder exports.
+Layer 1 = qe_fit.pest_fit (name/domain/industry, same rules as the contact pool).
+Layer 2 = Services / LinkedIn Bio / Home Page Text (Company Finder only) to (a) rescue real pest
+service cos that qe_fit drops on industry/word quirks and (b) admit generic names that are clearly pest cos."""
+import csv, re, sys, collections
+sys.path.insert(0, '/home/box/advero/bin')
+from qe_fit import pest_fit, PEST_SERVICE_IND
+from qe_dedupe import norm_domain
+
+PEST_ITEM = re.compile(r"pest|termit|extermin|rodent|mosquito|wildlife|bed ?bug|\bbats?\b|\bbees?\b|wasp|hornet|\bants?\b|\bticks?\b|flea|roach|fumig|animal (removal|control|trapping|exclusion)|trapping|exclusion|insect|spider|\brats?\b|\bmice\b|squirrel|raccoon|snake|bird|critter|mole|gopher|armadillo|skunk|scorpion|\bfly\b|flies|stinging|nuisance")
+VENDOR_ITEM = re.compile(r"products?\b|supplies|supply\b|equipment|distribut|wholesale|marketing|software|lead gen|insurance|training|course|education|exam|consult|manufactur|formulation|repellent|liners?|heaters?\b|bait|pesticide sales|e-?commerce|content|seo\b|google ads|website")
+STRONG = re.compile(r"pest control|pest management|pest services?|pest solutions|extermin|termite (control|treatment|inspection|service)|rodent (control|removal|exclusion)|wildlife (control|removal|management|exclusion|trapping)|animal (control|removal|trapping)|bed ?bug (treatment|removal|extermin|control)|mosquito (control|treatment|spray|service)|fumigat|integrated pest")
+VENDOR_NAME = re.compile(r"marketing|\bmedia\b|software|\bleads?\b|magazine|insurance|products?\b|\bsupply|supplies|distribut|wholesale|manufactur|\bmfg\b|\blabs?\b|laborator|chemical|equipment|\bsaas\b|\bapp\b|\.io$|association|federation|council|\.org\b|\.in$|\.co\.in")
+OFF_NAME = re.compile(r"fireplace|chimney|academy|university|college|school|institute|training|pharma|realty|real estate|property management|roofing|plumb|hvac|heating|electric|solar|construction|builders?\b|remodel|basement|waterproof|foundation|home inspect|inspections?\b|warranty|\bpools?\b|cleaners?\b|janitor|moving|storage|staffing|consult|county|city of|department|district|agricultur|\bfarms?\b|\bfeed\b|seed|nursery|garden|hardware|lumber|building center|vet(erinary)?\b|animal hospital|grooming|kennel|lawn|landscap|\btree|\bturf|irrigat|sprinkler|fertiliz|\bmd\b|\bdds\b|clinic|medical|hotel|restaurant|church")
+OFF_IND = re.compile(r"manufactur|software|wholesale|retail|chemical|biotech|research|pharma|advertising|marketing|media|staffing|education|e-learning|government|non-profit|financial|insurance|real estate|technology|it services|investment|veterinary|farming|food|hospital|health|medical|publishing|online and mail|warehousing|distribution|machinery|appliances|landscaping|entertainment|international trade|aviation|airlines|associations|executive offices|wellness")
+
+def items(svc):
+    return [s.strip().lower() for s in re.split(r",", svc or "") if s.strip()]
+
+def pest_share(svc):
+    it = items(svc)
+    if not it: return 0.0, 0.0, 0
+    p = sum(1 for s in it if PEST_ITEM.search(s) and not VENDOR_ITEM.search(s))
+    v = sum(1 for s in it if VENDOR_ITEM.search(s))
+    return p/len(it), v/len(it), len(it)
+
+NON_US_TLD = re.compile(r"\.(uk|au|ca|in|nz|ie|za|ph|pk|ae|sg|my|ng|de|fr|es|it|mx|br)$")
+STORE = re.compile(r"\bstore\b|\bshop\b|superstore|rental|\bdiy\b|do it yourself|to-go|india\b")
+
+def fit(row):
+    k, why = _fit(row)
+    if k:
+        dom = norm_domain(row['URL']) or norm_domain(row['Final Email Domain']) or norm_domain(row['Email Domain'])
+        m = NON_US_TLD.search(dom)
+        if m:
+            return False, f"non-US domain ('{m.group(0)}')"
+        m = STORE.search(row['Company Name'].lower() + " " + dom)
+        if m:
+            return False, f"retail/DIY store or equipment rental ('{m.group(0)}'), not a service co"
+    return k, why
+
+def _fit(row):
+    name = row['Company Name'].strip()
+    dom = norm_domain(row['URL']) or norm_domain(row['Final Email Domain']) or norm_domain(row['Email Domain'])
+    ind = row['Industry'].strip().lower()
+    nd = f"{name} {dom}".lower()
+    svc, bio, home = row['Services'], row['LinkedIn Bio'].lower(), row['Home Page Text'].lower()
+    ps, vs, n = pest_share(svc)
+    svc_service = ps >= 0.5 and vs < 0.5          # Services mostly pest *service* items
+    vn = VENDOR_NAME.search(nd)
+    f, why = pest_fit(name, dom, ind, "", "")
+    if f is None:   # qe_fit keeps it (pest word in name/domain)
+        if vs >= 0.5 and ps < 0.5:
+            return False, "pest word in name but Services are mostly products/marketing/training (vendor)"
+        return True, "qe_fit: pest keyword in name/domain"
+    if why.startswith("no pest word"):
+        # generic name: needs clear pest-service evidence and no off-niche name/industry
+        m = vn or OFF_NAME.search(nd)
+        if m:
+            return False, f"no pest word in name; off-niche name word '{m.group(0)}'"
+        if OFF_IND.search(ind) and ind not in PEST_SERVICE_IND:
+            return False, f"no pest word in name; industry '{ind}'"
+        mb = STRONG.search(bio[:400])
+        if mb and (ps >= 0.4 or n == 0):
+            return True, f"generic name; LinkedIn Bio '{mb.group(0)}' + Services {ps:.0%} pest"
+        if svc_service and (STRONG.search(bio) or STRONG.search(home[:3000]) or ind in ("environmental services","consumer services","facilities services")):
+            return True, f"generic name; Services {ps:.0%} pest service items (industry '{ind or 'blank'}')"
+        return False, f"no pest word in name; pest not the main business (Services {ps:.0%} pest)"
+    if why.startswith("lawn/landscape"):
+        return False, "qe_fit: lawn/landscape/tree co (pest is a side service)"
+    if why.startswith("other business"):
+        return False, "qe_fit: " + why
+    # qe_fit dropped a pest-named co on industry / word quirks ('remediation' -> media, 'academy', 'investigat', wildlife wording)
+    if vn:
+        return False, f"qe_fit: {why} (vendor/org name word '{vn.group(0)}')"
+    if re.search(r"zoo|museum|sanctuar|refuge|rehab|audubon|aquatic|\blakes?\b|\bponds?\b|insectar|beneficial|handyman|healthcare|\bctr\b", nd):
+        return False, "qe_fit: " + why
+    if svc_service and re.search(r"pest|termit|extermin|bug|mosquito|wildlife|rodent|critter|animal|bat|bee|wasp|termin|orkin", nd + " " + svc.lower()):
+        return True, f"rescued: pest-named, Services {ps:.0%} pest service items (qe_fit said: {why[:60]})"
+    return False, "qe_fit: " + why
+
+if __name__ == "__main__":
+    rows = list(csv.DictReader(open(sys.argv[1], newline='', encoding='utf-8-sig')))
+    c = collections.Counter(); ex = collections.defaultdict(list)
+    for r in rows:
+        k, why = fit(r); key = (k, re.sub(r"'.*|\d+%.*", "", why)[:70]); c[key]+=1
+        ex[key].append(f"{r['Company Name']} | {r['URL']} | {r['Industry']} | {r['Services'][:70]}")
+    for k,v in sorted(c.items(), key=lambda x:-x[1]):
+        print(v, k); [print('    ', e) for e in ex[k][:int(sys.argv[2]) if len(sys.argv)>2 else 6]]

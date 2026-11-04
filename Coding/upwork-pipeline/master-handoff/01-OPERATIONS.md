@@ -153,6 +153,8 @@ limit workaround. Do not restart archived rejected jobs.
 
 ## 6. Mechanical checks before Astra
 
+> **Superseded by U-014 (2026-10-20):** These mechanical checks now run before Demo Builder's own full-walkthrough review; no Astra review is needed. The text below is kept as history. See `DIRECTIVES.md` U-014.
+
 The compiler validates data, tokens, markup, graphs, supported actions and exact
 native proof duplication. The template lock detects shared-file drift. Neither
 validity nor a lock creates approval.
@@ -187,6 +189,8 @@ independently operate the browser. These are dated evidence, not today’s fresh
 rerun or approval of a different model’s output.
 
 ## 7. Independent whole-walkthrough review
+
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014. The review checklist itself still applies in full; Demo Builder performs it.
 
 Read `REVIEW_BRIEF.md`. Use one bounded independent Astra High review, provided
 that the current tools and authorization permit delegation. Supply the original
@@ -281,6 +285,8 @@ submits on Upwork; no sending/submission/publication is authorized by this playb
 Do not change screening-answer policy into fabricated facts to avoid asking him.
 
 ## 10. Roles, failure handling and cost
+
+> **Superseded by U-014 (2026-10-20):** Demo Builder (Grok) is solely responsible for authoring, review and final acceptance. The Sol Medium and Astra High roles, reviews and approvals described here are no longer required, and no report to them is needed. Demo Builder's own full-walkthrough review under U-010 is the approval, bound to the exact generation. The text below is kept as history. See `DIRECTIVES.md` U-014.
 
 Main coordinates, drafts/finalizes proposals, mutates queue state and owns Git.
 Workers write only assigned content/private evidence. Astra independently reviews

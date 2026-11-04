@@ -1,9 +1,28 @@
 ---
 name: cold-email-replies
-description: How AdveroSolutions handles an inbound reply to a cold email. The 11 reply categories and what each means, the action per category (template family, hold for Lorenzo, stop or blocklist, Instantly interest status, GHL stage), first-contact rules, which first replies auto-send, booking and slot rules, send rules, the price range that only the approved pricing reply carries, and the rule that only exact approved-template text auto-sends. Use on "a lead replied", "classify this reply", "what do we send back", "book this time", "interest status", or any Instantly reply_received event.
+description: "Handle Advero cold-email replies using current approved copy, context openers, booking rules and campaign-pause boundaries. Use for inbound replies and reply classification."
 ---
 
 # Cold-email replies
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../../../../ClaudeConfig/PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Cold Email Manager owns this lane. The November 3 campaign pause blocks new outreach; replies and approved follow-ups to existing conversations continue.
+- Approved Day 1 times copy can send under the October 30 autonomous rule. The November 2 standing opener rule permits one context line that answers the lead, with no price, promise or new offer, followed by the approved body verbatim.
+- When a lead gives availability, book one fitting slot in 12:00-18:00 CT and confirm it; do not offer more choices (November 3). Otherwise use the approved times copy and current calendar availability. Earlier four-hour and five-business-day slot rules are superseded by the at-least-one-day rule.
+- Price questions and wording outside the standing opener permission go to Lorenzo through COO. No email price or guarantee figures; the October approved-pricing-range exception below is superseded.
+- Re-read the newest inbound and sent log before every send, use the original inbox and thread, queue outside 07:00-19:00 CT, skip Sunday, and retry at most once after checking delivery. No out-of-office follow-ups unless Lorenzo restarts them.
+
+Current sources:
+
+- [LEAN_ORG.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [appointment-setter_to_cold-email-manager_20261104.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/handoffs/appointment-setter_to_cold-email-manager_20261104.md)
+- [interested_lead_sequence_v2.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/source_files/copy/interested_lead_sequence_v2.md)
+- [cold-email-manager.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/routine_exports/cold-email-manager.md)
+- [cold-email-manager_8-16.md](../../../../../ClaudeConfig/grok-source/2026-11-04/fourth-export/routines/cold-email-manager_8-16.md)
+
 
 Every reply to one of Lorenzo's cold emails goes through the same steps: read the lead's own words, classify, decide, send or hold, record.
 

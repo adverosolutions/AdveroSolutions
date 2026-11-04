@@ -1,9 +1,21 @@
 ---
 name: offer-intel
-description: 'Offer Intel, the "Offer Intel: Maker School Wins" Google Sheet that ranks which industry x offer combinations other Maker School members are closing. Covers the sheet''s tabs and columns, how patterns are ranked, the current top patterns, how to rerun or refresh it, and the hard rule that none of it is proof in Lorenzo''s copy. Use when Lorenzo asks "what offers are working in Maker School", "what should I test next", "check the wins sheet", "rerun offer intel", or when picking a new niche or offer.'
+description: "'Offer Intel, the \"Offer Intel: Maker School Wins\" Google Sheet that ranks which industry x offer combinations other Maker School members are closing. Covers the sheet''s tabs and columns, how patterns are ranked, the current top patterns, how to rerun or refresh it, and the hard rule that none of it is proof in Lorenzo''s copy. Use when Lorenzo asks \"what offers are working in Maker School\", \"what should I test next\", \"check the wins sheet\", \"rerun offer intel\", or when picking a new niche or offer.'"
 ---
 
 # Offer Intel (Maker School wins)
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- The existing Maker School wins methodology remains research, never proof of Lorenzo’s outcomes. No new Grok handoff changes its ranking method.
+- Use the current November 4 official offer menu for Lorenzo’s prices. A successful member’s price or offer is evidence for a test proposal, not authority to change that menu or written copy.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+
 
 Market research from the Wins category of Nick Saraev's Maker School community.
 Each win post is read, the offer facts are pulled out only where the post

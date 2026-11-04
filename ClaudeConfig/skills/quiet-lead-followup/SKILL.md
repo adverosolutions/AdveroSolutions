@@ -1,9 +1,30 @@
 ---
 name: quiet-lead-followup
-description: The follow-up ladder E1 to E10 for a lead who replied interested, got our first reply with two times, then went quiet. Covers when it starts (day 0 is the first reply), the timing of every email, the exact agreed text and its per-offer lines, no links, releasing earlier times, what happens with no free times, holds and stops, the hand-off to nurture, and the E2 research line status. Use for "follow up with a quiet lead", "which follow-up is due", "E1".."E10", "the lead went quiet", "cadence", "touch due".
+description: "Run Advero’s current interested-lead and post-proposal follow-ups using approved sequences, daily timing and stop rules. Use when an interested lead goes quiet or a proposal follow-up is due."
 ---
 
 # Quiet-lead follow-up (E1 to E10)
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- The current interested-lead sequence is copy/interested_lead_sequence_v2.md; the post-proposal sequence is copy/post_proposal_sequence_v1.md on Grok’s box. These replace the older E1-E10 default below for current operations.
+- Follow the actual approved v2 schedule: Days 1-8, then Day 14, skipping Sunday; Day 14 ends in long-term nurture when unanswered. Do not interpret the broader daily-follow-up rule as permission to invent extra steps. Approved steps run autonomously under LEAN_ORG F; one follow-up per lead per day, original thread and inbox, 07:00-19:00 CT.
+- Stop on booking, decline, opt-out or a newer inbound requiring handling. Do not restart out-of-office leads without Lorenzo’s instruction. A campaign pause does not stop these existing conversations.
+- Post-proposal Day 4 highlights may be sourced from that lead’s actual proposal under the November 1 approval. Do not invent a result or request approval for work already covered.
+- Exact current sequence text is now preserved in the third export linked below. Preserve literal approved wording, including its own style exceptions; do not polish it or substitute the historical ladder.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [appointment-setter_to_cold-email-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/appointment-setter_to_cold-email-manager_20261104.md)
+- [interested_lead_sequence_v2.md](../../grok-source/2026-11-04/third-export/source_files/copy/interested_lead_sequence_v2.md)
+- [post_proposal_sequence_v1.md](../../grok-source/2026-11-04/third-export/source_files/copy/post_proposal_sequence_v1.md)
+- [coo_PROMPTS.md](../../grok-source/2026-11-04/third-export/routine_exports/coo_PROMPTS.md)
+- [cold-email-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/cold-email-manager.md)
+- [cold-email-manager_8-16.md](../../grok-source/2026-11-04/fourth-export/routines/cold-email-manager_8-16.md)
+
 
 A lead said "interested", our first reply offered two call times, and the lead went silent. Ten emails follow in the same thread until they book, reply, or the ladder ends. All ten were agreed with Lorenzo on 2026-09-23.
 

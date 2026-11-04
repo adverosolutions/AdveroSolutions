@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+eval "$(python3 - <<'PY'
+import importlib.util, os, shlex
+spec = importlib.util.spec_from_file_location("lbs", "/home/box/advero/bin/_load_box_secrets.py")
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+m.apply()
+for k in ("GHL_API_KEY", "GHL_LOCATION_ID"):
+    v = os.environ.get(k)
+    if v:
+        print(f"export {k}={shlex.quote(v)}")
+PY
+)"
+BASE="https://services.leadconnectorhq.com"
+LOC="${GHL_LOCATION_ID:-ebyNANPagaK7ycf1pfge}"
+if [[ -z "${GHL_API_KEY:-}" ]]; then
+  echo "GHL_API_KEY is not set" >&2
+  exit 1
+fi
+auth=(-H "Authorization: Bearer ${GHL_API_KEY}" -H "Content-Type: application/json" -H "Version: 2021-07-28" -H "Accept: application/json" -H "User-Agent: Mozilla/5.0 (compatible; AdveroBot/1.0)")
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  ping)
+    curl -sS -o /tmp/ghl_ping.json -w "%{http_code}" "${auth[@]}" "$BASE/locations/$LOC"
+    echo
+    python3 -c "import pathlib; print(pathlib.Path('/tmp/ghl_ping.json').read_text()[:180].replace(chr(10),' '))"
+    ;;
+  contact-by-email)
+    email="${1:?email}"
+    curl -sS "${auth[@]}" --get "$BASE/contacts/" --data-urlencode "locationId=$LOC" --data-urlencode "query=$email"
+    echo
+    ;;
+  update-opp-stage)
+    opp="${1:?oppId}"; stage="${2:?stageId}"
+    curl -sS -X PUT "${auth[@]}" "$BASE/opportunities/$opp" \
+      -d "$(python3 -c "import json,sys; print(json.dumps({'pipelineStageId':sys.argv[1]}))" "$stage")"
+    echo
+    ;;
+  *)
+    echo "usage: ghl ping|contact-by-email <email>|update-opp-stage <oppId> <stageId>" >&2
+    exit 2
+    ;;
+esac

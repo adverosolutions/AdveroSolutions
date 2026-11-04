@@ -1,9 +1,21 @@
 ---
 name: mockup
-description: Render a GoHighLevel or Zapier builder mockup from a pasted job description, as a visual prop for a proposal Loom. Use when a post asks for GoHighLevel/GHL or Zapier automation, or when the user invokes /mockup.
+description: "Render a GoHighLevel or Zapier builder mockup from a pasted job description, as a visual prop for a proposal Loom. Use when a post asks for GoHighLevel/GHL or Zapier automation, or when the user invokes /mockup."
 ---
 
 # GoHighLevel / Zapier Builder Mockup
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- For a current Upwork job, read the maintained master handoff and DIRECTIVES.md before choosing a prop. Premium job-specific animated demos are the current general path; this historical builder-mockup format applies when Lorenzo requests that format or the job-specific brief calls for it.
+- Preserve job facts, native tool shapes and the no-invented-proof rule. Do not publicly publish or claim a mockup is a tested live automation.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+
 
 > **Retired 2026-09-09.** GHL and Zapier posts now use the native Excalidraw flowchart from `/upwork` (load with `job <name> flow`). Lorenzo rejected the builder mockup on camera; do not use this path unless he asks for it by name.
 

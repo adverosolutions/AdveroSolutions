@@ -1,0 +1,101 @@
+#!/bin/bash
+# maps_rolling.sh - constant rolling Google Maps crawl, batches of $BATCH metros (default 5 since 11/2; was 10) (Maps Bot 2026-11-01,
+# Lorenzo GO via COO Sun 11/1 7:53 PM CT). Order: pest top200 -> cleaning top200 -> US cities by pop
+# (Census 2024), alternating pest / commercial cleaning. Resumable: just start it again.
+# Start/resume: nohup ~/advero/bin/maps_rolling.sh >> /workspace/maps_rolling/runner.out 2>&1 &
+# Stop gracefully: touch /workspace/maps_rolling/STOP (checked between batches). Pause: touch maps/state/PAUSE_MAPS.
+# Sheet write is NOT automated: each batch stages values.json + READY_FOR_SHEET; Maps Bot writes, reads back,
+# then runs maps_rolling_finalize.py BATCHDIR START_ROW (MV queue + logs).
+set -u
+B=$HOME/advero/state/leads/maps; ST=$B/state; C=$B/cities; RAW=$B/raw; LOGS=$B/logs
+BIN=$HOME/advero/opt/google-maps-scraper; W=/workspace/maps_rolling; BT=$W/batches; STATUS=/workspace/maps_rolling_status.md
+KILL=$HOME/advero/state/KILL_SWITCH; PAUSE=$ST/PAUSE_MAPS; GAP=${GAP:-300}
+# Half size after 11/1 r002 throttle (LGM approval 11/1 9:58 PM CT): 5 metros/batch, depth 3. Throttle rule unchanged (full stop, exit 3).
+BATCH=${BATCH:-5}; DEPTH=${DEPTH:-3}
+PEST_T="pest control|exterminator|termite control"
+CLEAN_T="commercial cleaning|janitorial service|house cleaning service|pressure washing"
+CLEANC_T="commercial cleaning|janitorial service"
+mkdir -p $BT
+log(){ echo "$(date '+%F %T %Z') $*" >> $W/runner.log; }
+status(){ # $1 state line
+  { echo "# Maps rolling runner status"; echo "Updated: $(date '+%F %I:%M %p %Z')"; echo "State: $1"; echo
+    echo "## Done files"; for f in top200_metros cleaning_top200_metros us_cities_by_pop cleaning_us_cities_by_pop; do
+      t=$C/$f.txt; [ $f = cleaning_us_cities_by_pop ] && t=$C/us_cities_by_pop.txt
+      echo "- $f: $(grep -c . $ST/cities_done_$f.txt 2>/dev/null || echo 0) / $(grep -vc '^#' $t)"; done
+    echo; echo "## Batches (newest last)"; echo "| tag | phase | cities | places | rows | fit | MV-ready | QE | sheet |"; echo "|---|---|---|---|---|---|---|---|---|"
+    for d in $(ls -d $BT/*/ 2>/dev/null | sort); do python3 - "$d" <<'P'
+import json,sys,os
+d=sys.argv[1]; b=json.load(open(d+'batch.json')); s=json.load(open(d+'post_summary.json')) if os.path.exists(d+'post_summary.json') else {}
+sd=json.load(open(d+'SHEET_DONE')) if os.path.exists(d+'SHEET_DONE') else None
+st=('written '+sd['range']) if sd else ('STAGED, awaiting sheet write' if os.path.exists(d+'READY_FOR_SHEET') else ('crawled' if os.path.exists(d+'CRAWLED') else 'crawling/incomplete'))
+print(f"| {b['tag']} | {b['phase']} | {b['first_idx']}-{b['last_idx']} ({len(b['cities'])}) | {b.get('places','')} | {s.get('rows','')} | {s.get('fit','')} | {(sd or {}).get('mv','')} | {s.get('qe',{}).get('upload','')} | {st} |")
+P
+    done; } > $STATUS.tmp && mv $STATUS.tmp $STATUS
+}
+blockchk(){ L=$1; grep -qiE 'google\.com/sorry|unusual traffic|recaptcha|captcha' $L && return 0
+  NZ=$(grep -c '"0 places found"' $L); [ "$NZ" -ge 3 ] && return 0; return 1; }
+stop_throttle(){ log "STOPPED_THROTTLE $1"; status "STOPPED_THROTTLE ($1). Runner exited. Do not retry; tell Lead Gen Manager. Wait 24h+, then halve batch size and DEPTH."; touch $W/STOPPED_THROTTLE; exit 3; }
+next_phase(){ # prints: phase listfile donefile terms
+  for p in "pest_top200 $C/top200_metros.txt $ST/cities_done_top200_metros.txt PEST" "cleaning_top200 $C/cleaning_top200_metros.txt $ST/cities_done_cleaning_top200_metros.txt CLEAN"; do
+    set -- $p; touch $3; [ -n "$(grep -v '^\s*#' $2 | sed '/^\s*$/d' | grep -vxF -f $3 | head -1)" ] && { echo "$p"; return; }; done
+  PD=$ST/cities_done_us_cities_by_pop.txt; CD=$ST/cities_done_cleaning_us_cities_by_pop.txt; touch $PD $CD
+  if [ $(grep -c . $PD) -le $(grep -c . $CD) ]; then echo "pest_us $C/us_cities_by_pop.txt $PD PEST"; else echo "cleaning_us $C/us_cities_by_pop.txt $CD CLEANC"; fi; }
+[ -e $W/STOPPED_THROTTLE ] && { echo "STOPPED_THROTTLE marker present; refusing to start. Remove $W/STOPPED_THROTTLE only after LGM/Lorenzo say so."; exit 3; }
+exec 8>$W/runner.lock; flock -n 8 || { echo "runner already running"; exit 0; }
+log "runner start pid $$"
+while true; do
+  [ -e $W/STOP ] && { log "STOP file, exiting"; status "STOPPED (STOP file)"; rm -f $W/STOP; exit 0; }
+  while [ -e $PAUSE ]; do status "PAUSED (PAUSE_MAPS present, checking every 60 s)"; sleep 60; done
+  [ -e $KILL ] && { log KILL_SWITCH; status "STOPPED: KILL_SWITCH present"; exit 9; }
+  # resume an unfinished batch first
+  BD=""; for d in $(ls -d $BT/*/ 2>/dev/null | sort); do [ -e $d/READY_FOR_SHEET ] || { BD=${d%/}; break; }; done
+  if [ -z "$BD" ]; then
+    read PHASE LIST DONE TK <<< "$(next_phase)"
+    case $TK in PEST) TERMS=$PEST_T; N=pest;; CLEAN) TERMS=$CLEAN_T; N=cleaning;; CLEANC) TERMS=$CLEANC_T; N=cleaning;; esac
+    SEQ=$(printf %03d $(( $(ls $BT | wc -l) + 1 ))); D=$(date +%Y%m%d)
+    TAG=${D}r$SEQ; [ $N = cleaning ] && TAG=cleaning_$TAG
+    BD=$BT/${SEQ}_$TAG; mkdir -p $BD
+    grep -v '^\s*#' $LIST | sed '/^\s*$/d' | grep -vxF -f $DONE | head -$BATCH > $BD/cities.txt
+    [ -s $BD/cities.txt ] || { log "nothing left"; rmdir $BD 2>/dev/null; rm -rf $BD; status "ALL LISTS DONE"; exit 0; }
+    python3 - "$BD" "$TAG" "$PHASE" "$LIST" "$DONE" "$TERMS" "$N" "$(date +%F)" "$DEPTH" <<'P'
+import json,sys
+bd,tag,ph,lst,done,terms,n,dt=sys.argv[1:9]
+cs=[l.strip() for l in open(bd+'/cities.txt') if l.strip()]
+allc=[l.strip() for l in open(lst) if l.strip() and not l.startswith('#')]
+idx=[allc.index(c)+1 for c in cs]
+json.dump(dict(depth=int(sys.argv[9]),tag=tag,phase=ph,list=lst,done=done,terms=terms,niche=n,date=dt,cities=cs,first_idx=min(idx),last_idx=max(idx)),open(bd+'/batch.json','w'),indent=1)
+P
+    log "new batch $BD"
+  fi
+  eval "$(python3 -c "import json;b=json.load(open('$BD/batch.json'));print(f\"TAG='{b['tag']}' DONE='{b['done']}' TERMS='{b['terms']}' N='{b['niche']}' DT='{b['date']}'\")")"
+  LOG=$LOGS/pest_$TAG.log; Q=$RAW/queries_$TAG.txt
+  if [ ! -e $BD/CRAWLED ]; then
+    status "waiting for maps flock ($TAG)"
+    exec 9>$ST/maps_pest_scrape.lock; flock 9
+    [ -e $KILL ] && { log KILL_SWITCH; status "STOPPED: KILL_SWITCH present"; exit 9; }
+    while [ -e $PAUSE ]; do flock -u 9; status "PAUSED (PAUSE_MAPS present, checking every 60 s)"; sleep 60; flock 9; done
+    status "crawling $TAG ($(wc -l < $BD/cities.txt) cities)"
+    : > $Q; IFS='|' read -ra TT <<< "$TERMS"
+    while read c; do for t in "${TT[@]}"; do echo "$t in $c #!#${c}|${t}" >> $Q; done; done < $BD/cities.txt
+    echo "$(date '+%F %T %Z') start tag=$TAG cities=$(wc -l < $BD/cities.txt) queries=$(wc -l < $Q) depth=$DEPTH c=1 batch=$BATCH (maps_rolling)" >> $LOG
+    S0=$(date +%s); cd $B
+    timeout 3h $BIN -input $Q -results $RAW/pest_${TAG}_raw.csv -depth $DEPTH -c 1 -exit-on-inactivity 3m >> $LOG 2>&1; RC=$?
+    log "$TAG gosom exit $RC"
+    NP=$(python3 -c "import csv;csv.field_size_limit(10**9);print(sum(1 for _ in csv.DictReader(open('$RAW/pest_${TAG}_raw.csv',errors='replace'))))" 2>/dev/null || echo 0)
+    { [ $RC -eq 3 ] || blockchk $LOG || { [ $(wc -l < $Q) -ge 4 ] && [ "$NP" -lt 5 ]; }; } && { flock -u 9; stop_throttle "$TAG gosom rc=$RC places=$NP"; }
+    python3 $HOME/advero/bin/site_email_crawl.py $RAW/pest_${TAG}_raw.csv $RAW/pest_${TAG}_raw_emails.csv --workers 6 >> $LOG 2>&1
+    python3 $HOME/advero/bin/site_email_crawl.py $RAW/pest_${TAG}_raw_emails.csv $RAW/pest_${TAG}_raw_emails.csv --workers 3 --retry-status fetch_error,error >> $LOG 2>&1
+    python3 $HOME/advero/bin/maps_postprocess.py $RAW/pest_${TAG}_raw_emails.csv $B/pest_${TAG}.csv --stats $LOGS/pest_${TAG}_stats.json >> $LOG 2>&1 || { log "postprocess failed $TAG"; status "ERROR postprocess $TAG"; exit 4; }
+    python3 $HOME/advero/bin/maps_rolling_full.py $TAG > $BD/cities_full.txt
+    cat $BD/cities_full.txt >> $DONE
+    echo "$(date -Iseconds),$TAG,$(grep -c . $BD/cities_full.txt),$NP,$(( $(date +%s)-S0 )),$B/pest_${TAG}.csv" >> $ST/runs.csv
+    python3 -c "import json;p='$BD/batch.json';b=json.load(open(p));b['places']=$NP;b['full']=[l.strip() for l in open('$BD/cities_full.txt') if l.strip()];json.dump(b,open(p,'w'),indent=1)"
+    touch $BD/CRAWLED; flock -u 9; exec 9>&-
+    log "$TAG crawled places=$NP full=$(grep -c . $BD/cities_full.txt)/$(wc -l < $BD/cities.txt)"
+  fi
+  [ -e $KILL ] && { log KILL_SWITCH; status "STOPPED: KILL_SWITCH present"; exit 9; }
+  python3 $HOME/advero/bin/maps_rolling_post.py $N $TAG $BD $DT >> $BD/post.out 2>&1 || { log "post failed $TAG"; status "ERROR post step $TAG (see $BD/post.out)"; exit 4; }
+  touch $BD/READY_FOR_SHEET; log "$TAG staged"
+  status "running; last batch $TAG staged; next in ${GAP}s"
+  sleep $GAP
+done

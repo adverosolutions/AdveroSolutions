@@ -1,9 +1,26 @@
 ---
 name: upwork-followups
-description: Lorenzo's Upwork proposal-chat follow-ups. Covers which rooms count, the six stages he moves, the T1 to T7 touch plan (days 2 to 30), reply and check-in drafts, the voice and copy rules, the GHL Upwork pipeline, and the triggers. Every draft is bespoke and Lorenzo sends each one himself. Use when a client replies in an Upwork proposal room, a follow-up is due, he asks "what's waiting on me on Upwork", moves a stage, or says "draft the Upwork follow-up".
+description: "Draft bespoke replies and due follow-ups in Lorenzo’s Upwork proposal rooms. Use for client replies, due touches and waiting-on-Lorenzo checks; Lorenzo sends every message."
 ---
 
 # Upwork follow-ups
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Upwork Manager owns proposal-room follow-up drafts; Lorenzo sends every message. The current rulebook bans billing discussion even when older first-reply frameworks below allow a price range.
+- Only draft when the client wrote last or a real touch date is due, with no duplicate pending draft. Respect the actual stage, past contract boundaries, latest client reply and the current local Upwork directives.
+- Current post-call email proposals use a separate approved post-proposal sequence; do not send an Upwork draft through email or reuse that sequence as a room message.
+- Keep the specific client context and add one new point per touch. Source logs and draft state are operational data, not new send approval.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [upwork-coordinator.md](../../grok-source/2026-11-04/first-export/advero/state/org/roles/upwork-coordinator.md)
+- [upwork-followups.md](../../grok-source/2026-11-04/first-export/advero/skills/upwork-followups.md)
+- [upwork-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/upwork-manager.md)
+
 
 When a client opens a chat on one of Lorenzo's proposals, each reply and
 follow-up in that room is drafted for him. He reads the draft, edits it if he

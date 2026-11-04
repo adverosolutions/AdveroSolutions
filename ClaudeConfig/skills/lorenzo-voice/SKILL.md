@@ -1,9 +1,28 @@
 ---
 name: lorenzo-voice
-description: How Lorenzo Villarreal (AdveroSolutions) writes and talks in every customer-facing channel - cold email, replies, follow-ups, booked-call emails, Upwork proposals and chats, DMs. Cadence, peer tone, capitalization and punctuation rules, anchor + praise personalization, how he asks for a call, real approved lines and lines he rejected. Use before writing, editing or judging any message a lead or client will read, and when he says "this sounds AI", "make it sound like me" or "check the voice".
+description: "Write and review Lorenzo’s current plain, specific voice across email, proposals, LinkedIn and communities. Use before drafting customer-facing copy or checking whether it sounds like him."
 ---
 
 # Lorenzo's voice
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Current campaign and reply copy comes from Lorenzo’s approved text. Preserve it verbatim. New copy drafts require his wording approval; the November 2 one-line context opener permission is limited to lead replies and excludes prices, promises and new offers.
+- No em/en dashes, emojis or exclamation marks in new copy or messages to Lorenzo. No kicker that merely restates or sells the prior point. Lorenzo’s own literal template text is preserved even when it is an exception.
+- No price, fee, percentage, retainer or guarantee figures in email. The old approved pricing-range exception below is superseded by LEAN_ORG D. Never discuss Upwork billing. Do not add a 15-minute promise to Locked-in confirmations; preserve the literal approved Day 1 body, which still contains its own duration wording.
+- Personalization keeps the October 10 I know / Congrats form. Approved November fallbacks are recorded in the rulebook: use the exact niche text and its needs_review status; do not invent a substitute or change existing loaded leads.
+- Personalization fact selection and review use Codex in the current session under the November 1 local pipeline decision. Do not restore the older blanket Opus assignment for that pipeline.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [feedback-opener-certain-language.md](../../memory/feedback-opener-certain-language.md)
+- [SKILL.md](../../skills/cold-email-personalization/SKILL.md)
+- [approved_proof.md](../../grok-source/2026-11-04/third-export/source_files/communities/approved_proof.md)
+- [copywriter.md](../../grok-source/2026-11-04/third-export/routine_exports/copywriter.md)
+
 
 Every message sounds like Lorenzo texting a business owner he respects. Short,
 plain, specific, first person. If a line would sound strange said out loud to
@@ -157,14 +176,15 @@ What he settled on, in order of date:
 - 2026-09-02 to 09-07: one concrete thing you saw, then plain praise. Nothing
   analyzed, implied, guessed or labelled. 8 to 20 words. Praise phrases
   rotate: "love that", "awesome work", "congrats on", "big fan of that".
-- Final form, 2026-09-07 (template mode, current): fixed sentences, models
-  fill the variables only. "Hey {first_name}, saw that you do {x}. That's
-  something that's always intrigued me, wondering if I can run something by
-  you." {x} is a 3 to 10 word noun phrase for what the company specifically
-  does. He then added "That's exciting, {y}", where {y} is a playful
-  exaggeration starting "you must" built on one detail of {x} or the city
-  ("you must have half of Long Island on speed dial"). A human reads every
-  {y}. This slot is the one place "you must" is allowed.
+- 2026-09-07 to 10-10 (retired): "Hey {first_name}, saw that you do {x}. That's exciting,
+  {y}, wondering if I can run something by you." with {y} a "you must" exaggeration.
+- Current form, 2026-10-10: "Hey {first_name}, I know that you do {x}. Congrats on
+  {specific}. Was wondering if I can run something by you." He wants certain language ("we
+  just want to say we know"), no "That's exciting" ("sounds really AI"), no filler reaction,
+  and a real achievement from their own site as {specific} (a client result with a number,
+  a named award, years in business). No real specific: a cold read in its place, a compliment true
+  of nearly everyone in the niche that reads as aimed at them ("Fantastic work on the content. I can
+  tell that you really lean into being real and original."), never "Congrats on the results".
 - Detailed rules are in the `cold-email-personalization` skill.
 
 ## Real lines he approved (and why they work)

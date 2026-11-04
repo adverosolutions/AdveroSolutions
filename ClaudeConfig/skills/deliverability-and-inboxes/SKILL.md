@@ -1,9 +1,26 @@
 ---
 name: deliverability-and-inboxes
-description: Health of AdveroSolutions' Instantly sending estate. Covers the 45 inboxes on 15 domains, warm-up, the 25/day ramp, the five-level deliverability monitor (warm-up and DNS, placement seed test, reply and bounce audit, auto-responder canary, baseline campaign), the thresholds, how to read the daily card, replacing a burned inbox, and the list factory's cost and suppression rules. Use for "is anything burning", "deliverability", "bounce rate", "warm-up", "inbox health", "swap an inbox", "domain in spam", "list factory".
+description: "Read Advero inbox health and propose deliverability actions under current keep-and-watch thresholds. Use for bounces, warmup, domains, catch-alls or sending-estate health."
 ---
 
 # Deliverability and inboxes
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Cold Email Manager inherited Deliverability Specialist’s routines on November 4. The source snapshot reports 90 inboxes and 30 domains; these are dated counts, not a live check.
+- Keep and watch: remove nothing automatically. The November 2 ruling keeps catch-alls eligible; alert on an inbox above 5% weekly bounce or catch-all first-touch bounce above 8% daily. Earlier over-3%-at-50-sends rules identify watch/proposal items; exactly 3.00% is not a breach.
+- Domains are watch-only above 5% at 100 or more sends. Re-report a campaign only when it worsens by 0.5 percentage points. Alert only on a meaningful new crossing; do not repeatedly report unchanged alerts.
+- Live watch reads existing placement results; creating a placement test spends credits and remains unapproved. Every change to send limits, inboxes, domains, DNS or campaigns needs Lorenzo’s actual approval.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [deliverability-specialist_to_cold-email-manager_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/deliverability-specialist_to_cold-email-manager_20261104.md)
+- [cold-email-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/cold-email-manager.md)
+- [cold-email-manager_8-16.md](../../grok-source/2026-11-04/fourth-export/routines/cold-email-manager_8-16.md)
+
 
 The monitor watches and proposes. It never changes anything. Every pause, removal, swap or
 seed test is a written proposal that Lorenzo reads as a diff and applies himself.

@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Polite email finder for business websites listed in a gosom raw CSV.
+Fetches at most 4 pages per site (home, contact, about + 1 linked contact/about page),
+one request at a time per site, N sites in parallel, 10s timeout, honest User-Agent,
+respects robots.txt. Writes emails into the 'emails' column (in place copy -> OUT).
+Usage: site_email_crawl.py RAW_IN RAW_OUT [--workers 6] [--retry-status fetch_error,error]
+"""
+import csv, sys, re, html, time, concurrent.futures as cf
+from urllib.parse import urljoin, urlparse
+from urllib import robotparser
+import requests
+csv.field_size_limit(10**9)
+UA = "Mozilla/5.0 (X11; Linux x86_64) AdveroLeadResearch/1.0 (+https://adverosolutions.com)"
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+SKIP_HOSTS = ("facebook.com","instagram.com","yelp.com","google.com","business.site","linktr.ee","nextdoor.com")
+def cf_decode(hexs):
+    try:
+        k=int(hexs[:2],16); return "".join(chr(int(hexs[i:i+2],16)^k) for i in range(2,len(hexs),2))
+    except Exception: return ""
+def extract(text):
+    t=html.unescape(text)
+    found=set(m.group(0) for m in EMAIL_RE.finditer(t))
+    for h in re.findall(r'data-cfemail="([0-9a-fA-F]+)"', text): found.add(cf_decode(h))
+    for h in re.findall(r'/cdn-cgi/l/email-protection#([0-9a-fA-F]+)', text): found.add(cf_decode(h))
+    return {e.lower().strip(".") for e in found if e and not re.search(r"\.(png|jpe?g|gif|webp|svg|css|js)$", e, re.I)}
+def crawl(url):
+    if not url: return "", "no_website"
+    u=url if "://" in url else "https://"+url
+    p=urlparse(u); base=f"https://{p.netloc}"  # try https first; some hosts block/timeout on :80
+    if any(h in p.netloc for h in SKIP_HOSTS): return "", "platform_url"
+    s=requests.Session(); s.headers["User-Agent"]=UA
+    rp=robotparser.RobotFileParser()
+    try:
+        r=s.get(base+"/robots.txt",timeout=8); rp.parse(r.text.splitlines() if r.status_code==200 else [])
+    except Exception: rp.parse([])
+    pages=[base+"/", base+"/contact", base+"/contact-us", base+"/about-us"]
+    emails=set(); status="ok"; fetched=0; extra_added=False
+    while pages and fetched<5:
+        pg=pages.pop(0)
+        if not rp.can_fetch(UA,pg): status="robots_disallow"; continue
+        try:
+            r=s.get(pg,timeout=10,allow_redirects=True); fetched+=1
+        except Exception as e:
+            if fetched==0 and pg==base+"/" and base.startswith("https://"):
+                base="http://"+p.netloc; pages=[base+"/", base+"/contact", base+"/contact-us", base+"/about-us"]; continue
+            status="fetch_error"
+            if fetched==0 and pg==base+"/": break
+            continue
+        if r.status_code in (403,429,503) and fetched==1: status=f"http_{r.status_code}"
+        if r.status_code!=200 or "html" not in r.headers.get("content-type",""): continue
+        emails|=extract(r.text)
+        if not extra_added:
+            for href in re.findall(r'href="([^"#]+)"', r.text):
+                if re.search(r"contact|about|team|staff", href, re.I):
+                    full=urljoin(r.url, href)
+                    if urlparse(full).netloc.replace("www.","")==p.netloc.replace("www.","") and full not in pages:
+                        pages.insert(0, full); extra_added=True; break
+        time.sleep(0.5)
+    return ";".join(sorted(emails)), (status if emails or status!="ok" else "no_email_found")
+def main():
+    src,dst=sys.argv[1],sys.argv[2]
+    workers=int(sys.argv[sys.argv.index("--workers")+1]) if "--workers" in sys.argv else 6
+    rows=list(csv.DictReader(open(src,newline="",encoding="utf-8",errors="replace")))
+    if not rows: print("no rows"); return
+    cols=list(rows[0].keys())
+    if "email_crawl_status" not in cols: cols.append("email_crawl_status")
+    retry=sys.argv[sys.argv.index("--retry-status")+1].split(",") if "--retry-status" in sys.argv else None
+    todo=[r for r in rows if retry is None or r.get("email_crawl_status") in retry]
+    if retry:
+        for r in todo: r["emails"]=""
+    with cf.ThreadPoolExecutor(workers) as ex:
+        futs={ex.submit(crawl,(r.get("website") or "").strip()):r for r in todo}
+        for f in cf.as_completed(futs):
+            r=futs[f]
+            try: em,stt=f.result()
+            except Exception as e: em,stt="",f"error"
+            r["emails"]=";".join(x for x in [r.get("emails",""),em] if x); r["email_crawl_status"]=stt
+    w=csv.DictWriter(open(dst,"w",newline="",encoding="utf-8"),fieldnames=cols); w.writeheader(); w.writerows(rows)
+    from collections import Counter; print(Counter(r["email_crawl_status"] for r in rows))
+main()

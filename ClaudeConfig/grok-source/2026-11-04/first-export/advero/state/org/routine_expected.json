@@ -1,0 +1,347 @@
+{
+  "_about": "Expected routine slots for bin/heartbeat.py check (audit fix 2026-10-22). Times CT. days: 0=Mon..6=Sun. grace_min: how late a run may be before it counts as missed. A routine is only checked after its first beat, so nothing false-alarms before its prompt has the beat line. Sources: each bot's role doc in state/org/roles/ as of 2026-10-22 9:30 PM CT. Ops cleanup 2026-10-27 10:30 PM CT (Lorenzo t1338u): removed coo/instantly-backup-poll (Cold Email Manager owns the poll), vollna-bot/vollna-dashboard-sweep (paused, Lorenzo scrapes Vollna himself), community-engagement-bot/scan (Community Manager's pull 8,12,4 is the only trigger). No slots existed for the Upwork scrape/selection/scoring, Nightly Upwork prep or LinkedIn 7:15 list. Setter connect list daily; auto connect send Mon-Sat. Added Upwork hourly check, RevOps CRM sync every 30 min, RevOps dashboard refresh hourly. New slots use fixed times inside each routine's window (not every:N, which the checker gap-tests around the clock): Upwork check :12 from 6 AM to 10 PM Mon-Sat; dashboard refresh :05 from 7 AM to 10 PM daily; CRM sync on the hour and half hour 7 AM to 6:30 PM Mon-Sat (window inferred from crm_live_sync.log). Checks arm only after the first beat under that exact name.",
+  "routines": [
+    {
+      "name": "appointment-setter/stalled-leads-decision",
+      "owner": "Appointment Setter",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "times": [
+        "08:15"
+      ],
+      "grace_min": 30
+    },
+    {
+      "name": "linkedin-setter/daily-connect-list",
+      "owner": "LinkedIn Setter",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "06:45"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "linkedin-setter/auto-connect-send",
+      "owner": "LinkedIn Setter",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "times": [
+        "10:00"
+      ],
+      "grace_min": 30
+    },
+    {
+      "name": "sales-nav-bot/daily-connect-queue-fill",
+      "owner": "Sales Nav Bot",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "times": [
+        "06:00"
+      ],
+      "grace_min": 30
+    },
+    {
+      "name": "quickenrich-bot/nightly-quickenrich-pull",
+      "owner": "QuickEnrich Bot",
+      "days": [
+        6,
+        0,
+        1,
+        2,
+        3
+      ],
+      "times": [
+        "23:10"
+      ],
+      "grace_min": 30
+    },
+    {
+      "name": "lead-gen/morning-count-and-leak-review",
+      "owner": "Lead Gen Manager",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "times": [
+        "07:10"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "cold-email-manager/daily-review",
+      "owner": "Cold Email Manager",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "times": [
+        "08:00"
+      ],
+      "grace_min": 30
+    },
+    {
+      "name": "deliverability/daily-card",
+      "owner": "Deliverability",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "07:35"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "deliverability/evening-card",
+      "owner": "Deliverability",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "17:00"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "revops/stalled-leads-flag",
+      "owner": "RevOps",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "times": [
+        "07:45"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "revops/leak-audit",
+      "owner": "RevOps",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "times": [
+        "07:50"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "revops/nightly-sprint-row",
+      "owner": "RevOps",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "times": [
+        "21:00"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "community-manager/daily-summary-to-coo",
+      "owner": "Community Manager",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "18:30"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "coo/login-check",
+      "owner": "COO",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "18:00"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "coo/overnight-reply-delivery",
+      "owner": "COO",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "07:00"
+      ],
+      "grace_min": 15
+    },
+    {
+      "name": "upwork-manager/upwork-check",
+      "owner": "Upwork Manager",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "times": [
+        "06:12",
+        "07:12",
+        "08:12",
+        "09:12",
+        "10:12",
+        "11:12",
+        "12:12",
+        "13:12",
+        "14:12",
+        "15:12",
+        "16:12",
+        "17:12",
+        "18:12",
+        "19:12",
+        "20:12",
+        "21:12",
+        "22:12"
+      ],
+      "grace_min": 20
+    },
+    {
+      "name": "revops/crm-live-sync",
+      "owner": "RevOps",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "times": [
+        "07:00",
+        "07:30",
+        "08:00",
+        "08:30",
+        "09:00",
+        "09:30",
+        "10:00",
+        "10:30",
+        "11:00",
+        "11:30",
+        "12:00",
+        "12:30",
+        "13:00",
+        "13:30",
+        "14:00",
+        "14:30",
+        "15:00",
+        "15:30",
+        "16:00",
+        "16:30",
+        "17:00",
+        "17:30",
+        "18:00",
+        "18:30"
+      ],
+      "grace_min": 25
+    },
+    {
+      "name": "revops/dashboard-sheet-refresh",
+      "owner": "RevOps",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "times": [
+        "07:05",
+        "08:05",
+        "09:05",
+        "10:05",
+        "11:05",
+        "12:05",
+        "13:05",
+        "14:05",
+        "15:05",
+        "16:05",
+        "17:05",
+        "18:05",
+        "19:05",
+        "20:05",
+        "21:05",
+        "22:05"
+      ],
+      "grace_min": 20
+    }
+  ]
+}

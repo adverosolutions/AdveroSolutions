@@ -1,9 +1,27 @@
 ---
 name: client-fulfillment
-description: How AdveroSolutions delivers after a deal is won. Covers onboarding (Deal Won, kickoff email, kickoff form, kickoff call), the four product kits and their build steps, the weekly client scorecard and invoice basis, the day 7/21/25/30 retention touches, and case studies. Use for "new client", "onboard", "kickoff", "deal won", "scorecard", "invoice", "renewal", "check-in", "referral ask", "review request", "case study", or any question about a current client.
+description: "Prepare Advero onboarding, delivery, scorecards and retention work from the actual client scope and current package menu. Use for new clients, kickoff, invoices, renewals or case studies."
 ---
 
 # Client fulfillment: onboarding, kits, scorecards, retention
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Fit delivery to the package and actual signed scope. The November 4 official menu supersedes the old per-offer prices below; never change it based on a call without Lorenzo’s instruction.
+- Use separate call and prep documents before the call, then the actual transcript and approved scope for proposal and onboarding. Include package-specific expected results and the software stack reference without inventing outcomes.
+- Accounting and Revenue Operations retain their own seats. Treat their current handoffs as the source for billing, signature monitoring, CRM logging and unresolved items; do not mark a client won or an invoice paid from a bot summary alone.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [Revenue_Operations_to_COO_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/Revenue_Operations_to_COO_20261104.md)
+- [Accounting_to_COO_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/Accounting_to_COO_20261104.md)
+- [client-fulfillment.md](../../grok-source/2026-11-04/first-export/advero/skills/client-fulfillment.md)
+- [revenue-operations.md](../../grok-source/2026-11-04/third-export/routine_exports/revenue-operations.md)
+- [accounting.md](../../grok-source/2026-11-04/third-export/routine_exports/accounting.md)
+
 
 State as of 2026-09-22 to 2026-09-24: **nothing here is live.** The onboarding workflow, form, kickoff calendar, invoices and ClickUp templates are specs; the scorecard job only reads; no retention email has been sent by any system.
 

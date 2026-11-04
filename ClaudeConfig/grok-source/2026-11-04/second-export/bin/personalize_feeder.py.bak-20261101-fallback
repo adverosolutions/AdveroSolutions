@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Watcher: turns MV-valid backlog leads into chunks and runs up to MAXP personalize_runner.py at once.
+Loops every 10 min until the whole backlog has an MV result and every valid lead is chunked. Stage only."""
+import csv, glob, json, os, subprocess, sys, time
+from pathlib import Path
+H=Path.home(); ST=H/'advero/state'; OUT=ST/'leadgen/personalized'; W=OUT/'_work'
+MAP='/workspace/mv/2026-11-01_backlog_map.csv'; MAXP=int(os.environ.get('MAXP',5)); CH=int(os.environ.get('CHUNK',300))
+NICHE={'pest_control':'pest','cleaning':'cleaning','ppc':'ppc'}
+def log(**k):
+    k['ts']=time.strftime('%Y-%m-%dT%H:%M:%S%z'); k['src']='feeder'
+    with (OUT/'run_log.jsonl').open('a') as f: f.write(json.dumps(k)+'\n')
+backlog=list(csv.DictReader(open(MAP)))
+details={}
+want={r['email'].lower() for r in backlog}
+for f in sorted(glob.glob(str(ST/'leads/pool/*.csv'))):
+    for r in csv.DictReader(open(f,encoding='utf-8-sig')):
+        e=(r.get('email') or '').lower()
+        if e in want and e not in details: details[e]=r
+def results():
+    res={}
+    files=glob.glob(str(ST/'mv/*.csv'))+glob.glob(str(ST/'handoffs/leadgen/mv_*result*.csv'))+glob.glob('/workspace/mv/**/*full*.csv',recursive=True)+glob.glob('/workspace/mv/**/*result*.csv',recursive=True)
+    for f in files:
+        try:
+            for r in csv.DictReader(open(f,encoding='utf-8-sig')):
+                e=(r.get('email') or '').lower(); v=(r.get('result') or r.get('mv_result') or '').lower()
+                if e and v: res[e]='valid' if v in('ok','valid') else v
+        except Exception: pass
+    s=W/'mv_sheet_status.csv'  # optional: tab,row,mv_result copied from the sheet by the COO
+    if s.exists():
+        idx={(r['tab'],r['row']):r['email'].lower() for r in backlog}
+        for r in csv.DictReader(open(s)):
+            e=idx.get((r['tab'],r['row']))
+            if e and r.get('mv_result'): res[e]=r['mv_result'].strip().lower()
+    return res
+assigned_p=W/'assigned.json'
+assigned=json.load(open(assigned_p)) if assigned_p.exists() else {}
+procs={}
+while True:
+    res=results()
+    for k,p in list(procs.items()):
+        if p.poll() is not None:
+            log(event='chunk_exit',chunk=k,rc=p.returncode); procs.pop(k)
+            if not (OUT/f'{k}.csv').exists():
+                (W/f'{k}.failed2' if (W/f'{k}.failed').exists() else W/f'{k}.failed').touch()
+    pending={}
+    for b in backlog:
+        e=b['email'].lower(); lid=f"{b['tab']}-{b['row']}"
+        if res.get(e)!='valid' or lid in assigned: continue
+        d=dict(details.get(e,{})); d.update(tab=b['tab'],sheet_row=int(b['row']),mv_result='valid',email=b['email'])
+        pending.setdefault(b['tab'],[]).append(d)
+    resolved=sum(1 for b in backlog if b['email'].lower() in res)
+    for tab,rows in pending.items():
+        final = resolved==len(backlog)
+        while len(rows)>=CH or (final and rows):
+            part,rows=rows[:CH],rows[CH:]
+            n=len(glob.glob(str(W/f'chunk_{NICHE[tab]}_*.json')))+1
+            name=f'c{n:03d}'; fp=W/f'chunk_{NICHE[tab]}_{name}.json'
+            json.dump(part,open(fp,'w')); assigned.update({f"{r['tab']}-{r['sheet_row']}":name for r in part})
+            json.dump(assigned,open(assigned_p,'w')); log(event='chunk_made',chunk=f'{NICHE[tab]}_{name}',n=len(part))
+    for fp in sorted(glob.glob(str(W/'chunk_*.json'))):
+        stem=Path(fp).stem[6:]; niche,name=stem.rsplit('_',1)
+        if stem in procs or (OUT/f'{stem}.csv').exists() or (W/f'{stem}.failed2').exists(): continue
+        if len(procs)>=MAXP: break
+        fails=W/f'{stem}.failed'
+        lf=open(W/f'{stem}.out','a')
+        procs[stem]=subprocess.Popen([sys.executable,str(H/'advero/bin/personalize_runner.py'),fp,niche,name],cwd=OUT,stdout=lf,stderr=lf)
+        log(event='chunk_launch',chunk=stem)
+    st={'ts':time.strftime('%Y-%m-%d %H:%M'),'backlog':len(backlog),'mv_resolved':resolved,
+        'mv_valid':sum(1 for v in res.values() if v=='valid' and v),'assigned':len(assigned),'running':list(procs)}
+    (W/'feeder_status.json').write_text(json.dumps(st,indent=1))
+    if resolved==len(backlog) and not procs and all((OUT/f'{Path(f).stem[6:]}.csv').exists() or (W/f'{Path(f).stem[6:]}.failed2').exists() for f in glob.glob(str(W/'chunk_*.json'))):
+        log(event='feeder_finished',**st); break
+    time.sleep(600 if not procs else 120)

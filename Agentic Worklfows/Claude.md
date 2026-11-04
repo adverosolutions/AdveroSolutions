@@ -1,5 +1,8 @@
 # Agent Instructions
 
+**Current process authority (2026-11-04):** Read `ClaudeConfig/PROCESS_AUTHORITY.md` from the repo root and the relevant updated skill. Grok Bot is the current operational process source. The older engine build descriptions below remain historical where superseded; code-level live-write and template approval protections still apply.
+
+
 > This file is mirrored across CLAUDE.md, AGENTS.md, and GEMINI.md so the same instructions load in any AI environment.
 
 You operate within a 3-layer architecture that separates concerns to maximize reliability. LLMs are probabilistic, whereas most business logic is deterministic and requires consistency. This system fixes that mismatch.

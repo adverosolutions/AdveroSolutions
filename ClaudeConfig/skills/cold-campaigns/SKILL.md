@@ -1,9 +1,29 @@
 ---
 name: cold-campaigns
-description: How AdveroSolutions runs cold email in Instantly. Covers the six live 2026 campaigns (cleaning, bookkeeping, recruiting; reactivation plus outbound, one body each), what each email says, sending volume and schedule, how copy moves from the one Google Doc to Instantly through a change-set, verdict rules, Instantly API traps, and the legacy contractor SOPs (SOP-002, SOP-002R roofing). Use for "launch a campaign", "what did we send them", "change the cold email", "how are the campaigns doing", "add leads to a campaign".
+description: "Maintain Advero cold-campaign copy, testing and launch records using current pause, schedule and approval rules. Use for campaign copy, campaign state or a planned launch."
 ---
 
 # Cold campaigns
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- All Instantly campaigns are paused under Lorenzo’s November 3 instruction until he writes new copy and says resume. The six-campaign table below is a September snapshot, not the current estate.
+- Current campaign sending schedules were set to 07:00-19:00 Eastern, Monday-Saturday, using America/Detroit in Instantly. This is separate from the 07:00-19:00 CT reply/follow-up window.
+- Cold Email Manager owns the lane; Copywriter drafts current variants and Lorenzo approves wording. November 4 copy variants remain drafts unless an actual approval record covers them.
+- New-inquiry B campaigns, the current niche split and PPC B limit are documented in the rulebook and source records. Verify live settings read-only before planning a change; do not apply historical sender lists or volumes.
+- Campaign, lead-list, template and inbox changes still need the applicable approval and dry-run process. Updating this skill does not resume campaigns or approve copy.
+
+Current sources:
+
+- [LEAN_ORG.md](../../grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [cold-email-manager.md](../../grok-source/2026-11-04/first-export/advero/state/org/roles/cold-email-manager.md)
+- [copywriter_pilot_variant_20261104.md](../../grok-source/2026-11-04/first-export/advero/state/handoffs/copywriter_pilot_variant_20261104.md)
+- [cold-email-manager.md](../../grok-source/2026-11-04/third-export/routine_exports/cold-email-manager.md)
+- [copywriter.md](../../grok-source/2026-11-04/third-export/routine_exports/copywriter.md)
+- [cold-email-manager_8-16.md](../../grok-source/2026-11-04/fourth-export/routines/cold-email-manager_8-16.md)
+
 
 Lorenzo writes the cold copy. The system stages his edits and checks them. Nobody else
 writes, rewrites or "improves" a cold email, and nothing reaches live Instantly until he

@@ -1,0 +1,2 @@
+- 2026-10-21 3:59 PM CT (Community Manager, Lorenzo's live-call ask via COO): early push to row 3. J=0 (posts_log.jsonl empty; slot 1 not seen on page at 3:36 PM CT), K=1 (Agency Service Scaling Kings approved 8:36 AM CT, joins.jsonl), O = interim community note. The rest was asked of Revenue Operations. These are interim values, so the 9 PM run should refresh J, K and O if anything changed.
+- 2026-10-21 3:59 PM CT: O3 cleared (Lorenzo's standing rule: Notes stays blank). RevOps told not to write O.

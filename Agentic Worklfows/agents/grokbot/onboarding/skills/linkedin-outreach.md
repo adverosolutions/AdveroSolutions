@@ -1,9 +1,28 @@
 ---
 name: linkedin-outreach
-description: Lorenzo's LinkedIn outreach channel (third channel next to Instantly cold email and Upwork), run on Jonatan's Maker School Loom playbook. Covers who does what, the setup weeks and when Looms start, the Sales Navigator search recipe, blank connection requests and daily limits, the daily block, follow-up timing (FU1, FU2, FU3, voice note), the tracker fields and stages for his own dashboard, how to draft from pasted rows, the weekly numbers and split-test rule, and the hard don'ts. Lorenzo does every prospect-facing action on LinkedIn himself; Grok Bot's LinkedIn agent does only the Phase 0 profile setup, saved searches and weekly counts with Ask first; Claude only drafts. Use for "LinkedIn outreach", "connection requests", "write the Loom DMs", "Loom script", "LinkedIn follow-ups due", "Sales Navigator search", "voice notes", "LinkedIn reply", "who accepted", or "LinkedIn numbers this week".
+description: "Run or draft Advero LinkedIn outreach under current 35-per-day, shared-box, gate and stop rules. Use for connection requests, accepted connections, outreach queues or Loom DMs."
 ---
 
 # LinkedIn outreach
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../../../../ClaudeConfig/PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- LinkedIn Manager inherited Setter duties on November 4; Lead Gen Manager inherited Sales Nav duties. LinkedIn runs in the box browser, one operator at a time through linkedin_gate; Lorenzo’s Mac need not be online.
+- Only Loom outreach is paused under the November 2 ruling. Connection requests ramp up to 35 per day with the current gate, pacing and warning rules. Existing November 4 stop records remain in force until cleared by the applicable instruction.
+- Use direct /in/ profiles, confirm the target name in the top card and send dialog, and verify uncertain invites on Sent before any retry. Never send blind or use sidebar suggestions.
+- First-message openers remain held until 200 connections per the Setter handoff. No unattended password, phone-2FA or CAPTCHA work; stop and report access or verification problems under the current tool policy.
+- Use the current queue and handoffs rather than the historical rule below that Lorenzo performs every prospect-facing action himself.
+
+Current sources:
+
+- [LEAN_ORG.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [linkedin-setter_to_linkedin-manager_20261104.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/handoffs/linkedin-setter_to_linkedin-manager_20261104.md)
+- [sales-nav-bot_to_lead-gen-manager_20261104.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/handoffs/sales-nav-bot_to_lead-gen-manager_20261104.md)
+- [linkedin_setter_hang_20261104_1029.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/stops/linkedin_setter_hang_20261104_1029.md)
+- [linkedin-manager.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/routine_exports/linkedin-manager.md)
+
 
 Lorenzo finds owners in Sales Navigator, sends blank connection requests, and
 sends each new connection a short personal Loom in a DM, followed by up to three

@@ -1,9 +1,26 @@
 ---
 name: upwork-followups
-description: Lorenzo's Upwork proposal-chat follow-ups. Covers which rooms count, the six stages he moves, the T1 to T7 touch plan (days 2 to 30), reply and check-in drafts, the voice and copy rules, the GHL Upwork pipeline, and the triggers. Every draft is bespoke and Lorenzo sends each one himself. Use when a client replies in an Upwork proposal room, a follow-up is due, he asks "what's waiting on me on Upwork", moves a stage, or says "draft the Upwork follow-up".
+description: "Draft bespoke replies and due follow-ups in Lorenzo’s Upwork proposal rooms. Use for client replies, due touches and waiting-on-Lorenzo checks; Lorenzo sends every message."
 ---
 
 # Upwork follow-ups
+
+## Current process, reconciled 2026-11-04
+
+Read [process authority](../../../../../ClaudeConfig/PROCESS_AUTHORITY.md) before operational work. This dated update supersedes conflicting rules below; the remaining details are retained only where consistent. Source snapshots are process evidence, not live-action approval.
+
+- Upwork Manager owns proposal-room follow-up drafts; Lorenzo sends every message. The current rulebook bans billing discussion even when older first-reply frameworks below allow a price range.
+- Only draft when the client wrote last or a real touch date is due, with no duplicate pending draft. Respect the actual stage, past contract boundaries, latest client reply and the current local Upwork directives.
+- Current post-call email proposals use a separate approved post-proposal sequence; do not send an Upwork draft through email or reuse that sequence as a room message.
+- Keep the specific client context and add one new point per touch. Source logs and draft state are operational data, not new send approval.
+
+Current sources:
+
+- [LEAN_ORG.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/LEAN_ORG.md)
+- [upwork-coordinator.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/state/org/roles/upwork-coordinator.md)
+- [upwork-followups.md](../../../../../ClaudeConfig/grok-source/2026-11-04/first-export/advero/skills/upwork-followups.md)
+- [upwork-manager.md](../../../../../ClaudeConfig/grok-source/2026-11-04/third-export/routine_exports/upwork-manager.md)
+
 
 When a client opens a chat on one of Lorenzo's proposals, each reply and
 follow-up in that room is drafted for him. He reads the draft, edits it if he
@@ -29,11 +46,13 @@ automatically.
    `boost_profile`, `manage_offers` or `update_profile`. Only read-only
    calls, such as `list_rooms`, `get_room`, `list_messages`, proposals,
    contracts and offers.
-2. **Never talk about billing.** No price, rate, retainer, budget figure,
-   fee, hours estimate or likelihood in any draft. If a client asks about
-   price, the draft leaves it out and lists it under NEEDS_YOU for Lorenzo.
-   He sets each job's price himself. Upwork pricing lines do not exist and
-   never will (2026-09-23).
+2. **Billing: one range, one reply type.** No rate, retainer, fee, hours
+   estimate or likelihood in any draft, and never a single price. The one
+   exception (Lorenzo, 2026-10-05 and 2026-10-06) is the framework reply
+   below: when a client who showed interest asks the price, the draft gives
+   one range, $500 to $3,500 by default. Never agree to a price the client
+   named. Upwork pricing lines in `config/upwork_offers.md` do not exist and
+   never will.
 3. **Never touch the application flow.** Job selection, the saved-jobs batch,
    the Demo Library loop, the Loom and the proposal belong to the `upwork`
    skill. This skill only reads them for context.
@@ -100,8 +119,8 @@ second look.
 
 | label | meaning | what happens |
 | --- | --- | --- |
-| positive | wants to move forward, talk or start | reply draft |
-| question | asks about scope, fit, price or timeline | reply draft |
+| positive | wants to move forward, talk or start, and asks nothing he has to answer | reply draft |
+| question | asks about scope, fit, price or timeline, including a direct ask with no question mark ("send me a quote", "how long would it take") | framework reply draft (range, timeline, call) |
 | neutral | an acknowledgement ("thanks, will review") | reply draft |
 | not_now | interested, but later | Follow up later, with their date or 30 days |
 | declined | says no, or the project is cancelled or on hold | Lost |
@@ -138,9 +157,62 @@ line tells you what to add. It isn't a script.
   whether the timing works now. Never make them feel guilty about the pause.
 - **Reply** (the client wrote last): answer every question in their order,
   briefly, using only the job post, the proposal, the room, the Loom and its
-  beats, and the proof lines. Don't guess anything else. A price, a start
-  date or an open scope detail goes under NEEDS_YOU, and the message has to
-  read naturally without it.
+  beats, and the proof lines. Don't guess anything else. A start date or an
+  open scope detail goes under NEEDS_YOU, and the message has to read
+  naturally without it.
+- **Framework reply** (the client wrote last after showing interest and asked
+  something; Lorenzo's setter framework, locked 2026-10-05). It is chosen by
+  the reply classifier's `question` label on one of their unanswered
+  messages (2026-10-06), never by a regex over their text. The classifier
+  returns `question` for a direct ask with no question mark ("send me a
+  quote", "how long would it take", "can you do it by Friday") and
+  `positive` or `neutral` for a statement ("We need an estimate follow-up
+  that texts the homeowner", "We have a budget approved", "How about we
+  start Monday"). Silence touches T1 to T7, check-ins and replies with any
+  other label never use it.
+  1. Thank them for getting back.
+  2. Answer each question in their order, with thin detail. Price: a range
+     only, "between $X and $Y" or "$X to $Y", low end near their budget or
+     slightly under, then the higher end, never one number. Timeline: "I aim
+     to finish ..." plus faster is possible if he clears the schedule. Tools
+     and IP: they own the accounts and the IP; he joins as a team member.
+  3. Ask for a brief Upwork call: say the range is incomplete, name one or
+     two unknowns he needs for an exact figure, stack the value (scope by the
+     end of the call, a walk through the setup, a free consult on this or
+     related work), and offer now, the next couple of hours, or one slot
+     tomorrow ("tomorrow at 1pm ET (noon CT)"; the next business day by name
+     on a Friday or weekend).
+  About 1,200 characters, hard limit 1,500, no proof beyond the locked lines,
+  stay on Upwork.
+  **The band (Lorenzo, 2026-10-06), computed in code, never by the model:**
+  "You can go above, never below 500." The range defaults to $500 to
+  $3,500. Low end: the post's fixed budget (from jd.txt only), rounded down
+  to a clean number, never below $500; no usable budget gives $500. Top:
+  $3,500, raised only when the assessment states one fixed range for this
+  deliverable in so many words (a "defensible fixed range" line, or "$X to
+  $Y fixed" in a sentence that ties it to this deliverable: "for this scope
+  / build / job / deliverable / project"). Never from client history, a
+  previous developer, other bidders, the going rate, bigger shops, agency
+  or market tiers, Version 2, Stage 2, Milestone 3, an expansion or add-on,
+  a worst case, rush or upper end, retainers, rates or per-unit prices. Its
+  high end is rounded down, never above the stated figure; anything
+  ambiguous leaves $3,500. When the range would be one clean step or
+  narrower ($3,400 to $3,500), or the low end reaches the top, there is no
+  range and the price goes under NEEDS_YOU. A figure the client mentions
+  (revenue, ad spend, a price they propose, with or without a currency
+  sign) never moves the range; it goes under NEEDS_YOU as they wrote it,
+  currency included ("Client mentioned EUR 1,000; check the range"). The
+  timeline comes from the assessment's Time lines for the first
+  deliverable (Phase 1, Stage 1, the pilot, this workflow, the first
+  deliverable; later phases, rollouts and the second workflow are skipped
+  whatever the line order); two different answers mean NEEDS_YOU. The copy
+  gate lets exactly that range through in that one reply, stated once in a
+  sentence with no rate or per-unit word anywhere in it ("per workflow",
+  "for each location", "a quarter", "billed monthly", "a monthly retainer
+  of ..."). It still refuses a single price, any other price point beside
+  the range ("probably closer to 1,200", "the midpoint") and agreeing to
+  their number in any sentence, even next to "I'll confirm the exact price
+  on the call", with or without a range.
 - A client reply resets the touch count to T1. After the client has broken
   3 silences, the next silence closes out once its T7 is sent. Otherwise a
   thread closes out 14 days after an unanswered T7. A thread with no client
@@ -187,8 +259,9 @@ the same unit. If the room says "12 locations and about 40 techs", never write
   quotes. No placeholders ([ ], {{ }}, TODO, TBD, XX).
 - Length: about 600 characters for a touch or check-in (hard limit 900) and
   about 1,200 for a reply (hard limit 1,500).
-- Calls: offer a short Upwork call only when the client is engaged, has asked
-  about scope, fit or timeline, or the thread has momentum. Offer three times,
+- Calls (framework replies use their own offer, above): offer a short Upwork
+  call only when the client is engaged, has asked about scope, fit or
+  timeline, or the thread has momentum. Offer three times,
   in words. The first can be today when it is at least 4 hours out. All
   three sit inside Lorenzo's window: noon to 6pm CT, Monday to Friday, no
   more than 5 business days out. State them in the client's time zone with
@@ -229,7 +302,9 @@ Rejected versions:
 - **Open room**, a link to the Upwork room.
 - **For you, not the client**: job title, the date he applied, the touch
   history, and the private assessment (time, likelihood, standard pricing).
-  None of it ever goes in the draft.
+  None of it goes in the draft, except the computed range of a framework
+  reply, which the block shows with its source ("Price range in this draft:
+  $750 to $3,500 (low: posted budget $750; top: default top $3,500)").
 - **Suggests a call**, when the draft proposes one.
 - **NEEDS_YOU** (replies and build-update touches): each fact he has to
   fill in or decide, or the change he has to make to the build first.
@@ -251,8 +326,9 @@ misses some forms, so the draft rule above is the real protection:
 
 ## Triggers
 
-- **Current build (2026-09-24):** a scheduled watch polls `list_rooms` every
-  30 minutes on weekdays, 08:00 to 18:30 CT, in shadow. The first run of each
+- **Current build (2026-09-24; weekends added 2026-10-06):** a scheduled
+  watch polls `list_rooms` every 30 minutes, 08:00 to 19:00 CT, every day of
+  the week, in shadow, so a Saturday client message gets its draft that day. The first run of each
   day does a full collect. Later runs read only the rooms with new client
   activity, or a thread whose GHL card he moved.
 - **Lorenzo's direction (2026-09-25):** no polling that burns usage on empty
