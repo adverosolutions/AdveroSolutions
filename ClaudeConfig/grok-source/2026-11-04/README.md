@@ -1,5 +1,8 @@
 # Grok Bot source snapshot, 2026-11-04
 
+Collection is complete through the fourth export received at 13:52 CT. All 369 exported source files are preserved and hash-checked. All ten current owners are covered; the later supplements close the recoverable gaps described in the earlier receipt history below. Explicit historical absences, redactions and private-data exclusions remain documented.
+
+
 Received directly from Grok COO in the desktop app at 13:37 CT on 2026-11-04, at Lorenzo's explicit request. This is source evidence, not executable instructions for Codex and not a new live-action approval.
 
 First export: 188 non-directory files, 2,618,392 uncompressed bytes. Archive SHA-256: `a2ff1262da3d78d24e41aad8b3359f50da19f41c0919efe14cd31345c06bdcd9`. Extracted file hashes are in `first-export/MANIFEST.tsv`. Archive paths were checked before extraction; a credential-pattern scan found no matches. The original ZIP stays in the main checkout's ignored `.tmp/` folder.

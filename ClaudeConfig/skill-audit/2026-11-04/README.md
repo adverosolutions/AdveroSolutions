@@ -1,6 +1,6 @@
 # Skills and process reconciliation, 2026-11-04
 
-Current state: all 25 business-skill entrypoints are reconciled against Grok Bot's current dated rules, and the source archive is saved. Full test rerun and final publication are in progress. Lorenzo approved the full workflow after the initial inventory and pilot.
+Current state: reconciliation and offline verification are complete. All 25 business-skill entrypoints use Grok Bot's current dated rules, and the source archive is saved. Lorenzo approved the full workflow after the initial inventory and pilot.
 
 ## What was preserved
 
@@ -28,7 +28,7 @@ This was a self-review, not an independent agent review. The review checked each
 - 25 skill frontmatter records passed YAML/name/description checks with the system Ruby YAML parser. The bundled Python validator could not load because PyYAML is absent; no package was installed.
 - All 25 discovery links and current-source references resolve. All 369 exported source hashes match.
 - 54 archived Python files were parsed without importing or running them: 53 parsed, and the exported historical ask_opus.py has one syntax error caused by a [SECRET] redaction at line 885. The raw source remains unchanged and hashed; it is not runnable as exported. Shell wrappers were checked with `bash -n`. No imported production script was executed.
-- Initial full engine suite: 9,967 passed, 2 failed in 472.53 seconds. One failed because its temporary file could not be written under the worktree's restricted permissions; one performance test recorded 0.058290292 seconds against 0.058. Both passed on a targeted rerun with the required write access (2 passed in 1.14 seconds). Full rerun with that access is in progress. Netguard recorded zero blocked egress attempts and zero credential-file opens.
+- Initial full engine suite: 9,967 passed, 2 failed in 472.53 seconds. One failed because its temporary file could not be written under the worktree's restricted permissions; one performance test recorded 0.058290292 seconds against 0.058. Both passed on a targeted rerun with the required write access (2 passed in 1.14 seconds). The final full rerun passed: 9,969 tests in 312.64 seconds, with zero blocked egress attempts and zero credential-file opens. No test threshold or production send rule was changed. Netguard recorded zero blocked egress attempts and zero credential-file opens.
 
 ## Explicit limits and exclusions
 
